@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/28 17:06:48 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/03/29 14:35:07 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,30 +54,33 @@ Socket& Socket::operator=(const Socket& src)
 
 /***************** Member Methods *******************************/
 
-//accept, read and send rep -> later pass over to Request class / receive from Response for Parsing
-void	Socket::connection_handler()
+const int Socket::acceptConnection()
 {
-	std::cout << "********* waiting for new connection *********" << std::endl;
-	
+	std::cout << "********* Accepted new connection *********" << std::endl;
 	int io_socket = accept(this->_socket_fd, (struct sockaddr *) &this->_client_addr, (socklen_t *) &this->_addr_size);
 	if (io_socket < 0)
 		throw std::runtime_error("Error accepting client request");
-	
-	char buffer[BUFSIZE];
-	int byteRead = recv(io_socket, buffer, BUFSIZE, 0);
-	if (byteRead == 0)
-		std::cout << "Connection closed" << std::endl;
-	else if (byteRead < 0)
-		throw std::runtime_error("Impossible read message from client");
-	else
-		std::cout << "[SERVER SIDE] : Client message is : " << buffer << std::endl;
-	
-	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 17\n\nHello New world!";
-	int byteSend = send(io_socket, response.c_str(), response.size(), 0);
-	if (byteSend < 0)
-		throw std::runtime_error("IMpossible send message to client");
-	close(io_socket);
-	std::cout << "********* MESSAGE SENT / NEXT CONNECTION *********" << std::endl;
+	return (io_socket);
+}
+
+//read raw Browser request
+const std::string Socket::readData(const int io_socket)
+{
+	int byteRead = 1;
+	std::string rawRequest;
+	while(42)
+	{
+		char buffer[BUFSIZE];
+		byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
+		if (byteRead < 0)
+			throw std::runtime_error("Impossible read message from client");
+		buffer[byteRead] = '\0';
+		rawRequest.append(buffer, byteRead);
+		if (rawRequest.find("\r\n\r\n") != std::string::npos)
+			break ;
+	}
+	std::cout << "********* DONE TRANSMITTING DATA *********" << std::endl;
+	return (rawRequest);
 }
 
 void	Socket::_initSock()
@@ -86,7 +89,8 @@ void	Socket::_initSock()
 	//this->_client_addr = {0}; //because libft allowed isn't clear (and so is memset then)
 }
 
-void printSockAddrIn(const sockaddr_in& addr) {
+void printSockAddrIn(const sockaddr_in& addr) 
+{
     // Convert the IP address to a string
     char* ipStr = inet_ntoa(addr.sin_addr);
 

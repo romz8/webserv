@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/28 16:09:42 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/03/29 13:27:17 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,12 @@ int main(int argc, char *argv[])
 {
 	testConf test;
 	test.host = "0"; test.port = "4242"; test.serverName = "testing Server";
+	test.root = "/"; test.index = "index.html";
+	
 	try
 	{
-		
 		Server serv(test);
-		serv.handleConnection();
+		serv.run();
 	}
 	catch (const std::exception& e)
 	{

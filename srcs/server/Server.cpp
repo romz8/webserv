@@ -6,17 +6,16 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/28 16:58:28 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/03/29 14:40:34 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(const testConf& conf) : _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
+Server::Server(const testConf& conf) : _serverName(conf.serverName), _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
 {
 	this->_host = conf.host;
 	this->_port = conf.port;
-	this->_serverName = conf.serverName;
 	this->_locs = conf.loc;
 	
 	printSockAddrIn(_servAddr);
@@ -46,10 +45,22 @@ const sockaddr_in Server::setServAddr(const testConf& conf)
 	return (servAddr);
 }
 
-void	Server::handleConnection()
+void	Server::run()
 {
 	while(42)
-		this->_sock.connection_handler();
+	{
+		int io_fd = this->_sock.acceptConnection();
+		std::string head = this->_sock.readData(io_fd);
+		Header header(head);
+		header.printHeader();
+		// if (header.getMethod() == "POST")
+		// {
+		// 		std::string body = this->_sock.readData(io_fd);
+		// 		std::cout << "Bodyreceived : " << body << std::endl;
+		// }
+		// std::string response = this->getResponse();
+		close(io_fd);
+	}
 }
 
 Socket Server::socketFactory(const sockaddr_in& addr) 
@@ -57,9 +68,10 @@ Socket Server::socketFactory(const sockaddr_in& addr)
     try 
 	{
         return Socket(addr);
-    } catch(const std::exception& e) 
+    } 
+	catch(const std::exception& e) 
 	{
-        std::cerr << 
+        std::cerr << this->_serverName;
 		std::cerr << "Failed to create socket: " << e.what() << std::endl;
         throw;
     }

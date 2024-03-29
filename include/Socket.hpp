@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/28 16:58:54 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/03/29 12:32:16 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,8 @@ public:
 	Socket& operator=(const Socket& src);
 	
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
-	void	connection_handler();
+	const std::string readData(const int io_socket);
+	const int		acceptConnection();
 
 	// keep some space for I/O Multiplexing lateron
 };
