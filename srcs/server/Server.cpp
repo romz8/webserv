@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/29 14:40:34 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/01 17:19:11 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,18 +49,43 @@ void	Server::run()
 {
 	while(42)
 	{
-		int io_fd = this->_sock.acceptConnection();
-		std::string head = this->_sock.readData(io_fd);
-		Header header(head);
-		header.printHeader();
-		// if (header.getMethod() == "POST")
-		// {
-		// 		std::string body = this->_sock.readData(io_fd);
-		// 		std::cout << "Bodyreceived : " << body << std::endl;
-		// }
-		// std::string response = this->getResponse();
-		close(io_fd);
+		this->handleConnection();
 	}
+	// {
+	// 	int io_fd = this->_sock.acceptConnection();
+	// 	std::string head = this->_sock.readData(io_fd);
+	// 	Header header(head);
+	// 	header.buildRequest();
+	// 	// if (header.getMethod() == "POST")
+	// 	// {
+	// 	// 		std::string body = this->_sock.readData(io_fd);
+	// 	// 		std::cout << "Bodyreceived : " << body << std::endl;
+	// 	// }
+	// 	// std::string response = this->getResponse();
+	// 	close(io_fd);
+	// }
+}
+
+void	Server::handleConnection()
+{
+	int io_fd = this->_sock.acceptConnection();
+	std::string head = this->_sock.readData(io_fd);
+	Header header(head);
+	header.buildRequest();
+	// if (header.getMethod() == "POST")
+	// {
+	// 		std::string body = this->_sock.readData(io_fd);
+	// 		std::cout << "Bodyreceived : " << body << std::endl;
+	// }
+	// std::string response = this->getResponse();
+	header.printHeader();
+	Response resp(header); // later on build with location routing Response response(header, _locs);
+	resp.buildResponse();
+	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
+	int byteSend = send(io_fd, response.c_str(), response.size(), 0);
+	if (byteSend < 0)
+		throw std::runtime_error("IMpossible send message to client");
+	close(io_fd);
 }
 
 Socket Server::socketFactory(const sockaddr_in& addr) 

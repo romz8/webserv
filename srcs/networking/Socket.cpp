@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/29 14:35:07 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/01 16:25:12 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ const std::string Socket::readData(const int io_socket)
 {
 	int byteRead = 1;
 	std::string rawRequest;
-	while(42)
+	while(byteRead > 0)
 	{
 		char buffer[BUFSIZE];
 		byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);

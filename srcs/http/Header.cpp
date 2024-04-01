@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:55:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/29 14:46:16 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/01 17:55:03 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ void Header::parseHeader(const std::string& head)
 			break;
 		std::string::size_type pos = line.find(":");
 		if (pos == std::string::npos)
-			throw std::runtime_error("Error parsing header");
+			throw std::runtime_error("Error parsing header : no colon (:)found in" + line);
 		std::string key = line.substr(0, pos);
 		std::string value = line.substr(pos + 1);
 		key.substr(key.find_first_not_of(" \t\n\r\f\v"), key.find_last_not_of(" \t\n\r\f\v") - key.find_first_not_of(" \t\n\r\f\v") + 1);
@@ -104,4 +104,85 @@ void Header::printHeader() const
 	{
 		std::cout << it->first << " :" << it->second << std::endl;
 	}
+}
+
+void	Header::buildRequest()
+{
+	if (!isValidMethod())
+		this->_status = 405;
+	if (!isValidVersion())
+		this->_status = 505;
+	if (!isValidPath())
+		this->_status = 404;
+	std::cout << "Request is valid : " << this->_method << " " << this->_path << " " << this->_version << std::endl;
+	this->_status = 200;
+}
+
+bool Header::isValidMethod() const
+{
+	if (this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE")
+		return (true);
+	return (false);
+}
+
+bool Header::isValidPath() 
+{
+	std::string testpath = "/Users/rjobert/Desktop/42_cursus/webserv/proto"; //to be cahnge for dynamic root and env var
+	if (this->_path.empty())
+		return (false);
+	if (this->_path[0] != '/')
+		return (false);
+	if (this->_path[this->_path.size() - 1] == '/')
+	{
+		this->_isDirectory = true;
+		this->_parsePath = testpath.append(this->_path.substr(0, this->_path.size() - 1));
+		if (!(this->isDirectory()))
+			return (false);
+	}
+	else
+	{
+		this->_isDirectory = false;
+		this->_parsePath = testpath.append(this->_path);
+		if (!(this->fileExists()))
+			return (false);
+	}
+	return (true);
+}
+
+
+bool Header::isValidVersion() const
+{
+	if (this->_version == "HTTP/1.1")
+		return (true);
+	return (false);
+}
+
+std::string Header::getMethod() const
+{
+	return (this->_method);
+}
+
+std::string Header::getPath() const
+{
+	return (this->_path);
+}
+
+bool Header::fileExists() const
+{
+	struct stat buffer;
+	std::cout << "Path in file exist: " << this->_parsePath << std::endl;
+	return (stat(this->_parsePath.c_str(), &buffer) == 0);
+}
+
+bool Header::isDirectory() const
+{
+	struct stat buffer;
+	if (stat(this->_parsePath.c_str(), &buffer) == 0)
+		return (S_ISDIR(buffer.st_mode));
+	return (false);
+}
+
+int getStatus() const
+{
+	return (this->_status);
 }
