@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:55:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/01 17:55:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/02 15:30:06 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,11 @@ std::string Header::getPath() const
 	return (this->_path);
 }
 
+std::string Header::getParsePath() const
+{
+	return (this->_parsePath);
+}
+
 bool Header::fileExists() const
 {
 	struct stat buffer;
@@ -182,7 +187,7 @@ bool Header::isDirectory() const
 	return (false);
 }
 
-int getStatus() const
+int Header::getStatus() const
 {
 	return (this->_status);
 }

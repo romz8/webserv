@@ -6,7 +6,7 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/03/29 13:01:41 by rjobert          ###   ########.fr        #
+#    Updated: 2024/04/02 15:49:46 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,8 +19,8 @@ SRC_DIR = ./srcs/
 INC_DIR = ./include/
 OBJS_PATH	= ./OBJS/
 
-SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Header.cpp
-INC_NAME = Socket.hpp Server.hpp Location.hpp Header.hpp
+SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Header.cpp http/Response.cpp
+INC_NAME = Socket.hpp Server.hpp Location.hpp Header.hpp Response,hpp
 
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))

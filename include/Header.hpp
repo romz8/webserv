@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:44:52 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/01 17:54:49 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/02 15:22:30 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <map>
 # include <iostream>
 # include <sstream>
+# include <fstream>
 # include <sys/stat.h>
 
 class Header
@@ -29,6 +30,7 @@ private:
 	bool			_isDirectory;
 	std::string		_parsePath;
 	int				_status;
+	std::string		_respBody;
 	//std::string		_root; //will be used to remap the path to the root of the server
 	std::map<std::string, std::string> _headers;
 
@@ -49,6 +51,7 @@ public:
 	int			getStatus() const;
 	bool		fileExists() const;
 	bool		isDirectory() const;
+	std::string getParsePath() const;
 };
 
 #endif
