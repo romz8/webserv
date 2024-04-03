@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/02 15:47:05 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/03 19:59:47 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 # include "Location.hpp"
 # include "Header.hpp"
 # include "Response.hpp"
+# include "colors.h"
 
 
 typedef struct s_testConf

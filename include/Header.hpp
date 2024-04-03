@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:44:52 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/02 15:22:30 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/03 20:04:59 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 # include <sstream>
 # include <fstream>
 # include <sys/stat.h>
+# include <unistd.h>
+# include "colors.h"
 
 class Header
 {
@@ -28,6 +30,7 @@ private:
 	std::string		_path;
 	std::string		_version;
 	bool			_isDirectory;
+	bool			_isDirNorm;
 	std::string		_parsePath;
 	int				_status;
 	std::string		_respBody;
@@ -49,9 +52,13 @@ public:
 	std::string	getMethod() const;
 	std::string	getPath() const;
 	int			getStatus() const;
-	bool		fileExists() const;
+	int			fileExists() const;
 	bool		isDirectory() const;
 	std::string getParsePath() const;
+	bool		hasReadAccess() const;
+	bool typeCheck();
+	void	normalizeDirPath();
+	void	initRequest();
 };
 
 #endif
