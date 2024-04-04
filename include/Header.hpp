@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:44:52 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/03 20:04:59 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/04 22:48:38 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <string>
 # include <vector>
 # include <map>
+# include <algorithm>
 # include <iostream>
 # include <sstream>
 # include <fstream>
@@ -32,6 +33,7 @@ private:
 	bool			_isDirectory;
 	bool			_isDirNorm;
 	std::string		_parsePath;
+	std::string		_extension;
 	int				_status;
 	std::string		_respBody;
 	//std::string		_root; //will be used to remap the path to the root of the server
@@ -43,22 +45,33 @@ public:
 	Header(const Header& src);
 	Header& operator=(const Header& src);
 
-	void	parseHeader(const std::string& head);
-	void	printHeader() const;
-	bool	isValidMethod() const;
-	bool	isValidPath();
-	bool	isValidVersion() const;
-	void	buildRequest();
+	void		parseHeader(const std::string& head);
+	void		parseStartLine(const std::string& line);
+	void	parseHeaderLine(const std::string& line);
+	void		printHeader() const;
+	
+	bool		isValidMethod() const;
+	bool		isValidPath();
+	bool		isValidVersion() const;
+	std::string	sanitizeUrl(const std::string& urlSrc);
+	
+	void		setStatus();
+	void		buildRequest();
 	std::string	getMethod() const;
 	std::string	getPath() const;
 	int			getStatus() const;
-	int			fileExists() const;
-	bool		isDirectory() const;
 	std::string getParsePath() const;
+	std::string	getExtension() const;
+	bool		isDirectory() const;
+	
+	void		parseExtension();
 	bool		hasReadAccess() const;
-	bool typeCheck();
-	void	normalizeDirPath();
-	void	initRequest();
+	bool		typeCheck();
+	void		normalizeDirPath();
+	void		initRequest();
+	
 };
+
+std::string trim(const std::string& str);
 
 #endif

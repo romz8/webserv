@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/04 16:18:56 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/04 22:07:52 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,8 @@ TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
 */
 Response::Response(Header& head) : _status(head.getStatus()), _method(head.getMethod()), \
 	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _errPages(initErrMaps()), \
-	_mimeTypes(initMimeMaps()), _content_len("0"), _headerContent(""), \
-	_headerResponse(""), _body(""), _response(""), _assetPath("")
+	_mimeTypes(initMimeMaps()), _content_len("0"), _headerResponse(""), _body(""), \
+	_response(""), _assetPath(""), _extension(head.getExtension())
 {
 	if (_errPages.find(this->_status) != _errPages.end())
 		this->_assetPath = _root + _errPages[this->_status];
@@ -31,7 +31,8 @@ Response::Response(Header& head) : _status(head.getStatus()), _method(head.getMe
 		this->_assetPath = _root + _errPages[404];
 	else
 		this->_assetPath = head.getParsePath();
-	std::cout << "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
+	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
+	std::cout << "extension is " << this->_extension << std::endl;
 }
 
 Response::~Response(){}
@@ -74,7 +75,7 @@ void Response::buildResponse()
 	else
 		return ; //later on we will do the POST, DELETE and UNknown case
 	finalizeHeader();
-	std::cout << BLUE "FINAL CHECK ON RESP : " << this->_response << RESET << std::endl;
+	//std::cout << BLUE "FINAL CHECK ON RESP : " << this->_response << RESET << std::endl;
 }
 
 void	Response::excecuteGetResponse()
@@ -97,46 +98,15 @@ void	Response::excecuteGetResponse()
 			handleError();
 			break;
 	}
-	//to check - delete later on 
-	std::cout << "NO SF exec" << std::endl;
 	std::cout << "Header is  : " << this->_headerResponse << std::endl;
-	std::cout << "Body is  : " << this->_body << std::endl;
+	//std::cout << "Body is  : " << this->_body << std::endl;
 }
 
 void Response::setStatusLine(int sCode) 
 {
     std::ostringstream StatusLine;
 	
-	switch (sCode) {
-        case 200:
-            this->_statusMsg = "OK";
-            break;
-        case 301:
-            this->_statusMsg = "Moved Permanently";
-            break;
-        case 405:
-            this->_statusMsg = "Method Not Allowed";
-            break;
-        case 404:
-            this->_statusMsg = "Not Found";
-            break;
-        case 403:
-            this->_statusMsg = "Forbidden";
-            break;
-        case 500:
-            this->_statusMsg = "Internal Server Error";
-            break;
-        case 505:
-            this->_statusMsg = "HTTP Version not supported";
-            break;
-        default:
-            // Optionally handle unexpected status codes
-            // this->_statusMsg = "Internal Server Error";
-			// this->_statusMsg = "Internal Server Error";
-			this->_statusMsg = "Unknown Status"; //for debuggin, otherwise will be 500
-            break;
-    }
-	
+	this->_statusMsg = getStatusMessage(sCode);
 	StatusLine << this->_version << " " << this->_status << " " << this->_statusMsg << "\r\n";
 	this->_statusLine = StatusLine.str();
 }
@@ -146,19 +116,28 @@ std::string Response::getResponse() const
 	return(this->_response);
 }
 
+void	Response::addHeader()
+{
+	if (this->_status == 301)
+		_headers["Location"] = this->_assetPath;
+	else
+	{	
+		_headers["Content-Type"] = getMimeType(this->_extension);
+		_headers["Content-Length"] = _content_len;
+	}
+}
+
 void 	Response::handle200()
 {
 	std::ostringstream head;
 	
 	this->setBody();
-	_headers["Content-Type"] = "text/html; charset=UTF-8";
-	_headers["Content-Length"] = _content_len;
-	this->_headerResponse = this->_statusLine.append(this->_headerContent);
+	addHeader();
 }
 
 void 	Response::handle301()
 {
-	this->_headers["Location"] = this->_assetPath;
+	addHeader();
 }
 
 void 	Response::handleError()
@@ -166,17 +145,18 @@ void 	Response::handleError()
 	std::ostringstream head;
 	
 	this->setBody();
-	_headers["Content-Type"] = "text/html; charset=UTF-8";
-	_headers["Content-Length"] = _content_len;
-	this->_headerResponse = this->_statusLine.append(this->_headerContent);
+	addHeader();
 }
 
 std::string Response::assembHeader()
 {
 	std::ostringstream headerStream;
 	std::map<std::string, std::string>::const_iterator it = this->_headers.begin();
-	for (; it != _headers.end(); it++)
+	for (; it != _headers.end(); ++it)
+	{
+		std::cout << RED "HEADER IS : " << it->first << " : " << it->second << RESET << std::endl;
 		headerStream << it->first << ": " << it->second << "\r\n";
+	}
 	headerStream << "\r\n";
 	return (headerStream.str());
 }
@@ -187,6 +167,8 @@ void Response::finalizeHeader()
 	this->_response = this->_statusLine + headContent;
 	this->_response.append(_body);
 	
+	std::cout << "Header is  : " << this->_headerResponse << std::endl;
+	// std::cout << "Body is  : " << this->_body << std::endl;
 }
 
 /*
@@ -204,7 +186,6 @@ void	Response::setBody()
 		this->_status = 500;
 		return ;
 	}
-
 	std::streampos fileSize = fBody.tellg(); 
 	fBody.seekg(0, std::ios::beg);
 	
@@ -238,6 +219,7 @@ void	Response::setBody()
     m[".mp3"] = "audio/mpeg";
     m[".txt"] = "text/plain";
     m[".csv"] = "text/csv";
+	m[".ico"] = "image/x-icon";
 
 	return m;
 }
@@ -249,7 +231,8 @@ std::map<int, std::string>	Response::initStatusMaps()
 	
 	s[200] = "OK";
     s[301] = "Moved Permanently";
-    s[403] = "Forbidden";
+    s[400] = "Bad Request";
+	s[403] = "Forbidden";
     s[404] = "Not Found";
     s[405] = "Method Not Allowed";
     s[500] = "Internal Server Error";
@@ -262,6 +245,7 @@ std::map<int, std::string>	Response::initStatusMaps()
 std::map<int, std::string> Response::initErrMaps()
 {
     std::map<int, std::string> e;
+	e[400] = "/error_pages/400.html";
 	e[403] = "/error_pages/403.html";
     e[404] = "/error_pages/404.html";
     e[500] = "/error_pages/500.html";
@@ -269,4 +253,24 @@ std::map<int, std::string> Response::initErrMaps()
     e[505] = "/error_pages/505.html";
 	
 	return e;
+}
+
+// Get the MIME type based on file extension
+std::string Response::getMimeType(const std::string& extension) const 
+{
+    std::map<std::string, std::string>::const_iterator it = _mimeTypes.find(extension);
+    if (it != _mimeTypes.end())
+        return it->second;
+    else
+        return "text/plain"; // Default MIME type if not found
+}
+
+// Get the status message based on status code
+std::string Response::getStatusMessage(int statusCode) const 
+{
+    std::map<int, std::string>::const_iterator it = _statusMsgs.find(statusCode);
+    if (it != _statusMsgs.end()) 
+        return it->second;
+	else
+        return "Unknown Status"; // Default message if not found
 }
