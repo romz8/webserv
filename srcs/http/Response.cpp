@@ -5,13 +5,14 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/04/01 17:51:53 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/03 21:37:08 by rjobert          ###   ########.fr       */
+/*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
+/*   Updated: 2024/04/04 16:18:56 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
+const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
 
 /*
 Initializes a Response object using the provided Header object.
@@ -19,15 +20,15 @@ Sets the HTTP status, version, and the path to the asset to be returned
 in the response body.
 TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
 */
-Response::Response(Header& head)
+Response::Response(Header& head) : _status(head.getStatus()), _method(head.getMethod()), \
+	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _errPages(initErrMaps()), \
+	_mimeTypes(initMimeMaps()), _content_len("0"), _headerContent(""), \
+	_headerResponse(""), _body(""), _response(""), _assetPath("")
 {
-	this->_status = head.getStatus();
-	this->_method = head.getMethod();
-	this->_version = "HTTP/1.1";
-	if (this->_status == 404)
-		this->_assetPath = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/error_pages/404.html";
-	else if (this->_status == 401)
-		this->_assetPath = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/error_pages/401.html";
+	if (_errPages.find(this->_status) != _errPages.end())
+		this->_assetPath = _root + _errPages[this->_status];
+	else if (head.getParsePath().empty())
+		this->_assetPath = _root + _errPages[404];
 	else
 		this->_assetPath = head.getParsePath();
 	std::cout << "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
@@ -52,30 +53,6 @@ Response& Response::operator=(const Response& src)
 	return (*this);
 }
 
-
-/*
-Opens and reads the content of the asset file specified by _assetPath.
-Sets the _body member to the content of the file, updating _content_length 
-accordingly.
-Handles the error case where the file cannot be opened by setting the
-status to 500.
-
-*/
-void	Response::setBody()
-{
-	std::ifstream htmlBody(this->_assetPath, std::ios::in);
-	if (!htmlBody.is_open())
-	{
-		this->_status = 500;
-		return ;
-	}
-	std::stringstream buff;
-	buff << htmlBody.rdbuf();
-	this->_body = buff.str();
-	this->_content_length = this->_body.size();
-	return ;
-}
-
 /*
 Constructs the full HTTP response message.
 Calls setBody to load the response body from the specified asset path.
@@ -96,9 +73,8 @@ void Response::buildResponse()
 		this->excecuteGetResponse();
 	else
 		return ; //later on we will do the POST, DELETE and UNknown case
-	
-	this->_reponse = this->_headerResponse + this->_body;
-	std::cout << BLUE "FINAL CHECK ON RESP : " << this->_reponse << RESET << std::endl;
+	finalizeHeader();
+	std::cout << BLUE "FINAL CHECK ON RESP : " << this->_response << RESET << std::endl;
 }
 
 void	Response::excecuteGetResponse()
@@ -122,6 +98,7 @@ void	Response::excecuteGetResponse()
 			break;
 	}
 	//to check - delete later on 
+	std::cout << "NO SF exec" << std::endl;
 	std::cout << "Header is  : " << this->_headerResponse << std::endl;
 	std::cout << "Body is  : " << this->_body << std::endl;
 }
@@ -166,7 +143,7 @@ void Response::setStatusLine(int sCode)
 
 std::string Response::getResponse() const
 {
-	return(this->_reponse);
+	return(this->_response);
 }
 
 void 	Response::handle200()
@@ -174,20 +151,14 @@ void 	Response::handle200()
 	std::ostringstream head;
 	
 	this->setBody();
-	this->_content_type = "text/html; charset=UTF-8";
-	head << "Content-Length: " << this->_content_length << "\r\n";
-	head << "Content-Type: " << this->_content_type << "\r\n";
-	head << "\r\n";
-	this->_headerContent = head.str();
+	_headers["Content-Type"] = "text/html; charset=UTF-8";
+	_headers["Content-Length"] = _content_len;
 	this->_headerResponse = this->_statusLine.append(this->_headerContent);
 }
 
 void 	Response::handle301()
 {
 	this->_headers["Location"] = this->_assetPath;
-	
-	this->_headerContent = "Location: " + _headers["Location"] + " \r\n";  // this will be changed to auto converter of header later on;
-	this->_headerResponse = this->_statusLine.append(this->_headerContent);
 }
 
 void 	Response::handleError()
@@ -195,10 +166,107 @@ void 	Response::handleError()
 	std::ostringstream head;
 	
 	this->setBody();
-	this->_content_type = "text/html; charset=UTF-8";
-	head << "Content-Length: " << this->_content_length << "\r\n";
-	head << "Content-Type: " << this->_content_type << "\r\n";
-	head << "\r\n";
-	this->_headerContent = head.str();
+	_headers["Content-Type"] = "text/html; charset=UTF-8";
+	_headers["Content-Length"] = _content_len;
 	this->_headerResponse = this->_statusLine.append(this->_headerContent);
+}
+
+std::string Response::assembHeader()
+{
+	std::ostringstream headerStream;
+	std::map<std::string, std::string>::const_iterator it = this->_headers.begin();
+	for (; it != _headers.end(); it++)
+		headerStream << it->first << ": " << it->second << "\r\n";
+	headerStream << "\r\n";
+	return (headerStream.str());
+}
+
+void Response::finalizeHeader()
+{
+	std::string headContent = assembHeader();
+	this->_response = this->_statusLine + headContent;
+	this->_response.append(_body);
+	
+}
+
+/*
+Opens and reads the content of the asset file specified by _assetPath.
+Sets the _body member to the content of the file, updating _content_length 
+accordingly.
+Handles the error case where the file cannot be opened by setting the
+status to 500.
+*/
+void	Response::setBody()
+{
+	std::ifstream fBody(this->_assetPath, std::ios::binary | std::ios::ate);
+	if (!fBody.is_open())
+	{
+		this->_status = 500;
+		return ;
+	}
+
+	std::streampos fileSize = fBody.tellg(); 
+	fBody.seekg(0, std::ios::beg);
+	
+	 std::string buff(fileSize, '\0');
+	fBody.read(&buff[0], fileSize);
+	this->_body = buff;
+	
+	// Convert std::streampos to std::string
+    std::ostringstream oss;
+    oss << fileSize;
+    this->_content_len = oss.str();
+	
+	fBody.close();
+	return ;
+}
+
+// Initializing MIME Types
+ std::map<std::string, std::string> Response::initMimeMaps() 
+{
+    std::map<std::string, std::string> m;
+	
+	m[".html"] = "text/html";
+    m[".css"] = "text/css";
+    m[".jpg"] = "image/jpeg";
+    m[".png"] = "image/png";
+    m[".gif"] = "image/gif";
+    m[".js"] = "application/javascript";
+    m[".pdf"] = "application/pdf";
+    m[".json"] = "application/json";
+    m[".mp4"] = "video/mp4";
+    m[".mp3"] = "audio/mpeg";
+    m[".txt"] = "text/plain";
+    m[".csv"] = "text/csv";
+
+	return m;
+}
+
+// Initializing Status Messages
+std::map<int, std::string>	Response::initStatusMaps()
+{
+    std::map<int, std::string> s;
+	
+	s[200] = "OK";
+    s[301] = "Moved Permanently";
+    s[403] = "Forbidden";
+    s[404] = "Not Found";
+    s[405] = "Method Not Allowed";
+    s[500] = "Internal Server Error";
+    s[505] = "HTTP Version not supported";
+
+	return s;
+}
+
+// Initializing Error Pages
+std::map<int, std::string> Response::initErrMaps()
+{
+    std::map<int, std::string> e;
+	e[403] = "/error_pages/403.html";
+    e[404] = "/error_pages/404.html";
+    e[500] = "/error_pages/500.html";
+    e[405] = "/error_pages/405.html";
+    e[505] = "/error_pages/505.html";
+	
+	return e;
 }
