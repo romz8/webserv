@@ -6,14 +6,14 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/01 17:52:07 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/04 18:14:02 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 13:42:35 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include "Header.hpp"
+# include "Request.hpp"
 # include <fstream>
 
 
@@ -39,7 +39,7 @@ private:
 	static const std::string	_root; //for testing
 
 public:
-	Response(Header& head);
+	Response(Request& head);
 	~Response();
 	Response(const Response& src);
 	Response& operator=(const Response& src);
@@ -47,15 +47,16 @@ public:
 	void	buildResponse();
 	void	setStatusLine(int sCode);
 	void	setBody();
+	std::string	readWebFile(const std::string& path);
 	void	parseExtension();
 	std::string getResponse() const;
 	void	excecuteGetResponse();
 	void	handle200();
 	void	handle301();
 	void	handleError();
-	void	addHeader();
-	std::string assembHeader();
-	void	finalizeHeader();
+	void	addHeaders();
+	std::string assembHeaders();
+	void	finalizeResponse();
 	std::map<std::string, std::string> initMimeMaps();
 	std::map<int, std::string>initErrMaps();
 	std::map<int, std::string> initStatusMaps();

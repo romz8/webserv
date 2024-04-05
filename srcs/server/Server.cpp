@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/04 21:57:44 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 12:33:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,9 +54,9 @@ void	Server::run()
 	// {
 	// 	int io_fd = this->_sock.acceptConnection();
 	// 	std::string head = this->_sock.readData(io_fd);
-	// 	Header header(head);
-	// 	header.buildRequest();
-	// 	// if (header.getMethod() == "POST")
+	// 	Request Request(head);
+	// 	Request.buildRequest();
+	// 	// if (Request.getMethod() == "POST")
 	// 	// {
 	// 	// 		std::string body = this->_sock.readData(io_fd);
 	// 	// 		std::cout << "Bodyreceived : " << body << std::endl;
@@ -70,16 +70,16 @@ void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();
 	std::string head = this->_sock.readData(io_fd);
-	Header header(head);
-	header.buildRequest();
-	// if (header.getMethod() == "POST")
+	Request Request(head);
+	Request.buildRequest();
+	// if (Request.getMethod() == "POST")
 	// {
 	// 		std::string body = this->_sock.readData(io_fd);
 	// 		std::cout << "Bodyreceived : " << body << std::endl;
 	// }
 	// std::string response = this->getResponse();
-	header.printHeader();
-	Response resp(header); // later on build with location routing Response response(header, _locs);
+	Request.printRequest();
+	Response resp(Request); // later on build with location routing Response response(Request, _locs);
 	resp.buildResponse();
 	std::string response = resp.getResponse();
 	//std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";

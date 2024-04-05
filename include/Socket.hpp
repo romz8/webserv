@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/02 15:46:55 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 10:27:40 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 # include <exception>
 # include <iostream>
 # include <string>
+# include <errno.h>
+
 
 # define MAX_Q 10
 # define BUFSIZE 3000

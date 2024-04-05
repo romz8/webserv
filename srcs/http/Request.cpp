@@ -1,27 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Header.cpp                                         :+:      :+:    :+:   */
+/*   Request.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:55:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/04 23:17:57 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 12:30:37 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Header.hpp"
+#include "Request.hpp"
 
-/* Constructor: Initializes the header object by parsing the provided raw HTTP 
-header string. It sets up initial request parameters and catches any exceptions 
+/* Constructor: Initializes the Request object by parsing the provided raw HTTP 
+Request string. It sets up initial request parameters and catches any exceptions 
 during parsing, setting an error status if needed.
 */
-Header::Header(const std::string& rawHeader)
+Request::Request(const std::string& rawRequest)
 {
 	initRequest();
 	try
 	{
-		parseHeader(rawHeader);
+		parseHeader(rawRequest);
 	}
 	catch(const std::exception& e)
 	{
@@ -30,31 +30,31 @@ Header::Header(const std::string& rawHeader)
 	}
 }
 
-Header::~Header(){}
+Request::~Request(){}
 
-Header::Header(const Header& src)
+Request::Request(const Request& src)
 {
 	*this = src;
 }
 
-Header& Header::operator=(const Header& src)
+Request& Request::operator=(const Request& src)
 {
 	if (this != &src)
 	{
 		this->_method = src._method;
 		this->_path = src._path;
 		this->_version = src._version;
-		this->_headers = src._headers;
+		this->_Requests = src._Requests;
 	}
 	return (*this);
 }
 
 /*
 first we parse the start line (containing the method, path and version)
-then we parse the headers as key value pairs inside a map
+then we parse the Requests as key value pairs inside a map
 we implement a trimming for key, value for insrting in the map
 */
-void Header::parseHeader(const std::string& head)
+void Request::parseHeader(const std::string& head)
 {
 	std::istringstream stream(head);
 	std::string line;
@@ -75,31 +75,31 @@ void Header::parseHeader(const std::string& head)
 }
 
 // Extracts the HTTP method, path, and version from the start line of the request.
-void Header::parseStartLine(const std::string& line)
+void Request::parseStartLine(const std::string& line)
 {
 	std::istringstream lineStream(line);
 	lineStream >> this->_method >> this->_path >> this->_version;
 }
 
-void	Header::parseHeaderLine(const std::string& line)
+void	Request::parseHeaderLine(const std::string& line)
 {
 	if (line.empty())
 		return;
 	size_t pos = line.find(":");
 	if (pos == std::string::npos)
-		throw std::runtime_error("Error parsing header : no colon (:) at line " + line);
+		throw std::runtime_error("Error parsing Request : no colon (:) at line " + line);
 	std::string key = trim(line.substr(0, pos));
 	std::string value = trim(line.substr(pos + 1));
-	this->_headers[key] = value;
+	this->_Requests[key] = value;
 }
 
 /*
-Parses a single header line, extracting the header name and value, and storing them after trimming whitespace.
-Skip empty lines to prevent parsing errors, then Locate the delimiter between header name and value.
-If no delimiter is found, the header line is malformed. We then extract and trim the header name and value, 
-storing them in the header map. Finally Store the key-value pair in the header map
+Parses a single Request line, extracting the Request name and value, and storing them after trimming whitespace.
+Skip empty lines to prevent parsing errors, then Locate the delimiter between Request name and value.
+If no delimiter is found, the Request line is malformed. We then extract and trim the Request name and value, 
+storing them in the Request map. Finally Store the key-value pair in the Request map
 */ 
-void Header::printHeader() const
+void Request::printRequest() const
 {
 	std::cout << YELLOW "Method : " << this->_method << std::endl;
 	std::cout << "status is : " << this->_status << std::endl;
@@ -108,15 +108,15 @@ void Header::printHeader() const
 	std::cout << "Extension is  : " << this->_extension << std::endl;
 	std::cout << "is Dir  : " << this->_isDirectory << std::endl;
 	std::cout << "is DirNorm  : " << this->_isDirNorm << std::endl;
-	std::cout << "Headers : " << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); ++it)
+	std::cout << "Requests : " << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = this->_Requests.begin(); it != this->_Requests.end(); ++it)
 	{
 		std::cout << it->first << " :" << it->second << std::endl;
 	}
 	std::cout << RESET << std::endl;
 }
 
-void	Header::initRequest()
+void	Request::initRequest()
 {
 	this->_isDirectory = false;
 	this->_isDirNorm = false;
@@ -129,18 +129,19 @@ void	Header::initRequest()
 	this->_extension.clear();
 }
 /*
-Core of the machin after header parsing
+Core of the machin after Request parsing
 */
-void	Header::buildRequest()
+void	Request::buildRequest()
 {
-	// this->_path = sanitizeUrl(_path);
+	std::cout << BG_BLUE "INIT _PATH : " << this->_path << RESET << std::endl;
+	sanitizeUrl();
 	setStatus();
 	parseExtension();
 	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }
 
 /*
-Analyzes the HTTP request details stored in the Header object to determine the appropriate
+Analyzes the HTTP request details stored in the Request object to determine the appropriate
 HTTP response status code. This function sequentially checks various aspects of the request,
 including the HTTP method, version, and the requested path's validity and accessibility.
 
@@ -158,7 +159,7 @@ Process Flow:
    available). If access is granted, sets the status code to 200 (OK); otherwise, sets it to
    403 (Forbidden).
 */
-void	Header::setStatus()
+void	Request::setStatus()
 {
 	if (!isValidMethod())
 	{
@@ -187,7 +188,7 @@ void	Header::setStatus()
 	this->_status = hasReadAccess() ? 200 : 403;
 }
 
-bool Header::isValidMethod() const
+bool Request::isValidMethod() const
 {
 	if (this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE")
 		return (true);
@@ -199,7 +200,7 @@ verify that path is ok at first (not empty, starting with /)
 then check if the path is either a file or a dir (with stat())
 if neither -> raiseError by returning null, otherwise update Response State
 */
-bool Header::isValidPath() 
+bool Request::isValidPath() 
 {
 	std::string testpath = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; //to be cahnge for dynamic root and env var
 	struct stat path_stat;
@@ -224,7 +225,7 @@ if not we add the / and redirect it to the correct path/dir/ address by
 returning a 301 with path to the browser
 this is necessary as stat doesn't check this but http requires this management
 */
-void Header::normalizeDirPath()
+void Request::normalizeDirPath()
 {
 	std::string path = this->_parsePath;
 	if (path[path.size() - 1] == '/')
@@ -236,47 +237,47 @@ void Header::normalizeDirPath()
 
 
 
-bool Header::isValidVersion() const
+bool Request::isValidVersion() const
 {
 	if (this->_version == "HTTP/1.1")
 		return (true);
 	return (false);
 }
 
-std::string Header::getMethod() const
+std::string Request::getMethod() const
 {
 	return (this->_method);
 }
 
-std::string Header::getPath() const
+std::string Request::getPath() const
 {
 	return (this->_path);
 }
 
-std::string Header::getParsePath() const
+std::string Request::getParsePath() const
 {
 	return (this->_parsePath);
 }
 
-std::string Header::getExtension() const
+std::string Request::getExtension() const
 {
 	return (this->_extension);
 }
 
-int Header::getStatus() const
+int Request::getStatus() const
 {
 	return (this->_status);
 }
 
 // R_OK tests for readability only
-bool Header::hasReadAccess() const
+bool Request::hasReadAccess() const
 {	
     if (access(this->_parsePath.c_str(), R_OK) == 0)
 		return(true);
 	return (false);
 }
 
-void	Header::parseExtension()
+void	Request::parseExtension()
 {
 	if (this->_parsePath.empty() || this->_status != 200)
 	{
@@ -291,28 +292,70 @@ void	Header::parseExtension()
 	std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
 }
 /*
-Remove occurrences of '/../' to prevent directory traversal
+Remove occurrences of '/../' to prevent directory traversal -> BRowser do it automiatcally, test with POSTMAN
 Change '//' to '/' to avoid a url to go up the env to filesys
 Block access to hidden files and directories (any /. (like /.env) -> redirect to root)
 */
-std::string Header::sanitizeUrl(const std::string& urlSrc)
+void	Request::sanitizeUrl()
 {
-	std::string url = urlSrc;
+	std::string url = this->_path;
+	std::cout << BLUE "init url : " << url << std::endl;
+	
 	size_t pos;
-	while ((pos = url.find("/../") != std::string::npos))
+	pos = 0;
+	while ((pos = url.find("/../") != std::string::npos)) // ACTUALLY HANDLED BY BROWSER BUT VALID : SHOULD COMPARE IF EXCEED ROOT
 		url.erase(pos, 3);
 	
-	while ((pos = url.find("//") != std::string::npos))
+	pos = 0;
+	while ((pos = url.find("//", pos)) != std::string::npos)
 	{
 		url.replace(pos, 2, "/");
 		pos += 1;
 	}
 
-	// if ((pos = url.find("/.")) != std::string::npos) -- to ameliorate to avoid conflict wiht /../
-	// 	url = "/";
-	return (url);	
+	std::cout << BLUE "url post before /. check : " << url << std::endl;
+	
+	if (isHiddenAccess(url))
+		url = "/";
+	
+	this->_path = url;
+	std::cout << BLUE "url post ALL check : " << this->_path << std::endl;
 }
 
+/*
+ * Checks if the given URL attempts to access a hidden file or directory.
+ * 
+ * Hidden files or directories in Unix-based systems start with a dot (.) like .env
+ * This function searches for occurrences of "/." in the URL,
+ * However, it's important to distinguish between legitimate navigational patterns
+ * like "../" (navigate up one directory) or "./" (current directory) and actual
+ * attempts to access hidden resources. Therefore, this function specifically looks
+ * for "/." patterns that do not form part of these legitimate patterns.
+ * 
+ * The function iterates through the URL, searching for "/." sequences. When such
+ * a sequence is found, the function checks the character immediately following "/.".
+ * If the character is neither a slash (/) nor a dot (.), it indicates an attempt to
+ * access a hidden file or directory. In such cases, the function returns true, signaling
+ * that the URL should be sanitized or blocked to prevent unauthorized access.
+ * 
+ * If the sequence "/." is found at the end of the URL or is followed by a slash or another
+ * dot, it's considered part of a legitimate navigational pattern, and the search continues.
+ * The function returns false if no unauthorized attempt to access a hidden resource is detected.
+ */
+bool Request::isHiddenAccess(const std::string& url) 
+{
+    size_t pos = 0;
+    while ((pos = url.find("/.", pos)) != std::string::npos) {
+        if (pos + 2 == url.length() || (url[pos + 2] != '/' && url[pos + 2] != '.'))  // "/." at the end of the URL and Not followed by another dot or slash
+            return true; 
+        pos += 2; // Move past the "/." sequence to continue checking
+    }
+    return false; // No hidden file/directory access detected
+}
+
+/*
+utils to trim headers after Browser parsing
+*/
 std::string trim(const std::string& str) 
 {
     size_t first = str.find_first_not_of(" \t\n\r\f\v");

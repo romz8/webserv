@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/04 22:07:52 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 14:32:53 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,12 @@
 const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
 
 /*
-Initializes a Response object using the provided Header object.
+Initializes a Response object using the provided Request object.
 Sets the HTTP status, version, and the path to the asset to be returned 
 in the response body.
 TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
 */
-Response::Response(Header& head) : _status(head.getStatus()), _method(head.getMethod()), \
+Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
 	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _errPages(initErrMaps()), \
 	_mimeTypes(initMimeMaps()), _content_len("0"), _headerResponse(""), _body(""), \
 	_response(""), _assetPath(""), _extension(head.getExtension())
@@ -58,7 +58,7 @@ Response& Response::operator=(const Response& src)
 Constructs the full HTTP response message.
 Calls setBody to load the response body from the specified asset path.
 Sets the reason phrase based on the HTTP status code.
-Constructs the response headers, including Content-Length and Content-Type.
+Constructs the response Requests, including Content-Length and Content-Type.
 Assembles the full response string, ready to be sent back to the client.
 void Response::setReasonPhrase(int sCode)
 Sets the reason phrase (_statusMsg) based on the provided status code (sCode).
@@ -74,9 +74,28 @@ void Response::buildResponse()
 		this->excecuteGetResponse();
 	else
 		return ; //later on we will do the POST, DELETE and UNknown case
-	finalizeHeader();
-	//std::cout << BLUE "FINAL CHECK ON RESP : " << this->_response << RESET << std::endl;
+	finalizeResponse();
+	
+	std::cout << "Status-Line is : " << this->_statusLine << std::endl;
+	std::cout << "file path is : " << this->_assetPath << std::endl;
 }
+
+// void	Response::excecuteGetResponse()
+// {
+// 	setStatusLine(this->_status);
+// 	addHeaders();
+// 	if (this->_status == 301)
+// 		return;
+// 	try
+// 	{
+// 		setBody();
+// 	}
+// 	catch(const std::exception& e)
+// 	{
+// 		std::cerr << e.what() << '\n';
+		
+// 	}
+// }
 
 void	Response::excecuteGetResponse()
 {
@@ -116,7 +135,7 @@ std::string Response::getResponse() const
 	return(this->_response);
 }
 
-void	Response::addHeader()
+void	Response::addHeaders()
 {
 	if (this->_status == 301)
 		_headers["Location"] = this->_assetPath;
@@ -132,12 +151,12 @@ void 	Response::handle200()
 	std::ostringstream head;
 	
 	this->setBody();
-	addHeader();
+	addHeaders();
 }
 
 void 	Response::handle301()
 {
-	addHeader();
+	addHeaders();
 }
 
 void 	Response::handleError()
@@ -145,30 +164,29 @@ void 	Response::handleError()
 	std::ostringstream head;
 	
 	this->setBody();
-	addHeader();
+	addHeaders();
 }
 
-std::string Response::assembHeader()
+std::string Response::assembHeaders()
 {
-	std::ostringstream headerStream;
+	std::ostringstream RequestStream;
 	std::map<std::string, std::string>::const_iterator it = this->_headers.begin();
 	for (; it != _headers.end(); ++it)
 	{
-		std::cout << RED "HEADER IS : " << it->first << " : " << it->second << RESET << std::endl;
-		headerStream << it->first << ": " << it->second << "\r\n";
+		std::cout << RED "Request IS : " << it->first << " : " << it->second << RESET << std::endl;
+		RequestStream << it->first << ": " << it->second << "\r\n";
 	}
-	headerStream << "\r\n";
-	return (headerStream.str());
+	RequestStream << "\r\n";
+	return (RequestStream.str());
 }
 
-void Response::finalizeHeader()
+void Response::finalizeResponse()
 {
-	std::string headContent = assembHeader();
+	std::string headContent = assembHeaders();
 	this->_response = this->_statusLine + headContent;
 	this->_response.append(_body);
 	
 	std::cout << "Header is  : " << this->_headerResponse << std::endl;
-	// std::cout << "Body is  : " << this->_body << std::endl;
 }
 
 /*
@@ -180,26 +198,34 @@ status to 500.
 */
 void	Response::setBody()
 {
-	std::ifstream fBody(this->_assetPath, std::ios::binary | std::ios::ate);
-	if (!fBody.is_open())
+	try
 	{
-		this->_status = 500;
-		return ;
+		this->_body = readWebFile(this->_assetPath);    	
 	}
-	std::streampos fileSize = fBody.tellg(); 
-	fBody.seekg(0, std::ios::beg);
+	catch(std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		this->_status = 500;
+	}
+}
+
+std::string Response::readWebFile(const std::string& assetPath)
+{
+	std::ifstream file(assetPath, std::ios::binary | std::ios::ate);
+	if (!file.is_open())
+		throw std::runtime_error("Impossible opening the content to serve");
 	
-	 std::string buff(fileSize, '\0');
-	fBody.read(&buff[0], fileSize);
-	this->_body = buff;
+	std::streampos fileSize = file.tellg();
+	file.seekg(0, std::ios::beg);
 	
-	// Convert std::streampos to std::string
-    std::ostringstream oss;
+	std::vector<char> buffer(fileSize);
+	if (!file.read(&buffer[0], fileSize))
+		throw std::runtime_error("error reading content to serve");
+	file.close();
+	std::ostringstream oss;
     oss << fileSize;
     this->_content_len = oss.str();
-	
-	fBody.close();
-	return ;
+	return (std::string(buffer.begin(), buffer.end()));
 }
 
 // Initializing MIME Types

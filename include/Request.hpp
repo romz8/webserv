@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Header.hpp                                         :+:      :+:    :+:   */
+/*   Request.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/29 12:44:52 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/04 22:48:38 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 10:18:36 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HEADER_HPP
-# define HEADER_HPP
+#ifndef Request_HPP
+# define Request_HPP
 
 # include <string>
 # include <vector>
@@ -24,7 +24,7 @@
 # include <unistd.h>
 # include "colors.h"
 
-class Header
+class Request
 {
 private:
 	std::string		_method;
@@ -37,23 +37,24 @@ private:
 	int				_status;
 	std::string		_respBody;
 	//std::string		_root; //will be used to remap the path to the root of the server
-	std::map<std::string, std::string> _headers;
+	std::map<std::string, std::string> _Requests;
 
 public:
-	Header(const std::string& rawHeader);
-	~Header();
-	Header(const Header& src);
-	Header& operator=(const Header& src);
+	Request(const std::string& rawRequest);
+	~Request();
+	Request(const Request& src);
+	Request& operator=(const Request& src);
 
 	void		parseHeader(const std::string& head);
 	void		parseStartLine(const std::string& line);
 	void	parseHeaderLine(const std::string& line);
-	void		printHeader() const;
+	void		printRequest() const;
 	
 	bool		isValidMethod() const;
 	bool		isValidPath();
 	bool		isValidVersion() const;
-	std::string	sanitizeUrl(const std::string& urlSrc);
+	void		sanitizeUrl();
+	bool		isHiddenAccess(const std::string& url);
 	
 	void		setStatus();
 	void		buildRequest();

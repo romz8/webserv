@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/01 16:25:12 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/05 11:03:21 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,20 @@ Socket::Socket(const sockaddr_in& servAddr)
 	if (this->_socket_fd < 0)
 		throw std::runtime_error("Error creating socket");
 	this->_addr_size = sizeof(struct sockaddr_in);
+	
 	printSockAddrIn(servAddr);
+	
+	int enable = 1;
+	if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		std::string catchsys = strerror(errno);
+		throw std::runtime_error("Error setsockopt() on the socket" + catchsys);
+	}
 	if (bind(this->_socket_fd, (const struct sockaddr *) &servAddr, _addr_size) < 0)
-		throw std::runtime_error("Error binding the socket");
+	{
+		std::string catchsys = strerror(errno);
+		throw std::runtime_error("Error binding the socket" + catchsys);
+	}
 	if (listen(this->_socket_fd, MAX_Q) < 0)
 		throw std::runtime_error("Error listening socket stage");
 }
