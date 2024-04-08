@@ -47,6 +47,7 @@ public:
 
 	void		parseHeader(const std::string& head);
 	void		parseStartLine(const std::string& line);
+	bool	isValidRL(const std::string& line);
 	void	parseHeaderLine(const std::string& line);
 	void		printRequest() const;
 	

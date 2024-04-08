@@ -51,6 +51,7 @@ Request& Request::operator=(const Request& src)
 
 /*
 first we parse the start line (containing the method, path and version)
+after skipping any empty lines or lines that contain only whitespace or CRLF
 then we parse the Requests as key value pairs inside a map
 we implement a trimming for key, value for insrting in the map
 */
@@ -59,12 +60,11 @@ void Request::parseHeader(const std::string& head)
 	std::istringstream stream(head);
 	std::string line;
 	
-	if (std::getline(stream, line))
-		parseStartLine(line);
-	else
-		throw std::runtime_error("Empty startline");
+	while (std::getline(stream, line) && (line.empty() || line.find_first_not_of(" \t\n\r\f\v") == std::string::npos))
+		continue;
 	try
 	{
+		parseStartLine(line);
 		while (std::getline(stream, line) && !(line == "\r"))
 			parseHeaderLine(line);
 	}
@@ -77,8 +77,36 @@ void Request::parseHeader(const std::string& head)
 // Extracts the HTTP method, path, and version from the start line of the request.
 void Request::parseStartLine(const std::string& line)
 {
+	if (!isValidRL(line))
+		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	std::istringstream lineStream(line);
 	lineStream >> this->_method >> this->_path >> this->_version;
+}
+
+bool Request::isValidRL(const std::string& line)
+{
+	std::cout << "line is : " << line << std::endl;
+	const std::string SP  = " \t\r";
+	size_t spaces = 0;
+	size_t prevPos = -1;
+	
+	if (line.empty())
+		return (false);
+	
+	for (size_t i = 0; i < line.size(); i++)
+	{
+		if (SP.find(line[i]) != std::string::npos)
+		{
+			if (i == 0 || i == line.length() - 1 || (prevPos != -1 && prevPos + 1 == i))
+				return (false);
+			spaces++;
+			prevPos = i;
+
+		}
+	}
+	if (spaces != 2)
+		return (false);
+	return (true);
 }
 
 void	Request::parseHeaderLine(const std::string& line)
@@ -202,7 +230,8 @@ if neither -> raiseError by returning null, otherwise update Response State
 */
 bool Request::isValidPath() 
 {
-	std::string testpath = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; //to be cahnge for dynamic root and env var
+	std::string testpath = "/Users/romainjobert/Desktop/42/Webserv/proto/html";
+	//std::string testpath = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; //to be cahnge for dynamic root and env var
 	struct stat path_stat;
 	
 	if (this->_path.empty() || this->_path[0] != '/')
