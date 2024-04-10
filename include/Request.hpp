@@ -49,6 +49,8 @@ public:
 	void		parseStartLine(const std::string& line);
 	bool	isValidRL(const std::string& line);
 	void	parseHeaderLine(const std::string& line);
+	bool	endsWithCRLF(const std::string& str);
+	bool 	hasConsecutiveSpace(const std::string& str);
 	void		printRequest() const;
 	
 	bool		isValidMethod() const;

@@ -28,6 +28,7 @@ Request::Request(const std::string& rawRequest)
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
 	}
+	std::cout << BG_BLUE "Request built with : " << this->_status << RESET <<std::endl;
 }
 
 Request::~Request(){}
@@ -60,12 +61,12 @@ void Request::parseHeader(const std::string& head)
 	std::istringstream stream(head);
 	std::string line;
 	
-	while (std::getline(stream, line) && (line.empty() || line.find_first_not_of(" \t\n\r\f\v") == std::string::npos))
+	while (std::getline(stream, line, '\n') && (line.empty() || line.find_first_not_of(" \t\n\r\f\v") == std::string::npos))
 		continue;
 	try
 	{
 		parseStartLine(line);
-		while (std::getline(stream, line) && !(line == "\r"))
+		while (std::getline(stream, line,'\n') && !(line == "\r"))
 			parseHeaderLine(line);
 	}
 	catch(const std::exception& e)
@@ -77,37 +78,85 @@ void Request::parseHeader(const std::string& head)
 // Extracts the HTTP method, path, and version from the start line of the request.
 void Request::parseStartLine(const std::string& line)
 {
-	if (!isValidRL(line))
-		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	std::istringstream lineStream(line);
 	lineStream >> this->_method >> this->_path >> this->_version;
+	if (!isValidRL(line))
+		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 }
 
 bool Request::isValidRL(const std::string& line)
 {
+	
 	std::cout << "line is : " << line << std::endl;
-	const std::string SP  = " \t\r";
-	size_t spaces = 0;
-	size_t prevPos = -1;
+	const std::string SP  = " ";
+	size_t firstspace, secondspace;
 	
 	if (line.empty())
+	{
+		std::cout << "CASE 1\n";
 		return (false);
-	
+	}
+	if (!endsWithCRLF(line))
+        throw std::runtime_error("Request line does not end with CRLF");
+	if (line[0] == SP[0] || line[line.size() - 1] == SP[0])
+	{
+		std::cout << "CASE 1\n";
+		return (false);
+	}
+	firstspace = line.find(SP);
+	if (firstspace == std::string::npos || firstspace == 0 || line[firstspace + 1] == ' ')
+	{
+		std::cout << "CASE 3\n";
+		return (false);
+	}
+	secondspace = line.find(SP, firstspace + 1);
+	if (secondspace == std::string::npos || secondspace == firstspace + 1) 
+	{
+		std::cout << "CASE 4\n";
+		return (false);
+	}
+	size_t nextsp = line.find(SP, secondspace + 1);
+	if ((nextsp != std::string::npos) && (nextsp != line[line.size() - 3]))
+	{
+		std::cout << "CASE 5\n";
+		return (false);
+	}
 	for (size_t i = 0; i < line.size(); i++)
 	{
-		if (SP.find(line[i]) != std::string::npos)
+		size_t cr = line.find("\r");
+		if  (cr != std::string::npos)
 		{
-			if (i == 0 || i == line.length() - 1 || (prevPos != -1 && prevPos + 1 == i))
-				return (false);
-			spaces++;
-			prevPos = i;
-
+			if (cr != line.size() - 1 && line[cr + 1] != '\n')
+			{
+				std::cout << "CASE 6";
+				return (false);	
+			}
 		}
 	}
-	if (spaces != 2)
-		return (false);
 	return (true);
 }
+
+bool Request::endsWithCRLF(const std::string& str) 
+{
+    if (str.size() < 3) 
+	{
+        std::cout << "CASE END \n";
+		return false;
+    }
+	std::cout << "last of line is " << str[str.size() - 1] << " and " << str[str.size() - 2] << std::endl;
+    return (str[str.size() - 1] == '\r');
+}
+
+bool Request::hasConsecutiveSpace(const std::string& str)
+{
+	for (size_t i = 0; i < str.size(); ++i)
+    {
+        if (std::isspace(str[i]) && std::isspace(str[i + 1]))
+            return true;
+    }
+
+    return false;
+} 
 
 void	Request::parseHeaderLine(const std::string& line)
 {
@@ -163,7 +212,8 @@ void	Request::buildRequest()
 {
 	std::cout << BG_BLUE "INIT _PATH : " << this->_path << RESET << std::endl;
 	sanitizeUrl();
-	setStatus();
+	if (this->_status != 400)
+		setStatus();
 	parseExtension();
 	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }

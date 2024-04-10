@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/05 14:32:53 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/09 16:10:06 by romainjober      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
-const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
-
+//const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
+const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html";
 /*
 Initializes a Response object using the provided Request object.
 Sets the HTTP status, version, and the path to the asset to be returned 
@@ -25,6 +25,7 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 	_mimeTypes(initMimeMaps()), _content_len("0"), _headerResponse(""), _body(""), \
 	_response(""), _assetPath(""), _extension(head.getExtension())
 {
+	std::cout << BG_BLUE "RESP built with : " << this->_status << RESET <<std::endl;
 	if (_errPages.find(this->_status) != _errPages.end())
 		this->_assetPath = _root + _errPages[this->_status];
 	else if (head.getParsePath().empty())
