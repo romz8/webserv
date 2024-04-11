@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/05 12:33:08 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/11 21:20:19 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ Server::Server(const testConf& conf) : _serverName(conf.serverName), _servAddr(s
 {
 	this->_host = conf.host;
 	this->_port = conf.port;
-	this->_locs = conf.loc;
+	//this->_locs = conf.loc;
 	
 	printSockAddrIn(_servAddr);
 }
@@ -66,6 +66,9 @@ void	Server::run()
 	// }
 }
 
+/*
+TO CHANGE AS SUBJECT REQUIRES TO MAINTAIN OPEN -> close when recv reutnr 0 ?
+*/
 void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();

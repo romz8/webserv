@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/05 11:03:21 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/11 15:44:25 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,9 @@ Socket& Socket::operator=(const Socket& src)
 
 const int Socket::acceptConnection()
 {
-	std::cout << "********* Accepted new connection *********" << std::endl;
+	std::cout << "********* Accepted new connection *********  " << std::endl;
 	int io_socket = accept(this->_socket_fd, (struct sockaddr *) &this->_client_addr, (socklen_t *) &this->_addr_size);
+	std::cout << "ID SOCK IS " << io_socket << std::endl;
 	if (io_socket < 0)
 		throw std::runtime_error("Error accepting client request");
 	return (io_socket);

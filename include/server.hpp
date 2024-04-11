@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/05 12:32:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/11 21:20:39 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ typedef struct s_testConf
 	std::string	serverName;
 	std::string	root;
 	std::string	index;
-	Location	loc; 	//later on std::vector<Location> locs;
+	//Location	loc; 	//later on std::vector<Location> locs;
 } testConf;
 
 
@@ -35,7 +35,7 @@ private:
 	std::string	_host;
 	std::string	_port;
 	std::string	_serverName;
-	Location _locs; //will be a vector later-on if several routes inf conf file
+	//Location _locs; //will be a vector later-on if several routes inf conf file
 	const sockaddr_in _servAddr;
 	Socket _sock;
 	

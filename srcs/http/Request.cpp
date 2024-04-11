@@ -79,9 +79,10 @@ void Request::parseHeader(const std::string& head)
 void Request::parseStartLine(const std::string& line)
 {
 	std::istringstream lineStream(line);
-	lineStream >> this->_method >> this->_path >> this->_version;
+	
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
+	lineStream >> this->_method >> this->_path >> this->_version;
 }
 
 bool Request::isValidRL(const std::string& line)
@@ -280,13 +281,27 @@ if neither -> raiseError by returning null, otherwise update Response State
 */
 bool Request::isValidPath() 
 {
-	std::string testpath = "/Users/romainjobert/Desktop/42/Webserv/proto/html";
-	//std::string testpath = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; //to be cahnge for dynamic root and env var
-	struct stat path_stat;
+	std::vector<Location> loc;
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
 	
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
-	this->_parsePath = testpath.append(this->_path);
+	if (loc[0].match(this->_path))
+	{
+		this->_parsePath = loc[0].getPath() + this->_path.substr(loc[0].getPrefixSize());
+		std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+		std::cout << BG_YELLOW << "full path from loc is from root 1" << std::endl;
+	}
+	if (loc[1].match(this->_path))
+	{
+		this->_parsePath = loc[1].getPath() + this->_path.substr(loc[1].getPrefixSize());
+		std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+		std::cout << BG_YELLOW << "full path from loc is from root 2" << std::endl;
+	}
+	std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
+	
+	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
 	if(S_ISDIR(path_stat.st_mode))

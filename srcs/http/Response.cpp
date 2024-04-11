@@ -3,17 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/09 16:10:06 by romainjober      ###   ########.fr       */
+/*   Updated: 2024/04/11 20:11:15 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
-//const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
-const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html";
+const std::string Response::_root = "/html"; // Definition
+//const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html";
+
 /*
 Initializes a Response object using the provided Request object.
 Sets the HTTP status, version, and the path to the asset to be returned 
