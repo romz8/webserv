@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/03/29 13:27:17 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/12 12:56:57 by romainjober      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,9 @@
 
 int main(int argc, char *argv[])
 {
-	testConf test;
+	Config test;
 	test.host = "0"; test.port = "4242"; test.serverName = "testing Server";
-	test.root = "/"; test.index = "index.html";
+	test.root = "/"; test.index = "index.html"; test.hostName = "localhost:4242";
 	
 	try
 	{

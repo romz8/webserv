@@ -3,19 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/11 21:20:19 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/12 12:37:15 by romainjober      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(const testConf& conf) : _serverName(conf.serverName), _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
+Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
 {
 	this->_host = conf.host;
 	this->_port = conf.port;
+	this->_serverName = conf.serverName;
+	this->_hostName = conf.hostName;
 	//this->_locs = conf.loc;
 	
 	printSockAddrIn(_servAddr);
@@ -30,7 +32,7 @@ void	Server::_initServ()
 	_serverName.clear();
 }
 
-const sockaddr_in Server::setServAddr(const testConf& conf)
+const sockaddr_in Server::setServAddr(const Config& conf)
 {
 	sockaddr_in servAddr;
 	servAddr.sin_family = AF_INET; //how for ipv6 ?
@@ -73,7 +75,7 @@ void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();
 	std::string head = this->_sock.readData(io_fd);
-	Request Request(head);
+	Request Request(head, _hostName);
 	Request.buildRequest();
 	// if (Request.getMethod() == "POST")
 	// {

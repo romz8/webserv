@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/11 20:11:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/12 11:47:27 by romainjober      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
-const std::string Response::_root = "/html"; // Definition
-//const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html";
+//const std::string Response::_root = "/html"; // Definition
+const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html"; //has to be different root that locaiton to ensure correct path to error pages ??
 
 /*
 Initializes a Response object using the provided Request object.

@@ -28,6 +28,7 @@
 class Request
 {
 private:
+	std::string		_hostName;
 	std::string		_method;
 	std::string		_path;
 	std::string		_version;
@@ -41,7 +42,7 @@ private:
 	std::map<std::string, std::string> _Requests;
 
 public:
-	Request(const std::string& rawRequest);
+	Request(const std::string& rawRequest, const std::string& hostName);
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
@@ -52,6 +53,7 @@ public:
 	void	parseHeaderLine(const std::string& line);
 	bool	endsWithCRLF(const std::string& str);
 	bool 	hasConsecutiveSpace(const std::string& str);
+	bool	hasCorrectHost() const;
 	void		printRequest() const;
 	
 	bool		isValidMethod() const;

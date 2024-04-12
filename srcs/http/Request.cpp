@@ -16,7 +16,7 @@
 Request string. It sets up initial request parameters and catches any exceptions 
 during parsing, setting an error status if needed.
 */
-Request::Request(const std::string& rawRequest)
+Request::Request(const std::string& rawRequest, const std::string& hostName) : _hostName(hostName)
 {
 	initRequest();
 	try
@@ -68,6 +68,7 @@ void Request::parseHeader(const std::string& head)
 		parseStartLine(line);
 		while (std::getline(stream, line,'\n') && !(line == "\r"))
 			parseHeaderLine(line);
+		hasCorrectHost();
 	}
 	catch(const std::exception& e)
 	{
@@ -78,13 +79,19 @@ void Request::parseHeader(const std::string& head)
 // Extracts the HTTP method, path, and version from the start line of the request.
 void Request::parseStartLine(const std::string& line)
 {
+	std::cout << BG_RED "line is : " << line << RESET <<std::endl;
 	std::istringstream lineStream(line);
 	
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
 }
-
+/*
+Parses a single Request line, extracting the Request name and value, and storing them after trimming whitespace.
+Skip empty lines to prevent parsing errors, then Locate the delimiter between Request name and value.
+If no delimiter is found, the Request line is malformed. We then extract and trim the Request name and value, 
+storing them in the Request map. Finally Store the key-value pair in the Request map
+*/ 
 bool Request::isValidRL(const std::string& line)
 {
 	
@@ -171,12 +178,19 @@ void	Request::parseHeaderLine(const std::string& line)
 	this->_Requests[key] = value;
 }
 
-/*
-Parses a single Request line, extracting the Request name and value, and storing them after trimming whitespace.
-Skip empty lines to prevent parsing errors, then Locate the delimiter between Request name and value.
-If no delimiter is found, the Request line is malformed. We then extract and trim the Request name and value, 
-storing them in the Request map. Finally Store the key-value pair in the Request map
-*/ 
+bool	Request::hasCorrectHost() const
+{
+	std::map<std::string, std::string>::const_iterator it;
+	it = this->_Requests.find("Host");
+	if( it == this->_Requests.end())
+		throw std::runtime_error("Error parsing Request : no Host header");
+	if (it->second.empty())
+		throw std::runtime_error("Error parsing Request : empty Host header");
+	if (it->second != this->_hostName)
+		throw std::runtime_error("Error parsing Request : invalid Host header");
+	return(true);
+}
+
 void Request::printRequest() const
 {
 	std::cout << YELLOW "Method : " << this->_method << std::endl;
@@ -274,6 +288,16 @@ bool Request::isValidMethod() const
 	return (false);
 }
 
+bool Request::isValidVersion() const
+{
+	if (this->_version == "HTTP/1.1" || this->_version == "HTTP/1.0")
+		return (true);
+	return (false);
+}
+
+/*
+*************************** PATH VALIDATION ***************************
+*/
 /*
 verify that path is ok at first (not empty, starting with /)
 then check if the path is either a file or a dir (with stat())
@@ -282,8 +306,11 @@ if neither -> raiseError by returning null, otherwise update Response State
 bool Request::isValidPath() 
 {
 	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
+	loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
+	loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
+	//loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
+	//loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	//loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
 	
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
@@ -330,39 +357,6 @@ void Request::normalizeDirPath()
 }
 
 
-
-bool Request::isValidVersion() const
-{
-	if (this->_version == "HTTP/1.1")
-		return (true);
-	return (false);
-}
-
-std::string Request::getMethod() const
-{
-	return (this->_method);
-}
-
-std::string Request::getPath() const
-{
-	return (this->_path);
-}
-
-std::string Request::getParsePath() const
-{
-	return (this->_parsePath);
-}
-
-std::string Request::getExtension() const
-{
-	return (this->_extension);
-}
-
-int Request::getStatus() const
-{
-	return (this->_status);
-}
-
 // R_OK tests for readability only
 bool Request::hasReadAccess() const
 {	
@@ -385,6 +379,10 @@ void	Request::parseExtension()
 		this->_extension = ".html"; // chose the logic to hanle extension parsing error - especially for directories
 	std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
 }
+
+/*
+*********************** URI SANITIZATION ***********************
+*/
 /*
 Remove occurrences of '/../' to prevent directory traversal -> BRowser do it automiatcally, test with POSTMAN
 Change '//' to '/' to avoid a url to go up the env to filesys
@@ -457,4 +455,33 @@ std::string trim(const std::string& str)
         return "";
     size_t last = str.find_last_not_of(" \t\n\r\f\v");
     return str.substr(first, (last - first + 1));
+}
+
+/*
+*********************** GETTERS ***********************
+*/
+
+std::string Request::getMethod() const
+{
+	return (this->_method);
+}
+
+std::string Request::getPath() const
+{
+	return (this->_path);
+}
+
+std::string Request::getParsePath() const
+{
+	return (this->_parsePath);
+}
+
+std::string Request::getExtension() const
+{
+	return (this->_extension);
+}
+
+int Request::getStatus() const
+{
+	return (this->_status);
 }

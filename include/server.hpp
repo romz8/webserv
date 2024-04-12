@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/11 21:20:39 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/12 12:27:57 by romainjober      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,16 @@
 # include "colors.h"
 
 
-typedef struct s_testConf
+typedef struct Config
 {
 	std::string	host;
 	std::string	port; //need to atoi : careful on overflow in conf file parsing
 	std::string	serverName;
 	std::string	root;
 	std::string	index;
+	std::string	hostName;
 	//Location	loc; 	//later on std::vector<Location> locs;
-} testConf;
+} Config;
 
 
 class Server
@@ -35,6 +36,7 @@ private:
 	std::string	_host;
 	std::string	_port;
 	std::string	_serverName;
+	std::string	_hostName;
 	//Location _locs; //will be a vector later-on if several routes inf conf file
 	const sockaddr_in _servAddr;
 	Socket _sock;
@@ -45,7 +47,7 @@ private:
 	Socket socketFactory(const sockaddr_in& addr);
 
 public:
-	Server(const testConf& conf);
+	Server(const Config& conf);
 	~Server();
 	
 	void 	_initServ();
@@ -54,7 +56,7 @@ public:
 	void	run();
 	void	handleConnection();
 	
-	static const sockaddr_in setServAddr(const testConf& conf);
+	static const sockaddr_in setServAddr(const Config& conf);
 };
 
 #endif
