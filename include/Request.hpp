@@ -37,12 +37,13 @@ private:
 	std::string		_parsePath;
 	std::string		_extension;
 	int				_status;
+	int				_maxBodySize;
 	std::string		_respBody;
 	//std::string		_root; //will be used to remap the path to the root of the server
-	std::map<std::string, std::string> _Requests;
+	std::map<std::string, std::string> _headers;
 
 public:
-	Request(const std::string& rawRequest, const std::string& hostName);
+	Request(const std::string& rawRequest, const std::string& hostName, int maxBody);
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
@@ -55,6 +56,8 @@ public:
 	bool 	hasConsecutiveSpace(const std::string& str);
 	bool	hasCorrectHost() const;
 	void		printRequest() const;
+	void		parseBody();
+	void		handlePostRequest();
 	
 	bool		isValidMethod() const;
 	bool		isValidPath();

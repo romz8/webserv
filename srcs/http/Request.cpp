@@ -16,7 +16,7 @@
 Request string. It sets up initial request parameters and catches any exceptions 
 during parsing, setting an error status if needed.
 */
-Request::Request(const std::string& rawRequest, const std::string& hostName) : _hostName(hostName)
+Request::Request(const std::string& rawRequest, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
 {
 	initRequest();
 	try
@@ -45,11 +45,16 @@ Request& Request::operator=(const Request& src)
 		this->_method = src._method;
 		this->_path = src._path;
 		this->_version = src._version;
-		this->_Requests = src._Requests;
+		this->_headers = src._headers;
 	}
 	return (*this);
 }
 
+/*
+*********************************************************************
+**************** PARSING OF THE REQUEST HEADER ***********************
+*********************************************************************
+*/
 /*
 first we parse the start line (containing the method, path and version)
 after skipping any empty lines or lines that contain only whitespace or CRLF
@@ -59,6 +64,7 @@ we implement a trimming for key, value for insrting in the map
 void Request::parseHeader(const std::string& head)
 {
 	std::istringstream stream(head);
+	bool	headersFinished = false;
 	std::string line;
 	
 	while (std::getline(stream, line, '\n') && (line.empty() || line.find_first_not_of(" \t\n\r\f\v") == std::string::npos))
@@ -66,9 +72,25 @@ void Request::parseHeader(const std::string& head)
 	try
 	{
 		parseStartLine(line);
-		while (std::getline(stream, line,'\n') && !(line == "\r"))
+		while (std::getline(stream, line,'\n'))
+		{
+			if (!line.empty() && line[line.size() - 1] == '\r')
+				line.erase(line.size() - 1);
+			if (line.empty())
+			{
+				headersFinished = true;
+				break;
+			}
 			parseHeaderLine(line);
+		}
 		hasCorrectHost();
+		if (this->_method == "POST" && headersFinished == true)
+		{
+			std::string request = stream.str(); // TO CHANGE FOR PARSEBODY DEPENDING ON CONTENT-LENGTH or CHUNKED
+			request.find("\r\n\r\n");
+			std::string body = request.substr(request.find("\r\n\r\n") + 4, atoi(_headers["Content-Length"].c_str()));
+			_headers["BODY"] = body;
+		}
 	}
 	catch(const std::exception& e)
 	{
@@ -175,14 +197,14 @@ void	Request::parseHeaderLine(const std::string& line)
 		throw std::runtime_error("Error parsing Request : no colon (:) at line " + line);
 	std::string key = trim(line.substr(0, pos));
 	std::string value = trim(line.substr(pos + 1));
-	this->_Requests[key] = value;
+	this->_headers[key] = value;
 }
 
 bool	Request::hasCorrectHost() const
 {
 	std::map<std::string, std::string>::const_iterator it;
-	it = this->_Requests.find("Host");
-	if( it == this->_Requests.end())
+	it = this->_headers.find("Host");
+	if( it == this->_headers.end())
 		throw std::runtime_error("Error parsing Request : no Host header");
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
@@ -193,7 +215,7 @@ bool	Request::hasCorrectHost() const
 
 void Request::printRequest() const
 {
-	std::cout << YELLOW "Method : " << this->_method << std::endl;
+	std::cout << BG_YELLOW "Method : " << this->_method << std::endl;
 	std::cout << "status is : " << this->_status << std::endl;
 	std::cout << "Path : " << this->_path << std::endl;
 	std::cout << "Version : " << this->_version << std::endl;
@@ -201,9 +223,9 @@ void Request::printRequest() const
 	std::cout << "is Dir  : " << this->_isDirectory << std::endl;
 	std::cout << "is DirNorm  : " << this->_isDirNorm << std::endl;
 	std::cout << "Requests : " << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = this->_Requests.begin(); it != this->_Requests.end(); ++it)
+	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); ++it)
 	{
-		std::cout << it->first << " :" << it->second << std::endl;
+		std::cout << it->first << " : " << it->second << std::endl;
 	}
 	std::cout << RESET << std::endl;
 }
@@ -220,15 +242,23 @@ void	Request::initRequest()
 	this->_respBody.clear();
 	this->_extension.clear();
 }
+
 /*
-Core of the machin after Request parsing
+*********************************************************************
+********************* BUILD THE REQUEST **************************
+*********************************************************************
+*/
+/*
+Core of the engine after Request parsing
 */
 void	Request::buildRequest()
 {
 	std::cout << BG_BLUE "INIT _PATH : " << this->_path << RESET << std::endl;
 	sanitizeUrl();
-	if (this->_status != 400)
+	if (this->_status != 400) //later on add the location check and GET / POST / DELETE switch
 		setStatus();
+	if (this->_method == "POST") //later on add the location check
+		this->handlePostRequest();
 	parseExtension();
 	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }
@@ -294,10 +324,69 @@ bool Request::isValidVersion() const
 		return (true);
 	return (false);
 }
-
 /*
-*************************** PATH VALIDATION ***************************
+*********************************************************************
+*************************** POST Request Logic ***********************
+*********************************************************************
 */
+
+void	Request::handlePostRequest()
+{
+	std::vector<Location> loc;
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	
+	std::map<std::string, std::string> data;
+	std::string body = this->_headers["BODY"];
+	if (body.empty()) // TO VERIFY THAT THIS SHOULD BE A 400
+	{
+		this->_status = 400;
+		return ;
+	}
+	if (body.size() > this->_maxBodySize)
+	{
+		this->_status = 413;
+		return ;
+	}
+	if (this->_headers["Content-Type"] == "application/x-www-form-urlencoded")
+	{
+		std::string key;
+		std::string value;
+		std::istringstream stream(body);
+		while (std::getline(stream, body, '&'))
+		{
+			size_t pos = body.find("=");
+			if (pos != std::string::npos)
+			{
+				key = body.substr(0, pos);
+				value = body.substr(pos + 1);
+				data[key] = value;
+			}
+		}
+		std::ofstream file(loc[0].getPath() + this->_parsePath + "post_data.txt"); //very testy ..update with Location and actual logic
+		if (!file.is_open())
+		{
+			this->_status = 500;
+			std::cerr << "Error opening file in POST for FORM" << std::endl;
+			return ;
+		}
+		std::map<std::string, std::string>::const_iterator it;
+		for(it = data.begin(); it != data.end(); ++it)
+		{
+			file << it->first << " : " << it->second << std::endl;
+		}
+	}
+}
+
+// void	Request::parseBody()
+// {
+	
+// }
+/*
+*********************************************************************
+*************************** PATH VALIDATION ***************************
+*********************************************************************
+*/
+
 /*
 verify that path is ok at first (not empty, starting with /)
 then check if the path is either a file or a dir (with stat())
@@ -306,11 +395,10 @@ if neither -> raiseError by returning null, otherwise update Response State
 bool Request::isValidPath() 
 {
 	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
-	loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
-	//loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
-	//loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	//loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
+	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
+	//loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
 	
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
@@ -381,8 +469,11 @@ void	Request::parseExtension()
 }
 
 /*
+********************************************************************
 *********************** URI SANITIZATION ***********************
+*********************************************************************
 */
+
 /*
 Remove occurrences of '/../' to prevent directory traversal -> BRowser do it automiatcally, test with POSTMAN
 Change '//' to '/' to avoid a url to go up the env to filesys
@@ -458,7 +549,9 @@ std::string trim(const std::string& str)
 }
 
 /*
+*********************************************************************
 *********************** GETTERS ***********************
+*********************************************************************
 */
 
 std::string Request::getMethod() const

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/12 12:37:15 by romainjober      ###   ########.fr       */
+/*   Updated: 2024/04/15 18:57:32 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();
 	std::string head = this->_sock.readData(io_fd);
-	Request Request(head, _hostName);
+	Request Request(head, _hostName, 1000000); //to replace with config max body size
 	Request.buildRequest();
 	// if (Request.getMethod() == "POST")
 	// {

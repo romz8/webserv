@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/12 11:47:27 by romainjober      ###   ########.fr       */
+/*   Updated: 2024/04/15 19:11:34 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
-//const std::string Response::_root = "/html"; // Definition
-const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html"; //has to be different root that locaiton to ensure correct path to error pages ??
+const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
+//const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html"; //has to be different root that locaiton to ensure correct path to error pages ??
 
 /*
 Initializes a Response object using the provided Request object.
@@ -72,8 +72,10 @@ Returns the full HTTP response message as a string.
 //MISSING TIME AND SERVER_NAME
 void Response::buildResponse()
 {
-	if(this->_method == "GET")
+	if(this->_method == "GET" || this->_method == "POST") // to improve the logic later on
 		this->excecuteGetResponse();
+	// else if (this->_method == "POST")
+	// 	this->excecutePostResponse();
 	else
 		return ; //later on we will do the POST, DELETE and UNknown case
 	finalizeResponse();
