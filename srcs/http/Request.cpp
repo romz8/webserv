@@ -28,7 +28,8 @@ Request::Request(const std::string& rawRequest, const std::string& hostName, int
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
 	}
-	std::cout << BG_BLUE "Request built with : " << this->_status << RESET <<std::endl;
+	if (this->_method == "POST")
+		parseBody(rawRequest);
 }
 
 Request::~Request(){}
@@ -83,14 +84,9 @@ void Request::parseHeader(const std::string& head)
 			}
 			parseHeaderLine(line);
 		}
+		if (!headersFinished)
+			throw std::runtime_error("Headers not properly terminated (CRLFCRLF)");
 		hasCorrectHost();
-		if (this->_method == "POST" && headersFinished == true)
-		{
-			std::string request = stream.str(); // TO CHANGE FOR PARSEBODY DEPENDING ON CONTENT-LENGTH or CHUNKED
-			request.find("\r\n\r\n");
-			std::string body = request.substr(request.find("\r\n\r\n") + 4, atoi(_headers["Content-Length"].c_str()));
-			_headers["BODY"] = body;
-		}
 	}
 	catch(const std::exception& e)
 	{
@@ -130,7 +126,7 @@ bool Request::isValidRL(const std::string& line)
         throw std::runtime_error("Request line does not end with CRLF");
 	if (line[0] == SP[0] || line[line.size() - 1] == SP[0])
 	{
-		std::cout << "CASE 1\n";
+		std::cout << "CASE 2\n";
 		return (false);
 	}
 	firstspace = line.find(SP);
@@ -333,20 +329,11 @@ bool Request::isValidVersion() const
 void	Request::handlePostRequest()
 {
 	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	//loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
 	
 	std::map<std::string, std::string> data;
 	std::string body = this->_headers["BODY"];
-	if (body.empty()) // TO VERIFY THAT THIS SHOULD BE A 400
-	{
-		this->_status = 400;
-		return ;
-	}
-	if (body.size() > this->_maxBodySize)
-	{
-		this->_status = 413;
-		return ;
-	}
 	if (this->_headers["Content-Type"] == "application/x-www-form-urlencoded")
 	{
 		std::string key;
@@ -362,7 +349,7 @@ void	Request::handlePostRequest()
 				data[key] = value;
 			}
 		}
-		std::ofstream file(loc[0].getPath() + this->_parsePath + "post_data.txt"); //very testy ..update with Location and actual logic
+		std::ofstream file(loc[0].getPath() + this->_parsePath + "post_data.txt", std::ios::app); //very testy ..update with Location and actual logic
 		if (!file.is_open())
 		{
 			this->_status = 500;
@@ -374,13 +361,51 @@ void	Request::handlePostRequest()
 		{
 			file << it->first << " : " << it->second << std::endl;
 		}
+		file.close();
 	}
 }
 
-// void	Request::parseBody()
-// {
+void	Request::parseBody(const std::string& input)
+{
+	std::string request;
+	try
+	{
+		if (_headers["Transfer-Encoding"] == "chunked")
+			parseChunkBody(input);
+		else
+			parseContentLenBody(input);
+	}
+	catch(const std::exception& e)
+	{
+		throw;
+	}
 	
-// }
+}
+
+void	Request::parseChunkBody(const std::string& input)
+{
+	std::cout << "CHUNKED BODY" + input << std::endl;
+}
+
+void	Request::parseContentLenBody(const std::string& request)
+{
+	int	len = atoi(_headers["Content-Length"].c_str());
+	if (len < 0)
+	{
+		this->_status = 400;
+		return;
+	}
+
+	std::string body = request.substr(request.find("\r\n\r\n") + 4, len);
+	if (body.empty() && len > 0)
+		this->_status = 400;
+	else if (body.size() > this->_maxBodySize)
+		this->_status = 413;
+	else if (body.size() < atoi(_headers["Content-Length"].c_str()))
+		this->_status = 400;
+	else
+		_headers["BODY"] = body;
+}
 /*
 *********************************************************************
 *************************** PATH VALIDATION ***************************
@@ -395,10 +420,10 @@ if neither -> raiseError by returning null, otherwise update Response State
 bool Request::isValidPath() 
 {
 	std::vector<Location> loc;
-	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
-	//loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
+	loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
+	loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
+	//loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	//loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
 	
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);

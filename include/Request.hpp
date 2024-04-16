@@ -56,7 +56,9 @@ public:
 	bool 	hasConsecutiveSpace(const std::string& str);
 	bool	hasCorrectHost() const;
 	void		printRequest() const;
-	void		parseBody();
+	void		parseBody(const std::string& header);
+	void		parseChunkBody(const std::string& input);
+	void		parseContentLenBody(const std::string& input);
 	void		handlePostRequest();
 	
 	bool		isValidMethod() const;
