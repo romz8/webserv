@@ -59,6 +59,7 @@ public:
 	void		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
 	void		parseContentLenBody(const std::string& input);
+	void		parseMultiFormat(const std::string& input, const std::string& boundary);
 	void		handlePostRequest();
 	
 	bool		isValidMethod() const;
@@ -76,7 +77,6 @@ public:
 	std::string	getExtension() const;
 	bool		isDirectory() const;
 	
-	void		parseExtension();
 	bool		hasReadAccess() const;
 	bool		typeCheck();
 	void		normalizeDirPath();
@@ -84,6 +84,9 @@ public:
 	
 };
 
+/*utils*/
+std::string parseExtension(const std::string& path, const std::string& def);
 std::string trim(const std::string& str);
+std::string extractBoundary(const std::string& contentType);
 
 #endif

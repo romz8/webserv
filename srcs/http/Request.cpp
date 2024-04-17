@@ -255,7 +255,11 @@ void	Request::buildRequest()
 		setStatus();
 	if (this->_method == "POST") //later on add the location check
 		this->handlePostRequest();
-	parseExtension();
+	if (this->_status != 200)
+		this->_extension = ".html";
+	else
+		this->_extension = parseExtension(this->_parsePath, ".html");
+	std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
 	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }
 
@@ -329,8 +333,8 @@ bool Request::isValidVersion() const
 void	Request::handlePostRequest()
 {
 	std::vector<Location> loc;
-	//loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
 	
 	std::map<std::string, std::string> data;
 	std::string body = this->_headers["BODY"];
@@ -363,23 +367,20 @@ void	Request::handlePostRequest()
 		}
 		file.close();
 	}
+	if (this->_headers["Content-Type"] == "multipart/form-data")
+	{
+		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
+		parseMultiFormat(this->_headers["BODY"], boundary);
+	}
 }
 
 void	Request::parseBody(const std::string& input)
 {
 	std::string request;
-	try
-	{
-		if (_headers["Transfer-Encoding"] == "chunked")
-			parseChunkBody(input);
-		else
-			parseContentLenBody(input);
-	}
-	catch(const std::exception& e)
-	{
-		throw;
-	}
-	
+	if (_headers["Transfer-Encoding"] == "chunked")
+		parseChunkBody(input);
+	else
+		parseContentLenBody(input);
 }
 
 void	Request::parseChunkBody(const std::string& input)
@@ -395,8 +396,8 @@ void	Request::parseContentLenBody(const std::string& request)
 		this->_status = 400;
 		return;
 	}
-
 	std::string body = request.substr(request.find("\r\n\r\n") + 4, len);
+	std::cout << BG_RED << "body is :" << body << RESET << std::endl;
 	if (body.empty() && len > 0)
 		this->_status = 400;
 	else if (body.size() > this->_maxBodySize)
@@ -405,6 +406,43 @@ void	Request::parseContentLenBody(const std::string& request)
 		this->_status = 400;
 	else
 		_headers["BODY"] = body;
+}
+
+
+void	Request::parseMultiFormat(const std::string& input, const std::string& boundary)
+{
+	std::string delimiter = "--" + boundary;
+	std::string	endDelimiter = delimiter + "--";
+	std::string fname;
+	size_t pos = 0, start, end;
+
+	start += delimiter.length() + 2; //for CRLF
+	end = input.find(endDelimiter, start) - 2; //for CRLF (to not select)
+
+	std::string part = input.substr(start, end - start);
+	size_t headerpos= part.find("\r\n\r\n");
+	
+	std::string headers = part.substr(0, headerpos);
+	std::string body = part.substr(headerpos + 4);
+
+	std::istringstream headStream(headers);
+	std::string line;
+	while(std::getline(headStream, line) && !line.empty())
+	{
+		if (line.find("Content-Disposition:"))
+		{
+			size_t npos = line.find("filename=");
+			if (npos == std::string::npos)
+				fname = "unknown.txt";
+			else
+				fname = line.substr(npos + 9);
+		}
+	}
+	std::vector<Location> loc;
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	std::ofstream file(loc[0].getPath() + "/upload/" + fname); //very testy ..update with Location and actual logic
+	file << body;
+	file.close();
 }
 /*
 *********************************************************************
@@ -420,10 +458,10 @@ if neither -> raiseError by returning null, otherwise update Response State
 bool Request::isValidPath() 
 {
 	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
-	loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
-	//loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	//loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
+	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
+	//loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
 	
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
@@ -475,22 +513,7 @@ bool Request::hasReadAccess() const
 {	
     if (access(this->_parsePath.c_str(), R_OK) == 0)
 		return(true);
-	return (false);
-}
-
-void	Request::parseExtension()
-{
-	if (this->_parsePath.empty() || this->_status != 200)
-	{
-		this->_extension = ".html";
-		return ;
-	}
-	size_t pos = _parsePath.find_last_of('.');
-	if (pos != std::string::npos)
-    	this->_extension = _parsePath.substr(pos);
-	else
-		this->_extension = ".html"; // chose the logic to hanle extension parsing error - especially for directories
-	std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
+	return (false); 
 }
 
 /*
@@ -562,18 +585,6 @@ bool Request::isHiddenAccess(const std::string& url)
 }
 
 /*
-utils to trim headers after Browser parsing
-*/
-std::string trim(const std::string& str) 
-{
-    size_t first = str.find_first_not_of(" \t\n\r\f\v");
-    if (first == std::string::npos)
-        return "";
-    size_t last = str.find_last_not_of(" \t\n\r\f\v");
-    return str.substr(first, (last - first + 1));
-}
-
-/*
 *********************************************************************
 *********************** GETTERS ***********************
 *********************************************************************
@@ -602,4 +613,48 @@ std::string Request::getExtension() const
 int Request::getStatus() const
 {
 	return (this->_status);
+}
+
+/************************** UTILS **********************************/
+
+/*
+This function looks for the "boundary=" substring within the Content-Type header and
+ returns the boundary value. If the boundary is quoted, it 
+ properly extracts the quoted string.
+ */
+std::string extractBoundary(const std::string& contentType) {
+    std::string boundaryPrefix = "boundary=";
+    size_t pos = contentType.find(boundaryPrefix);
+    if (pos != std::string::npos) {
+        pos += boundaryPrefix.length();
+        if (contentType[pos] == '\"') {
+            pos++;
+            return contentType.substr(pos, contentType.find('\"', pos) - pos);
+        }
+        return contentType.substr(pos);
+    }
+    return "";
+}
+
+/*
+utils to trim headers after Browser parsing
+*/
+std::string trim(const std::string& str) 
+{
+    size_t first = str.find_first_not_of(" \t\n\r\f\v");
+    if (first == std::string::npos)
+        return "";
+    size_t last = str.find_last_not_of(" \t\n\r\f\v");
+    return str.substr(first, (last - first + 1));
+}
+
+std::string parseExtension(const std::string& path, const std::string& def)
+{
+	if (path.empty())
+		return(def);
+	size_t pos = path.find_last_of('.');
+	if (pos != std::string::npos)
+    	return(path.substr(pos));
+	else
+		return(def);
 }
