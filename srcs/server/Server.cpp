@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/15 18:57:32 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/18 19:45:10 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,15 +74,21 @@ TO CHANGE AS SUBJECT REQUIRES TO MAINTAIN OPEN -> close when recv reutnr 0 ?
 void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();
-	std::string head = this->_sock.readData(io_fd);
+	std::string rawhead = this->_sock.readHeader(io_fd);
+	//std::string head = this->_sock.readData(io_fd);
+	std::string head = rawhead.substr(0, rawhead.find("\r\n\r\n") + 4);
+	std::cout << "HEAD IS : " << head << std::endl;
+	std::cout << "rawHead: " << rawhead << std::endl;
 	Request Request(head, _hostName, 1000000); //to replace with config max body size
+	Request.printHeader();
+	if (Request.hasBody())
+	{
+		std::cout << BG_GREEN << "Request has body" << std::endl;
+		std::string body = this->_sock.readBody(io_fd, Request.getHeader(), rawhead);
+		Request.setBody(body);
+		std::cout << "BODY SET and is :"<< Request.getBody() << RESET << std::endl;
+	}
 	Request.buildRequest();
-	// if (Request.getMethod() == "POST")
-	// {
-	// 		std::string body = this->_sock.readData(io_fd);
-	// 		std::cout << "Bodyreceived : " << body << std::endl;
-	// }
-	// std::string response = this->getResponse();
 	Request.printRequest();
 	Response resp(Request); // later on build with location routing Response response(Request, _locs);
 	resp.buildResponse();

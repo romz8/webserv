@@ -38,7 +38,7 @@ private:
 	std::string		_extension;
 	int				_status;
 	int				_maxBodySize;
-	std::string		_respBody;
+	std::string		_body;
 	//std::string		_root; //will be used to remap the path to the root of the server
 	std::map<std::string, std::string> _headers;
 
@@ -52,10 +52,10 @@ public:
 	void		parseStartLine(const std::string& line);
 	bool	isValidRL(const std::string& line);
 	void	parseHeaderLine(const std::string& line);
-	bool	endsWithCRLF(const std::string& str);
-	bool 	hasConsecutiveSpace(const std::string& str);
 	bool	hasCorrectHost() const;
+	bool	hasBody() const;
 	void		printRequest() const;
+	void		printHeader() const;
 	void		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
 	void		parseContentLenBody(const std::string& input);
@@ -75,6 +75,9 @@ public:
 	int			getStatus() const;
 	std::string getParsePath() const;
 	std::string	getExtension() const;
+	std::map<std::string, std::string> getHeader() const;
+	std::string getBody() const;
+	void		setBody(const std::string& body);
 	bool		isDirectory() const;
 	
 	bool		hasReadAccess() const;
@@ -88,5 +91,7 @@ public:
 std::string parseExtension(const std::string& path, const std::string& def);
 std::string trim(const std::string& str);
 std::string extractBoundary(const std::string& contentType);
+bool	endsWithCRLF(const std::string& str);
+bool 	hasConsecutiveSpace(const std::string& str);
 
 #endif

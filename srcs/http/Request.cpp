@@ -27,9 +27,8 @@ Request::Request(const std::string& rawRequest, const std::string& hostName, int
 	{
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
+		std::cout << BG_GREEN << "ERROR IS Header" << RESET << std::endl;
 	}
-	if (this->_method == "POST")
-		parseBody(rawRequest);
 }
 
 Request::~Request(){}
@@ -112,77 +111,36 @@ storing them in the Request map. Finally Store the key-value pair in the Request
 */ 
 bool Request::isValidRL(const std::string& line)
 {
-	
-	std::cout << "line is : " << line << std::endl;
 	const std::string SP  = " ";
 	size_t firstspace, secondspace;
 	
 	if (line.empty())
-	{
-		std::cout << "CASE 1\n";
 		return (false);
-	}
 	if (!endsWithCRLF(line))
         throw std::runtime_error("Request line does not end with CRLF");
 	if (line[0] == SP[0] || line[line.size() - 1] == SP[0])
-	{
-		std::cout << "CASE 2\n";
 		return (false);
-	}
 	firstspace = line.find(SP);
 	if (firstspace == std::string::npos || firstspace == 0 || line[firstspace + 1] == ' ')
-	{
-		std::cout << "CASE 3\n";
 		return (false);
-	}
 	secondspace = line.find(SP, firstspace + 1);
 	if (secondspace == std::string::npos || secondspace == firstspace + 1) 
-	{
-		std::cout << "CASE 4\n";
-		return (false);
-	}
+		return(false);
 	size_t nextsp = line.find(SP, secondspace + 1);
 	if ((nextsp != std::string::npos) && (nextsp != line[line.size() - 3]))
-	{
-		std::cout << "CASE 5\n";
 		return (false);
-	}
 	for (size_t i = 0; i < line.size(); i++)
 	{
 		size_t cr = line.find("\r");
 		if  (cr != std::string::npos)
 		{
 			if (cr != line.size() - 1 && line[cr + 1] != '\n')
-			{
-				std::cout << "CASE 6";
 				return (false);	
-			}
 		}
 	}
 	return (true);
 }
 
-bool Request::endsWithCRLF(const std::string& str) 
-{
-    if (str.size() < 3) 
-	{
-        std::cout << "CASE END \n";
-		return false;
-    }
-	std::cout << "last of line is " << str[str.size() - 1] << " and " << str[str.size() - 2] << std::endl;
-    return (str[str.size() - 1] == '\r');
-}
-
-bool Request::hasConsecutiveSpace(const std::string& str)
-{
-	for (size_t i = 0; i < str.size(); ++i)
-    {
-        if (std::isspace(str[i]) && std::isspace(str[i + 1]))
-            return true;
-    }
-
-    return false;
-} 
 
 void	Request::parseHeaderLine(const std::string& line)
 {
@@ -209,23 +167,6 @@ bool	Request::hasCorrectHost() const
 	return(true);
 }
 
-void Request::printRequest() const
-{
-	std::cout << BG_YELLOW "Method : " << this->_method << std::endl;
-	std::cout << "status is : " << this->_status << std::endl;
-	std::cout << "Path : " << this->_path << std::endl;
-	std::cout << "Version : " << this->_version << std::endl;
-	std::cout << "Extension is  : " << this->_extension << std::endl;
-	std::cout << "is Dir  : " << this->_isDirectory << std::endl;
-	std::cout << "is DirNorm  : " << this->_isDirNorm << std::endl;
-	std::cout << "Requests : " << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); ++it)
-	{
-		std::cout << it->first << " : " << it->second << std::endl;
-	}
-	std::cout << RESET << std::endl;
-}
-
 void	Request::initRequest()
 {
 	this->_isDirectory = false;
@@ -235,7 +176,7 @@ void	Request::initRequest()
 	this->_path.clear();
 	this->_version.clear();
 	this->_parsePath.clear();
-	this->_respBody.clear();
+	this->_body.clear();
 	this->_extension.clear();
 }
 
@@ -337,9 +278,14 @@ void	Request::handlePostRequest()
 	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
 	
 	std::map<std::string, std::string> data;
-	std::string body = this->_headers["BODY"];
+	std::string body = this->_body;
+	if (_headers["Transfer-Encoding"] == "chunked")
+		parseChunkBody(body);
+	else
+		parseContentLenBody(body);
 	if (this->_headers["Content-Type"] == "application/x-www-form-urlencoded")
 	{
+		std::cout << BG_GREEN "ENTTER APP URL ENCODED : " RESET << std::endl;
 		std::string key;
 		std::string value;
 		std::istringstream stream(body);
@@ -360,6 +306,7 @@ void	Request::handlePostRequest()
 			std::cerr << "Error opening file in POST for FORM" << std::endl;
 			return ;
 		}
+		std::cout << BG_GREEN << "OPENED FILE : " << RESET << std::endl;
 		std::map<std::string, std::string>::const_iterator it;
 		for(it = data.begin(); it != data.end(); ++it)
 		{
@@ -370,8 +317,9 @@ void	Request::handlePostRequest()
 	if (this->_headers["Content-Type"] == "multipart/form-data")
 	{
 		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
-		parseMultiFormat(this->_headers["BODY"], boundary);
+		parseMultiFormat(this->_body, boundary);
 	}
+	std::cout << BG_GREEN << "STATUS AT POST EXIT IS : " << this->_status << RESET << std::endl;
 }
 
 void	Request::parseBody(const std::string& input)
@@ -388,24 +336,62 @@ void	Request::parseChunkBody(const std::string& input)
 	std::cout << "CHUNKED BODY" + input << std::endl;
 }
 
+// void	Request::parseContentLenBody(const std::string& request)
+// {
+// 	int	len = atoi(_headers["Content-Length"].c_str());
+// 	if (len < 0)
+// 	{
+// 		this->_status = 400;
+// 		std::cout << BG_GREEN << "CONTENT LEN 0" << RESET << std::endl;
+// 		return;
+// 	}
+// 	std::cout << BG_GREEN << "full request is " << request << RESET << std::endl;
+// 	std::string body = request.substr(request.find("\r\n\r\n") + 4, len);
+// 	std::cout << BG_RED << "body is :" << body << RESET << std::endl;
+// 	if (body.empty() && len > 0)
+// 	{
+// 		this->_status = 400;
+// 		std::cout << BG_GREEN << "ERROR IS empty body" << RESET << std::endl;
+// 	}
+// 	else if (body.size() > this->_maxBodySize)
+// 		this->_status = 413;
+// 	else if (body.size() < atoi(_headers["Content-Length"].c_str()))
+// 	{
+// 		this->_status = 400;
+// 		std::cout << BG_GREEN << "ERROR IS  body < LEN"; 
+// 		std::cout << "body is :" << body.size() << "and CL is " << _headers["Content-Length"] << RESET << std::endl;
+// 	}
+// 	else
+// 		this->_body = body;
+// }
 void	Request::parseContentLenBody(const std::string& request)
 {
 	int	len = atoi(_headers["Content-Length"].c_str());
 	if (len < 0)
 	{
 		this->_status = 400;
+		std::cout << BG_GREEN << "CONTENT LEN 0" << RESET << std::endl;
 		return;
 	}
-	std::string body = request.substr(request.find("\r\n\r\n") + 4, len);
-	std::cout << BG_RED << "body is :" << body << RESET << std::endl;
-	if (body.empty() && len > 0)
+	std::cout << BG_RED << "body is :" << this->_body << RESET << std::endl;
+	if (_body.empty() && len > 0)
+	{
 		this->_status = 400;
-	else if (body.size() > this->_maxBodySize)
+		std::cout << BG_GREEN << "ERROR IS empty body AND LEN > 0" << RESET << std::endl;
+	}
+	if (_body.empty())
+	{
+		this->_status = 400;
+		std::cout << BG_GREEN << "ERROR IS empty body" << RESET << std::endl;
+	}
+	else if (_body.size() > this->_maxBodySize)
 		this->_status = 413;
-	else if (body.size() < atoi(_headers["Content-Length"].c_str()))
+	else if (_body.size() < atoi(_headers["Content-Length"].c_str()))
+	{
 		this->_status = 400;
-	else
-		_headers["BODY"] = body;
+		std::cout << BG_GREEN << "ERROR IS  body < LEN"; 
+		std::cout << "body is :" << _body.size() << "and CL is " << _headers["Content-Length"] << RESET << std::endl;
+	}
 }
 
 
@@ -424,7 +410,9 @@ void	Request::parseMultiFormat(const std::string& input, const std::string& boun
 	
 	std::string headers = part.substr(0, headerpos);
 	std::string body = part.substr(headerpos + 4);
-
+	std::cout << BG_RED << "headers are : " << headers << RESET << std::endl;
+	std::cout << BG_RED << "headers are : " << headers << RESET << std::endl;
+	
 	std::istringstream headStream(headers);
 	std::string line;
 	while(std::getline(headStream, line) && !line.empty())
@@ -436,6 +424,7 @@ void	Request::parseMultiFormat(const std::string& input, const std::string& boun
 				fname = "unknown.txt";
 			else
 				fname = line.substr(npos + 9);
+			std::cout << BG_RED << "fname is : " << fname << RESET << std::endl;
 		}
 	}
 	std::vector<Location> loc;
@@ -449,7 +438,6 @@ void	Request::parseMultiFormat(const std::string& input, const std::string& boun
 *************************** PATH VALIDATION ***************************
 *********************************************************************
 */
-
 /*
 verify that path is ok at first (not empty, starting with /)
 then check if the path is either a file or a dir (with stat())
@@ -586,7 +574,7 @@ bool Request::isHiddenAccess(const std::string& url)
 
 /*
 *********************************************************************
-*********************** GETTERS ***********************
+*********************** GETTERS & SETTERS ***********************
 *********************************************************************
 */
 
@@ -613,6 +601,34 @@ std::string Request::getExtension() const
 int Request::getStatus() const
 {
 	return (this->_status);
+}
+
+std::map<std::string, std::string> Request::getHeader() const
+{
+	return (this->_headers);
+}
+
+bool Request::hasBody() const
+{
+	std::map<std::string, std::string>::const_iterator it;
+	it = this->_headers.find("Content-Length");
+	if (it != this->_headers.end())
+		if (it->second != "" && atoi(it->second.c_str()) > 0)
+			return (true);
+	it = this->_headers.find("Transfer-Encoding");
+	if (it != this->_headers.end() && it->second == "chunked")
+		return (true);
+	return (false);
+}
+
+void Request::setBody(const std::string& body)
+{
+	this->_body = body;
+}
+
+std::string  Request::getBody() const
+{
+	return(this->_body);
 }
 
 /************************** UTILS **********************************/
@@ -658,3 +674,46 @@ std::string parseExtension(const std::string& path, const std::string& def)
 	else
 		return(def);
 }
+
+void Request::printRequest() const
+{
+	std::cout << BG_YELLOW "Method : " << this->_method << std::endl;
+	std::cout << "status is : " << this->_status << std::endl;
+	std::cout << "Path : " << this->_path << std::endl;
+	std::cout << "Version : " << this->_version << std::endl;
+	std::cout << "Extension is  : " << this->_extension << std::endl;
+	std::cout << "is Dir  : " << this->_isDirectory << std::endl;
+	std::cout << "is DirNorm  : " << this->_isDirNorm << std::endl;
+	std::cout << "Requests : " << std::endl;
+
+	std::cout << RESET << std::endl;
+	std::cout << BG_CYAN "Body is : " << this->_body << RESET << std::endl;
+}
+
+void Request::printHeader() const
+{
+	std::map<std::string, std::string>::const_iterator it;
+	for(it = this->_headers.begin(); it != this->_headers.end(); ++it)
+	{
+		std::cout << BG_CYAN << it->first << " : " << it->second << RESET << std::endl;
+	}
+}
+
+bool	endsWithCRLF(const std::string& str) 
+{
+    if (str.size() < 3) 
+		return false;
+	std::cout << "last of line is " << str[str.size() - 1] << " and " << str[str.size() - 2] << std::endl;
+    return (str[str.size() - 1] == '\r');
+}
+
+
+bool hasConsecutiveSpace(const std::string& str)
+{
+	for (size_t i = 0; i < str.size(); ++i)
+    {
+        if (std::isspace(str[i]) && std::isspace(str[i + 1]))
+            return true;
+    }
+    return false;
+} 

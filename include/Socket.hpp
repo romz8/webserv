@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/05 10:27:40 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/18 19:43:22 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,13 @@
 # include <exception>
 # include <iostream>
 # include <string>
+# include <vector>
+# include <map>
 # include <errno.h>
 
 
 # define MAX_Q 10
-# define BUFSIZE 3000
+# define BUFSIZE 200
 
 class Socket
 {
@@ -41,7 +43,10 @@ public:
 	
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
 	const std::string readData(const int io_socket);
+	const std::string readHeader(const int io_socket);
+	const std::string readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead);
 	const int		acceptConnection();
+	std::string		readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
 
 	// keep some space for I/O Multiplexing lateron
 };
