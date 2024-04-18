@@ -279,16 +279,35 @@ void	Request::handlePostRequest()
 	
 	std::map<std::string, std::string> data;
 	std::string body = this->_body;
-	if (_headers["Transfer-Encoding"] == "chunked")
-		parseChunkBody(body);
-	else
-		parseContentLenBody(body);
-	if (this->_headers["Content-Type"] == "application/x-www-form-urlencoded")
+	std::map<std::string, std::string>::const_iterator it;
+	it = this->_headers.find("Content-Type");
+	if (it == this->_headers.end())
 	{
-		std::cout << BG_GREEN "ENTTER APP URL ENCODED : " RESET << std::endl;
+		this->_status = 400;
+		return ;
+	}
+	if (it->second == "application/x-www-form-urlencoded")
+	{
+		std::cout << BG_GREEN "WE ARE PROCESSING A FORM DATA" RESET << std::endl;
+		processFormData(body, loc[0]);
+	}
+	
+	if (it->second.find("multipart/form-data") != std::string::npos)
+	{
+		std::cout << BG_GREEN "WE ARE PROCESSING A MUTLIPART DATA" RESET << std::endl;
+		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
+		processMultiFormat(body, boundary);
+	}
+	std::cout << BG_GREEN << "STATUS AT POST EXIT IS : " << this->_status << RESET << std::endl;
+}
+void	Request::processFormData(const std::string& input, const Location& loc)
+{
 		std::string key;
 		std::string value;
-		std::istringstream stream(body);
+		std::istringstream stream(input);
+		std::string body;
+		std::map<std::string, std::string> data;
+
 		while (std::getline(stream, body, '&'))
 		{
 			size_t pos = body.find("=");
@@ -299,11 +318,10 @@ void	Request::handlePostRequest()
 				data[key] = value;
 			}
 		}
-		std::ofstream file(loc[0].getPath() + this->_parsePath + "post_data.txt", std::ios::app); //very testy ..update with Location and actual logic
+		std::ofstream file(loc.getPath() + this->_parsePath + "post_data.txt", std::ios::app); //very testy ..update with Location and actual logic
 		if (!file.is_open())
 		{
 			this->_status = 500;
-			std::cerr << "Error opening file in POST for FORM" << std::endl;
 			return ;
 		}
 		std::cout << BG_GREEN << "OPENED FILE : " << RESET << std::endl;
@@ -313,57 +331,11 @@ void	Request::handlePostRequest()
 			file << it->first << " : " << it->second << std::endl;
 		}
 		file.close();
-	}
-	if (this->_headers["Content-Type"] == "multipart/form-data")
-	{
-		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
-		parseMultiFormat(this->_body, boundary);
-	}
-	std::cout << BG_GREEN << "STATUS AT POST EXIT IS : " << this->_status << RESET << std::endl;
+		this->_status = 201;
 }
 
-void	Request::parseBody(const std::string& input)
-{
-	std::string request;
-	if (_headers["Transfer-Encoding"] == "chunked")
-		parseChunkBody(input);
-	else
-		parseContentLenBody(input);
-}
 
-void	Request::parseChunkBody(const std::string& input)
-{
-	std::cout << "CHUNKED BODY" + input << std::endl;
-}
 
-// void	Request::parseContentLenBody(const std::string& request)
-// {
-// 	int	len = atoi(_headers["Content-Length"].c_str());
-// 	if (len < 0)
-// 	{
-// 		this->_status = 400;
-// 		std::cout << BG_GREEN << "CONTENT LEN 0" << RESET << std::endl;
-// 		return;
-// 	}
-// 	std::cout << BG_GREEN << "full request is " << request << RESET << std::endl;
-// 	std::string body = request.substr(request.find("\r\n\r\n") + 4, len);
-// 	std::cout << BG_RED << "body is :" << body << RESET << std::endl;
-// 	if (body.empty() && len > 0)
-// 	{
-// 		this->_status = 400;
-// 		std::cout << BG_GREEN << "ERROR IS empty body" << RESET << std::endl;
-// 	}
-// 	else if (body.size() > this->_maxBodySize)
-// 		this->_status = 413;
-// 	else if (body.size() < atoi(_headers["Content-Length"].c_str()))
-// 	{
-// 		this->_status = 400;
-// 		std::cout << BG_GREEN << "ERROR IS  body < LEN"; 
-// 		std::cout << "body is :" << body.size() << "and CL is " << _headers["Content-Length"] << RESET << std::endl;
-// 	}
-// 	else
-// 		this->_body = body;
-// }
 void	Request::parseContentLenBody(const std::string& request)
 {
 	int	len = atoi(_headers["Content-Length"].c_str());
@@ -395,12 +367,12 @@ void	Request::parseContentLenBody(const std::string& request)
 }
 
 
-void	Request::parseMultiFormat(const std::string& input, const std::string& boundary)
+void	Request::processMultiFormat(const std::string& input, const std::string& boundary)
 {
 	std::string delimiter = "--" + boundary;
 	std::string	endDelimiter = delimiter + "--";
 	std::string fname;
-	size_t pos = 0, start, end;
+	size_t pos = 0, start = 0, end = 0;
 
 	start += delimiter.length() + 2; //for CRLF
 	end = input.find(endDelimiter, start) - 2; //for CRLF (to not select)
@@ -410,7 +382,6 @@ void	Request::parseMultiFormat(const std::string& input, const std::string& boun
 	
 	std::string headers = part.substr(0, headerpos);
 	std::string body = part.substr(headerpos + 4);
-	std::cout << BG_RED << "headers are : " << headers << RESET << std::endl;
 	std::cout << BG_RED << "headers are : " << headers << RESET << std::endl;
 	
 	std::istringstream headStream(headers);
@@ -429,9 +400,11 @@ void	Request::parseMultiFormat(const std::string& input, const std::string& boun
 	}
 	std::vector<Location> loc;
 	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	std::ofstream file(loc[0].getPath() + "/upload/" + fname); //very testy ..update with Location and actual logic
+	std::cout << BG_GREEN << "FILE PATH IS : " << loc[0].getPath() + "upload/" + fname << RESET << std::endl;
+	std::ofstream file(loc[0].getPath() + "upload/" + fname); //very testy ..update with Location and actual logic
 	file << body;
 	file.close();
+	this->_status = 201;
 }
 /*
 *********************************************************************
@@ -687,7 +660,7 @@ void Request::printRequest() const
 	std::cout << "Requests : " << std::endl;
 
 	std::cout << RESET << std::endl;
-	std::cout << BG_CYAN "Body is : " << this->_body << RESET << std::endl;
+	//std::cout << BG_CYAN "Body is : " << this->_body << RESET << std::endl;
 }
 
 void Request::printHeader() const

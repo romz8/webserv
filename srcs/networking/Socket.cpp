@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/18 19:47:20 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/18 21:49:13 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,12 +117,11 @@ const std::string Socket::readHeader(const int io_socket)
 	}
 	if (endheader == std::string::npos)
 		throw std::runtime_error("Header too long");
-	//std::string headers = rawRequest.substr(0, endheader + 4);
 	std::cout << "********* DONE RECEIVING HEADER DATA *********" << std::endl;
 	return (rawRequest);
 }
 
-/* QUICK AND DIRTY*/
+/* QUICK AND DIRTY : CHANGE THE TRANSFER ENCODING LATER ON BY REAL CHUNK*/
 const std::string Socket::readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead)
 {
 	std::string body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
@@ -177,31 +176,6 @@ std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, 
     std::string result(buffer, totalRead);
     return (body.append(result));
 }
-// {
-// 	int byteRead = 1;
-// 	std::string rawRequest;
-// 	size_t endheader = std::string::npos;
-	
-// 	while(byteRead > 0)
-// 	{
-// 		char buffer[BUFSIZE];
-// 		byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
-// 		if (byteRead < 0)
-// 			throw std::runtime_error("Impossible read message from client");
-// 		if (byteRead == 0)
-// 			throw std::runtime_error("Client closed connection");
-// 		buffer[byteRead] = '\0';
-// 		rawRequest.append(buffer, byteRead);
-// 		endheader = rawRequest.find("\r\n\r\n");
-// 		if (endheader != std::string::npos)
-// 			break ;
-// 	}
-// 	if (endheader == std::string::npos)
-// 		throw std::runtime_error("Header too long");
-// 	std::string headers = rawRequest.substr(0, endheader + 4);
-// 	std::cout << "********* DONE TRANSMITTING DATA *********" << std::endl;
-// 	return (headers);
-// }
 
 void	Socket::_initSock()
 {

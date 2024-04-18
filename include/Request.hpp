@@ -59,7 +59,8 @@ public:
 	void		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
 	void		parseContentLenBody(const std::string& input);
-	void		parseMultiFormat(const std::string& input, const std::string& boundary);
+	void		processMultiFormat(const std::string& input, const std::string& boundary);
+	void		processFormData(const std::string& body, const Location& Loc);
 	void		handlePostRequest();
 	
 	bool		isValidMethod() const;
