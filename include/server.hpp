@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/15 19:59:06 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/19 12:01:16 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ private:
 	std::string	_port;
 	std::string	_serverName;
 	std::string	_hostName;
+	int		_maxBodySize;
 	//Location _locs; //will be a vector later-on if several routes inf conf file
 	const sockaddr_in _servAddr;
 	Socket _sock;

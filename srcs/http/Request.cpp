@@ -167,6 +167,36 @@ bool	Request::hasCorrectHost() const
 	return(true);
 }
 
+bool	Request::parseContentLenBody()
+{
+	bool bodyok = false;
+	if (_headers["Content-Length"].empty())
+		this->_status = 400;
+	long int	len = atoi(_headers["Content-Length"].c_str());
+	if (len <= 0)
+		this->_status = 400;
+	if (len > this->_maxBodySize)
+	{ 
+		this->_status = 413;
+		return(true);
+	}
+	else
+		bodyok = true;
+	return (bodyok);
+}
+
+bool Request::hasBody()
+{
+	std::map<std::string, std::string>::const_iterator it;
+	it = this->_headers.find("Content-Length");
+	if (it != this->_headers.end())
+		return (parseContentLenBody());
+	it = this->_headers.find("Transfer-Encoding");
+	if (it != this->_headers.end() && it->second == "chunked")
+		return (true);
+	return (false);
+}
+
 void	Request::initRequest()
 {
 	this->_isDirectory = false;
@@ -192,8 +222,9 @@ void	Request::buildRequest()
 {
 	std::cout << BG_BLUE "INIT _PATH : " << this->_path << RESET << std::endl;
 	sanitizeUrl();
-	if (this->_status != 400) //later on add the location check and GET / POST / DELETE switch
-		setStatus();
+	if (this->_status > 400)
+		return; //later on add the location check and GET / POST / DELETE switch
+	setStatus();
 	if (this->_method == "POST") //later on add the location check
 		this->handlePostRequest();
 	if (this->_status != 200)
@@ -281,24 +312,18 @@ void	Request::handlePostRequest()
 	std::string body = this->_body;
 	std::map<std::string, std::string>::const_iterator it;
 	it = this->_headers.find("Content-Type");
-	if (it == this->_headers.end())
+	if (it == this->_headers.end() || it->second.empty())
 	{
 		this->_status = 400;
 		return ;
 	}
 	if (it->second == "application/x-www-form-urlencoded")
-	{
-		std::cout << BG_GREEN "WE ARE PROCESSING A FORM DATA" RESET << std::endl;
 		processFormData(body, loc[0]);
-	}
-	
 	if (it->second.find("multipart/form-data") != std::string::npos)
 	{
-		std::cout << BG_GREEN "WE ARE PROCESSING A MUTLIPART DATA" RESET << std::endl;
 		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
-		processMultiFormat(body, boundary);
+		processMultipartForm(body, boundary);
 	}
-	std::cout << BG_GREEN << "STATUS AT POST EXIT IS : " << this->_status << RESET << std::endl;
 }
 void	Request::processFormData(const std::string& input, const Location& loc)
 {
@@ -318,13 +343,12 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 				data[key] = value;
 			}
 		}
-		std::ofstream file(loc.getPath() + this->_parsePath + "post_data.txt", std::ios::app); //very testy ..update with Location and actual logic
+		std::ofstream file(loc.getPath() + this->_parsePath + "postData.txt", std::ios::app); //very testy ..update with Location and actual logic
 		if (!file.is_open())
 		{
 			this->_status = 500;
 			return ;
 		}
-		std::cout << BG_GREEN << "OPENED FILE : " << RESET << std::endl;
 		std::map<std::string, std::string>::const_iterator it;
 		for(it = data.begin(); it != data.end(); ++it)
 		{
@@ -335,72 +359,36 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 }
 
 
-
-void	Request::parseContentLenBody(const std::string& request)
-{
-	int	len = atoi(_headers["Content-Length"].c_str());
-	if (len < 0)
-	{
-		this->_status = 400;
-		std::cout << BG_GREEN << "CONTENT LEN 0" << RESET << std::endl;
-		return;
-	}
-	std::cout << BG_RED << "body is :" << this->_body << RESET << std::endl;
-	if (_body.empty() && len > 0)
-	{
-		this->_status = 400;
-		std::cout << BG_GREEN << "ERROR IS empty body AND LEN > 0" << RESET << std::endl;
-	}
-	if (_body.empty())
-	{
-		this->_status = 400;
-		std::cout << BG_GREEN << "ERROR IS empty body" << RESET << std::endl;
-	}
-	else if (_body.size() > this->_maxBodySize)
-		this->_status = 413;
-	else if (_body.size() < atoi(_headers["Content-Length"].c_str()))
-	{
-		this->_status = 400;
-		std::cout << BG_GREEN << "ERROR IS  body < LEN"; 
-		std::cout << "body is :" << _body.size() << "and CL is " << _headers["Content-Length"] << RESET << std::endl;
-	}
-}
-
-
-void	Request::processMultiFormat(const std::string& input, const std::string& boundary)
+void	Request::processMultipartForm(const std::string& input, const std::string& boundary)
 {
 	std::string delimiter = "--" + boundary;
 	std::string	endDelimiter = delimiter + "--";
-	std::string fname;
+	std::string fname = "unknown.txt";
 	size_t pos = 0, start = 0, end = 0;
 
-	start += delimiter.length() + 2; //for CRLF
-	end = input.find(endDelimiter, start) - 2; //for CRLF (to not select)
-
+	start += delimiter.length() + 2; 
+	end = input.find(endDelimiter) - 2;
+	std::cout <<"start is : " << start << " and end is : " << end << std::endl;
 	std::string part = input.substr(start, end - start);
-	size_t headerpos= part.find("\r\n\r\n");
-	
+	size_t headerpos= part.find("\r\n\r\n");	
 	std::string headers = part.substr(0, headerpos);
 	std::string body = part.substr(headerpos + 4);
-	std::cout << BG_RED << "headers are : " << headers << RESET << std::endl;
 	
 	std::istringstream headStream(headers);
 	std::string line;
 	while(std::getline(headStream, line) && !line.empty())
 	{
-		if (line.find("Content-Disposition:"))
+		if (line.find("filename=") != std::string::npos)
 		{
-			size_t npos = line.find("filename=");
-			if (npos == std::string::npos)
-				fname = "unknown.txt";
-			else
-				fname = line.substr(npos + 9);
+			std::cout << BG_CYAN << "line is : " << line << RESET << std::endl;
+			size_t pos = line.find("filename=\"") + 10;
+			size_t bracketpos = line.substr(pos).find('\"');
+			fname = line.substr(pos, bracketpos);
 			std::cout << BG_RED << "fname is : " << fname << RESET << std::endl;
 		}
 	}
 	std::vector<Location> loc;
 	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	std::cout << BG_GREEN << "FILE PATH IS : " << loc[0].getPath() + "upload/" + fname << RESET << std::endl;
 	std::ofstream file(loc[0].getPath() + "upload/" + fname); //very testy ..update with Location and actual logic
 	file << body;
 	file.close();
@@ -581,26 +569,16 @@ std::map<std::string, std::string> Request::getHeader() const
 	return (this->_headers);
 }
 
-bool Request::hasBody() const
-{
-	std::map<std::string, std::string>::const_iterator it;
-	it = this->_headers.find("Content-Length");
-	if (it != this->_headers.end())
-		if (it->second != "" && atoi(it->second.c_str()) > 0)
-			return (true);
-	it = this->_headers.find("Transfer-Encoding");
-	if (it != this->_headers.end() && it->second == "chunked")
-		return (true);
-	return (false);
-}
 
 void Request::setBody(const std::string& body)
 {
-	this->_body = body;
+	if (!(this->_status == 413))
+		this->_body = body;
 }
 
 std::string  Request::getBody() const
 {
+	
 	return(this->_body);
 }
 
@@ -611,7 +589,8 @@ This function looks for the "boundary=" substring within the Content-Type header
  returns the boundary value. If the boundary is quoted, it 
  properly extracts the quoted string.
  */
-std::string extractBoundary(const std::string& contentType) {
+std::string extractBoundary(const std::string& contentType) 
+{
     std::string boundaryPrefix = "boundary=";
     size_t pos = contentType.find(boundaryPrefix);
     if (pos != std::string::npos) {

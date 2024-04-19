@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/18 22:10:45 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/19 13:42:21 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	this->_port = conf.port;
 	this->_serverName = conf.serverName;
 	this->_hostName = conf.hostName;
+	this->_maxBodySize = 10000000; //to replace with config max body size
 	//this->_locs = conf.loc;
 	
 	printSockAddrIn(_servAddr);
@@ -75,16 +76,14 @@ void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();
 	std::string rawhead = this->_sock.readHeader(io_fd);
-	//std::string head = this->_sock.readData(io_fd);
 	std::string head = rawhead.substr(0, rawhead.find("\r\n\r\n") + 4);
 	std::cout << "rawHead: " << rawhead << std::endl;
-	Request Request(head, _hostName, 1000000); //to replace with config max body size
+	Request Request(head, _hostName, _maxBodySize); //to replace with config max body size
 	Request.printHeader();
 	if (Request.hasBody())
 	{
 		std::string body = this->_sock.readBody(io_fd, Request.getHeader(), rawhead);
 		Request.setBody(body);
-		//std::cout << "BODY SET and is :"<< Request.getBody() << RESET << std::endl;
 	}
 	Request.buildRequest();
 	Request.printRequest();

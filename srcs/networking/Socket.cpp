@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/18 21:49:13 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/19 14:03:44 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ const std::string Socket::readHeader(const int io_socket)
 		if (byteRead < 0)
 			throw std::runtime_error("Impossible read message from client");
 		if (byteRead == 0)
-			throw std::runtime_error("Client closed connection");
+			throw std::runtime_error("Client closed connection in HEADER reading");
 		buffer[byteRead] = '\0';
 		rawRequest.append(buffer, byteRead);
 		endheader = rawRequest.find("\r\n\r\n");
@@ -158,20 +158,18 @@ std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, 
 	char buffer[contentLength + 1];
     while (body.size() < contentLength) 
 	{
-		std::cout << "ENTER THE LOOP \n";
 		bytesRead = recv(clientSocket, buffer, contentLength  - body.size(), 0);
-        std::cout << "READ OK \n";
 		if (bytesRead > 0)
             totalRead += bytesRead;
         else if (bytesRead == 0)
             break; // Connection closed
         else
             throw std::runtime_error("Error reading from socket");
-		std::cout << "Bytes read : " << bytesRead << std::endl;
-		std::cout << "Total read : " << totalRead << std::endl;
 		buffer[bytesRead] = '\0';
 		body.append(buffer, bytesRead);
     }
+	std::cout << "Bytes read : " << bytesRead << std::endl;
+	std::cout << "Total read : " << totalRead << std::endl;
     buffer[totalRead] = '\0';
     std::string result(buffer, totalRead);
     return (body.append(result));

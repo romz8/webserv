@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/18 13:28:58 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/19 13:23:09 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,11 @@ TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
 Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
 	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _errPages(initErrMaps()), \
 	_mimeTypes(initMimeMaps()), _content_len("0"), _headerResponse(""), _body(""), \
-	_response(""), _assetPath(""), _extension(head.getExtension())
+	_response(""), _assetPath(""), _extension(".html")
 {
 	std::cout << BG_BLUE "RESP built with : " << this->_status << RESET <<std::endl;
-	if (_errPages.find(this->_status) != _errPages.end())
-		this->_assetPath = _root + _errPages[this->_status];
+	if (this->_status >= 400)
+		this->_assetPath = _root + getErrorPage(this->_status);
 	else if (head.getParsePath().empty())
 		this->_assetPath = _root + _errPages[404];
 	else
@@ -177,7 +177,7 @@ std::string Response::assembHeaders()
 	std::map<std::string, std::string>::const_iterator it = this->_headers.begin();
 	for (; it != _headers.end(); ++it)
 	{
-		std::cout << RED "Request IS : " << it->first << " : " << it->second << RESET << std::endl;
+		std::cout << RED "Resp header IS : " << it->first << " : " << it->second << RESET << std::endl;
 		RequestStream << it->first << ": " << it->second << "\r\n";
 	}
 	RequestStream << "\r\n";
@@ -204,10 +204,12 @@ void	Response::setBody()
 {
 	try
 	{
-		this->_body = readWebFile(this->_assetPath);    	
+		this->_body = readWebFile(this->_assetPath);
+		this->_extension = parseExtension(this->_assetPath, this->_extension);   	
 	}
 	catch(std::exception& e)
 	{
+		std::cerr << "Error settign body response ";
 		std::cerr << e.what() << std::endl;
 		this->_status = 500;
 	}
@@ -264,6 +266,7 @@ std::map<int, std::string>	Response::initStatusMaps()
     s[400] = "Bad Request";
 	s[403] = "Forbidden";
     s[404] = "Not Found";
+	s[413] = "Content Too Large";
     s[405] = "Method Not Allowed";
     s[500] = "Internal Server Error";
     s[505] = "HTTP Version not supported";
@@ -303,4 +306,13 @@ std::string Response::getStatusMessage(int statusCode) const
         return it->second;
 	else
         return "Unknown Status"; // Default message if not found
+}
+
+std::string Response::getErrorPage(int statusCode) const 
+{
+	std::map<int, std::string>::const_iterator it = _errPages.find(statusCode);
+	if (it != _errPages.end()) 
+		return it->second;
+	else
+		return "/error_pages/def_err.html"; // Default message if not found
 }

@@ -36,7 +36,6 @@ public:
 	void	setStatusLine(int sCode);
 	void	setBody();
 	std::string	readWebFile(const std::string& path);
-	void	parseExtension();
 	std::string getResponse() const;
 	void	excecuteGetResponse();
 	void	handle200();

@@ -50,16 +50,16 @@ public:
 
 	void		parseHeader(const std::string& head);
 	void		parseStartLine(const std::string& line);
-	bool	isValidRL(const std::string& line);
-	void	parseHeaderLine(const std::string& line);
-	bool	hasCorrectHost() const;
-	bool	hasBody() const;
+	bool		isValidRL(const std::string& line);
+	void		parseHeaderLine(const std::string& line);
+	bool		hasCorrectHost() const;
+	bool		hasBody();
 	void		printRequest() const;
 	void		printHeader() const;
 	void		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
-	void		parseContentLenBody(const std::string& input);
-	void		processMultiFormat(const std::string& input, const std::string& boundary);
+	bool		parseContentLenBody();
+	void		processMultipartForm(const std::string& input, const std::string& boundary);
 	void		processFormData(const std::string& body, const Location& Loc);
 	void		handlePostRequest();
 	
