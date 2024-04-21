@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/19 13:42:21 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/21 20:17:07 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,16 +85,18 @@ void	Server::handleConnection()
 		std::string body = this->_sock.readBody(io_fd, Request.getHeader(), rawhead);
 		Request.setBody(body);
 	}
+	std::cout << BG_GREEN "********* DONE READING : NOW Build Request ********* " RESET << std::endl;
 	Request.buildRequest();
 	Request.printRequest();
 	Response resp(Request); // later on build with location routing Response response(Request, _locs);
 	resp.buildResponse();
 	std::string response = resp.getResponse();
-	//std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
+	//std::cout << BG_MAGENTA "Response is : " RESET << response << std::endl;
 	int byteSend = send(io_fd, response.c_str(), response.size(), 0);
 	if (byteSend < 0)
 		throw std::runtime_error("IMpossible send message to client");
 	close(io_fd);
+	std::cout << BG_GREEN	<< "Response sent : ALL OK" RESET << std::endl;
 }
 
 Socket Server::socketFactory(const sockaddr_in& addr) 

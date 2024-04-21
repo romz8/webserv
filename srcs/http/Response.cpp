@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/19 13:23:09 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/21 17:04:12 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ Returns the full HTTP response message as a string.
 //MISSING TIME AND SERVER_NAME
 void Response::buildResponse()
 {
-	if(this->_method == "GET" || this->_method == "POST") // to improve the logic later on
+	if(this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE") // to improve the logic later on
 		this->excecuteGetResponse();
 	// else if (this->_method == "POST")
 	// 	this->excecutePostResponse();
@@ -262,10 +262,13 @@ std::map<int, std::string>	Response::initStatusMaps()
     std::map<int, std::string> s;
 	
 	s[200] = "OK";
+	s[201] = "Created";
+	s[204] = "No Content";
     s[301] = "Moved Permanently";
     s[400] = "Bad Request";
 	s[403] = "Forbidden";
     s[404] = "Not Found";
+	s[409] = "Conflict";
 	s[413] = "Content Too Large";
     s[405] = "Method Not Allowed";
     s[500] = "Internal Server Error";
@@ -281,8 +284,10 @@ std::map<int, std::string> Response::initErrMaps()
 	e[400] = "/error_pages/400.html";
 	e[403] = "/error_pages/403.html";
     e[404] = "/error_pages/404.html";
-    e[500] = "/error_pages/500.html";
     e[405] = "/error_pages/405.html";
+	e[409] = "/error_pages/409.html";
+	e[413] = "/error_pages/413.html";
+	e[500] = "/error_pages/500.html";
     e[505] = "/error_pages/505.html";
 	
 	return e;

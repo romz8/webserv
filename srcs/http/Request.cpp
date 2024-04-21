@@ -27,7 +27,7 @@ Request::Request(const std::string& rawRequest, const std::string& hostName, int
 	{
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
-		std::cout << BG_GREEN << "ERROR IS Header" << RESET << std::endl;
+		std::cout << BG_GREEN << "ERROR IN Header" << RESET << std::endl;
 	}
 }
 
@@ -222,11 +222,15 @@ void	Request::buildRequest()
 {
 	std::cout << BG_BLUE "INIT _PATH : " << this->_path << RESET << std::endl;
 	sanitizeUrl();
-	if (this->_status > 400)
+	std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
+	if (this->_status >= 400)
 		return; //later on add the location check and GET / POST / DELETE switch
 	setStatus();
+	std::cout << BG_CYAN << "status PRE _METHOD and path are " << this->_status << " and " << this->_path << std::endl;
 	if (this->_method == "POST") //later on add the location check
 		this->handlePostRequest();
+	if (this->_method == "DELETE" && !(this->_status >= 400))
+		this->handleDeleteRequest();
 	if (this->_status != 200)
 		this->_extension = ".html";
 	else
@@ -302,6 +306,7 @@ bool Request::isValidVersion() const
 *********************************************************************
 */
 
+
 void	Request::handlePostRequest()
 {
 	std::vector<Location> loc;
@@ -315,45 +320,37 @@ void	Request::handlePostRequest()
 	if (it == this->_headers.end() || it->second.empty())
 	{
 		this->_status = 400;
+		std::cout << BG_GREEN << "ERROR : Empty Header" << RESET << std::endl;
 		return ;
 	}
-	if (it->second == "application/x-www-form-urlencoded")
-		processFormData(body, loc[0]);
 	if (it->second.find("multipart/form-data") != std::string::npos)
 	{
 		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
 		processMultipartForm(body, boundary);
 	}
+	else
+		processFormData(body, loc[0]);
 }
 void	Request::processFormData(const std::string& input, const Location& loc)
 {
-		std::string key;
-		std::string value;
 		std::istringstream stream(input);
-		std::string body;
-		std::map<std::string, std::string> data;
-
-		while (std::getline(stream, body, '&'))
-		{
-			size_t pos = body.find("=");
-			if (pos != std::string::npos)
-			{
-				key = body.substr(0, pos);
-				value = body.substr(pos + 1);
-				data[key] = value;
-			}
-		}
+		
 		std::ofstream file(loc.getPath() + this->_parsePath + "postData.txt", std::ios::app); //very testy ..update with Location and actual logic
+		std::cout << "parsed path is : " << this->_parsePath + "postData.txt" << std::endl;
 		if (!file.is_open())
 		{
 			this->_status = 500;
+			std::cout << BG_GREEN << "ERROR : File not open" << RESET << std::endl;
+			struct stat path_stat;
+			if (stat(this->_parsePath.c_str(), &path_stat) == -1)
+				std::cout << BG_GREEN << "INEXISTANT PATH" << RESET << std::endl;
+			if (access(this->_parsePath.c_str(), W_OK) != 0)
+				std::cout << BG_GREEN << "PERMISSION ISSUE FOLDER" << RESET << std::endl;
+			if (access((this->_parsePath + "postData.txt" ).c_str(), W_OK) != 0)
+				std::cout << BG_GREEN << "PERMISSION ISSUE FILE" << RESET << std::endl;
 			return ;
 		}
-		std::map<std::string, std::string>::const_iterator it;
-		for(it = data.begin(); it != data.end(); ++it)
-		{
-			file << it->first << " : " << it->second << std::endl;
-		}
+		file << input << std::endl;
 		file.close();
 		this->_status = 201;
 }
@@ -394,6 +391,130 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	file.close();
 	this->_status = 201;
 }
+
+void	Request::processChunkBody(std::string input)
+{
+	std::string data;
+
+	size_t pos = 0;
+	data.clear();
+	std::cout << BG_CYAN << "WE ARE IN CHUNK PROCESS input is " << input << RESET  << std::endl;
+	while (true)
+	{
+		size_t endBlock = input.find("\r\n", pos);
+		size_t chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
+		std::cout << BG_RED "chunksize iss" << chunkSize << RESET << std::endl;
+		if (chunkSize == 0)
+			break;
+		std::string unchunked = input.substr(endBlock + 2, chunkSize);
+		std::cout << BG_RED "unckcubnked block is :" << unchunked << RESET << std::endl;
+		data.append(unchunked);
+		pos = endBlock + chunkSize + 2 + 2;
+		
+	}	
+	std::cout << BG_RED "UN CHUNKED Data is : " << data << RESET << std::endl;
+	this->_body = data;
+}
+
+/*
+*********************************************************************
+*************************** DELETE Request Logic ********************
+*********************************************************************
+*/
+
+/**
+ Handles a DELETE HTTP request to remove a specified resource from the server.
+ This function is designed to delete both files and empty directories based on
+ the request path provided. It performs several key operations:
+
+ 1. Path Resolution: Converts the sanitized URL path into a valid server path using predefined 
+    Location mappings. This helps in locating the exact file or directory on the server.
+ 
+ 2. Resource Existence and Type Verification: Utilizes the stat() system call to ascertain
+    whether the target path is a directory or a file. It sets a 404 Not Found status if the path 
+    does not exist or is invalid.
+ 
+ 3. Deletion Logic:
+    - For directories: Checks if the directory is empty (containing only '.' and '..'). If empty,
+      it attempts to delete the directory. If not empty, it sets a 409 Conflict status indicating
+      that the directory cannot be deleted unless it is empty.
+    - For files: Attempts to delete the file directly and handles failure by setting appropriate 
+      HTTP status codes.
+
+ The function modifies the HTTP response status based on the outcome of the delete operation,
+ providing clear and RESTful feedback to the client.
+ */
+void	Request::handleDeleteRequest()
+{
+	std::vector<Location> loc;
+	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
+	
+	sanitizeUrl();
+	if (loc[0].match(this->_path))
+		this->_parsePath = loc[0].getPath() + this->_path.substr(loc[0].getPrefixSize());
+    
+	struct stat path_stat;
+    if ((stat(this->_parsePath.c_str(), &path_stat) == -1) || this->_path.empty() || this->_path[0] != '/')
+	{
+        _status = 404;  
+        return;
+    }
+	if (access(this->_parsePath.c_str(), W_OK) != 0)
+	{
+		this->_status = 403;
+		return;
+	}
+	if(S_ISDIR(path_stat.st_mode))
+	{
+		this->_isDirectory = true;
+		DeleteDirectory();
+	}
+	else if(S_ISREG(path_stat.st_mode))
+	{
+		this->_isDirectory = false;
+		if(!deleteResource(this->_parsePath))
+			this->_status = 500;
+		else
+			this->_status = 204;
+	}
+	else
+		this->_status = 400;
+}
+
+void Request::DeleteDirectory()
+{
+	std::string path = this->_parsePath;
+	bool emptyDir = true;
+
+	if (path[path.size() - 1] != '/')
+		path.append("/");
+	DIR *dir = opendir(path.c_str());
+	if (dir == NULL)
+	{
+		this->_status = 404;
+		return;
+	}
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string name = entry->d_name;
+		if (name != "." && name != "..")
+			emptyDir = false;
+	}
+	closedir(dir);
+	if (!emptyDir)
+	{
+		this->_status = 409;
+		std::cout << "Directory not empty for DELETE request" << std::endl;
+		return;
+	}
+	if (!deleteResource(path))
+		this->_status = 500;
+	else
+		this->_status = 204;
+}
+
+
 /*
 *********************************************************************
 *************************** PATH VALIDATION ***************************
@@ -464,6 +585,8 @@ bool Request::hasReadAccess() const
 		return(true);
 	return (false); 
 }
+
+
 
 /*
 ********************************************************************
@@ -572,8 +695,16 @@ std::map<std::string, std::string> Request::getHeader() const
 
 void Request::setBody(const std::string& body)
 {
-	if (!(this->_status == 413))
+	std::cout << BG_RED "Body BEFORE set STAGE is : " << body << RESET << std::endl;
+	if (this->_status == 413)
+		return;
+	std::map<std::string, std::string>::const_iterator it;
+	it = this->_headers.find("Transfer-Encoding");
+	if (it != this->_headers.end() && it->second == "chunked")
+		processChunkBody(body);
+	else
 		this->_body = body;
+	std::cout << BG_RED "Body at set STAGE is : " << this->_body << RESET << std::endl;
 }
 
 std::string  Request::getBody() const
@@ -669,3 +800,11 @@ bool hasConsecutiveSpace(const std::string& str)
     }
     return false;
 } 
+
+bool deleteResource(const std::string& path) 
+{
+    if (std::remove(path.c_str()) == 0)
+        return true;  // Successfully deleted
+    else
+        return false;  // Error in deleting the resource
+}

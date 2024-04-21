@@ -22,6 +22,7 @@
 # include <fstream>
 # include <sys/stat.h>
 # include <unistd.h>
+# include <dirent.h>
 # include "colors.h"
 # include "Location.hpp"
 
@@ -38,6 +39,7 @@ private:
 	std::string		_extension;
 	int				_status;
 	int				_maxBodySize;
+	std::string		_chunkBody;
 	std::string		_body;
 	//std::string		_root; //will be used to remap the path to the root of the server
 	std::map<std::string, std::string> _headers;
@@ -61,7 +63,10 @@ public:
 	bool		parseContentLenBody();
 	void		processMultipartForm(const std::string& input, const std::string& boundary);
 	void		processFormData(const std::string& body, const Location& Loc);
+	void		processChunkBody(std::string buffer);
 	void		handlePostRequest();
+	void		handleDeleteRequest();
+	void		DeleteDirectory();
 	
 	bool		isValidMethod() const;
 	bool		isValidPath();
@@ -86,13 +91,14 @@ public:
 	void		normalizeDirPath();
 	void		initRequest();
 	
-};
+}; 
 
-/*utils*/
+/********************* utils ******************************/
 std::string parseExtension(const std::string& path, const std::string& def);
 std::string trim(const std::string& str);
 std::string extractBoundary(const std::string& contentType);
 bool	endsWithCRLF(const std::string& str);
 bool 	hasConsecutiveSpace(const std::string& str);
+bool	deleteResource(const std::string& path);
 
 #endif

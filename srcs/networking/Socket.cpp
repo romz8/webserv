@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/19 14:03:44 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/21 20:40:59 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,22 +121,13 @@ const std::string Socket::readHeader(const int io_socket)
 	return (rawRequest);
 }
 
-/* QUICK AND DIRTY : CHANGE THE TRANSFER ENCODING LATER ON BY REAL CHUNK*/
+
 const std::string Socket::readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead)
 {
 	std::string body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
-	std::cout << "BODY IS : " << body << std::endl;
+	std::cout << "BODY from Header is : " << body << std::endl;
 	if (header.find("Transfer-Encoding") != header.end() && header.find("Transfer-Encoding")->second == "chunked")
-	{
-		std::string chunk;
-		while (true)
-		{
-			chunk = readData(io_socket);
-			if (chunk.empty())
-				break ;
-			body.append(chunk);
-		}
-	}
+		readChunkEncodingBody(io_socket, body);
 	else if (header.find("Content-Length") != header.end())
 	{
 		size_t contentLength = atoi((header.find("Content-Length")->second).c_str());
@@ -148,7 +139,8 @@ const std::string Socket::readBody(const int io_socket, const std::map<std::stri
 	return (body);
 }
 
-std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body) {
+std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body) 
+{
     
     int bytesRead = 0;
     size_t totalRead = 0;
@@ -172,7 +164,38 @@ std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, 
 	std::cout << "Total read : " << totalRead << std::endl;
     buffer[totalRead] = '\0';
     std::string result(buffer, totalRead);
-    return (body.append(result));
+	body.append(result);
+    return (body);
+}
+
+std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body) 
+{
+	std::string data;
+	char buffer[BUFSIZE];
+	int bytesRead = 0;
+	bool endChunk = (body.find("0\r\n\r\n") != std::string::npos);
+	
+	data.clear();
+	while(!endChunk)
+	{
+		bytesRead = recv(clientSocket, buffer, BUFSIZE - 1, 0);
+		if (bytesRead < 0)
+			throw std::runtime_error("Error reading from socket");
+		if (bytesRead == 0)
+		{
+			throw std::runtime_error("readChunk : Connection closed by client ");
+			break; // Connection closed
+		}
+		buffer[bytesRead] = '\0';
+		data.append(buffer, bytesRead);
+		if (data.find("0\r\n\r\n") != std::string::npos)
+			endChunk = true;
+	}
+	body.append(data);
+	std::cout << "Bytes read : " << bytesRead << std::endl;
+	std::cout << "Data is : " << data << std::endl;
+	std::cout << "Body is : " << body << std::endl;
+	return (body);
 }
 
 void	Socket::_initSock()

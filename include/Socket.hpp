@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/18 22:09:44 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/21 17:59:13 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ public:
 	const std::string readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead);
 	const int		acceptConnection();
 	std::string		readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
+	std::string		readChunkEncodingBody(int clientSocket, std::string& body);
 
 	// keep some space for I/O Multiplexing lateron
 };
