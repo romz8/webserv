@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 10:43:19 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 12:28:12 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ int	ParseDirectives::parseServer( Directives *d, StrVector & content, int n_line
 	{
 		string treated_line = treat_comments((content[i]));
 		parse_line(treated_line, i + 1);
-		line = split(line, content[i], " \t");
+		split(line, content[i], " \t");
 		for (size_t j = 0; j < line.size(); j++)
 			content_parsed += line[j] + " ";
 		line.clear();
@@ -59,7 +59,7 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 	for (int i = n_line + 1; i < last; i++)
 	{
 		string treated_line = treat_comments((content[i]));
-		line = split(line, content[i], " \t");
+		split(line, content[i], " \t");
 		for (size_t j = 0; j < line.size(); j++)
 			content_parsed += line[j] + " ";
 		line.clear();
@@ -83,12 +83,12 @@ void	ParseDirectives::save_listen( Directives *d, const StrVector & line ) {
 	string value = line[1].substr(0, line[1].find_last_of(";"));
 	size_t pos = value.find_last_of(":");
 	if (pos != string::npos) {
-		d->ip.push_back(value.substr(0, pos));
+		d->ip = ParseContent::checkValidIp(value.substr(0, pos));
 		string	port = value.substr(pos + 1, value.length());
-		d->ports.push_back(stoui(port));
+		d->port = ParseContent::checkValidPort(stoui(port));
 	}
 	else
-		d->ports.push_back(stoui(value));
+		d->port = ParseContent::checkValidPort(stoui(port));
 }
 
 void	ParseDirectives::save_error_page( Directives *d, const StrVector & line ) {

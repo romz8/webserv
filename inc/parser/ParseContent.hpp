@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:07:08 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 07:38:14 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 12:34:50 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include <iostream>
 
 using namespace std;
+using namespace SUtils;
 
 class ParseContent {
 	private:
@@ -35,6 +36,8 @@ class ParseContent {
 		static string				total_directives[N_DIRECTIVES];
 		static StrBoolPair			_canRepeatDirectiveList[N_DIRECTIVES];
 		static StrBoolMap			canRepeatDirectiveList;
+		static string				&checkValidIp( string );
+		static bool					checkIpSyntax( string );
 };
 
 #endif

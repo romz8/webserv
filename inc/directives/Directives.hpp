@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 11:06:05 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 12:15:33 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,14 +27,10 @@ class Directives {
 	friend class Server;
 	friend class ParseDirectives;
 	friend class Location;
-	
-	private:
-		string					def_err_page;
-		StrVector				d_ip;
 
 	private:
 		string					root;
-		vector<unsigned int>	ports;
+		unsigned int			port;
 		UintStrMap				error_page;
 		unsigned int			client_max_body_size;
 		
@@ -51,7 +47,7 @@ class Directives {
 		StrVector				allow_methods;
 		
 		StrVector				server_names;
-		StrVector				ip;
+		string					ip;
 		
 		ServersVector			servers;
 		LocVector				locations;
@@ -69,8 +65,8 @@ class Directives {
 
 		static Directives	*parseDirectives( const std::string & content );
 		
-		const StrVector					&getIp( void ) const ;
-		const vector<unsigned int>		&getPorts( void ) const ;
+		const string					&getIp( void ) const ;
+		const unsigned int				&getPort( void ) const ;
 		const string					&getRoot( void ) const ;
 		const StrVector					&getSNames( void ) const ;
 		const ServersVector				&getServers( void ) const ;

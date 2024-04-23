@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 10:33:24 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 13:40:00 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,4 +102,43 @@ int	ParseContent::getLocAllowDirectives( const string & directive ) {
 			return (i);
 	}
 	return (ERROR);
+}
+
+string	&ParseContent::checkValidIp( string ip ) {
+	StrVector	masks;
+	
+	if (checkIpSyntax(ip) == false)
+		throw logic_error("Invalid syntax in IP");
+	split(masks, ip, ".");
+	if (masks.size() > 4)
+		throw logic_error("Invalid IP");
+	for ( size_t i = 0; i < masks.size(); i++ )
+	{
+		if ( checkValidRangeIpMask( masks[ i ], i, masks.size() ) == false )
+			throw logic_error("Invalid IP");
+	}
+}
+
+bool	ParseContent::checkIpSyntax( string ip ) {
+	size_t	pos;
+
+	pos = ip.find_first_not_of( IP_VALID_CHARS );
+	if ( pos != string::npos || ip[ 0 ] == '.' )
+		return ( false );
+	pos = 0;
+	while ( pos != string::npos )
+	{
+		pos = ip.find_first_of( "." );
+		if ( pos != string::npos )
+		{
+			if ( ip[ pos + 1 ] == '\0' || ip[ pos + 1 ] == '.' )
+				return ( false );
+			ip.erase( 0, pos + 1 );
+		}
+	}
+	return (true);
+}
+
+bool	ParseContent::checkValidRangeIpMask( string mask, size_t pos, size_t size ) {
+	
 }

@@ -6,15 +6,15 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 11:12:16 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 12:33:18 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Directives.hpp>
 
 Directives::Directives( void ) : root("/"), client_max_body_size(10240), allow_upload(false), autoindex(false) {
-	this->ports.push_back(443);
-	this->d_ip.push_back("42.42.42.42");
+	this->port = 443;
+	this->ip = "42.42.42.42";
 	this->def_err_page = "./def_err.html";
 	this->upload_store = "./uploads/";
 	for (int i = 0; i < N_DIRECTIVES; i++)
@@ -61,12 +61,12 @@ Directives	*Directives::parseDirectives( const string & content ) {
 		StrVector line;
 		size_t	i = 0;
 	
-		lines = split(lines, content, "\n");
+		split(lines, content, "\n");
 		size_t n_lines = lines.size();
 		while (i < n_lines)
 		{
 			string treated_line = treat_comments(lines[i]);
-			line = split(line, treated_line, " \t");
+			split(line, treated_line, " \t");
 			if (!line[0].compare("server"))
 			{
 				n_server++;
@@ -86,45 +86,43 @@ Directives	*Directives::parseDirectives( const string & content ) {
 	}
 }
 
-const StrVector					&Directives::getIp( void ) const {
-	if (this->ip.size() == 0)
-		return (this->d_ip);
+const string						&Directives::getIp( void ) const {
 	return (this->ip);
 }
 
-const vector<unsigned int>	&Directives::getPorts( void ) const {
-	return (this->ports);
+const unsigned int					&Directives::getPort( void ) const {
+	return (this->port);
 }
 
-const string				&Directives::getRoot( void ) const {
+const string						&Directives::getRoot( void ) const {
 	return (this->root);
 }
 
-const StrVector					&Directives::getSNames( void ) const {
+const StrVector						&Directives::getSNames( void ) const {
 	return (this->server_names);
 }
 
-const Server					*Directives::getServer( unsigned int s_num ) const {
+const Server						*Directives::getServer( unsigned int s_num ) const {
 	if (s_num >= this->servers.size())
 		return (NULL);
 	return (new Server(*this->servers[s_num]));
 }
 
-const Location					*Directives::getLocation( unsigned int s_num ) const {
+const Location						*Directives::getLocation( unsigned int s_num ) const {
 	if (s_num >= this->locations.size())
 		return (NULL);
 	return (new Location(*this->locations[s_num]));
 }
 
-const ServersVector				&Directives::getServers( void ) const {
+const ServersVector					&Directives::getServers( void ) const {
 	return (this->servers);
 }
 
-const bool						&Directives::getAutoindex( void ) const {
+const bool							&Directives::getAutoindex( void ) const {
 	return (this->autoindex);
 }
 
-const string					&Directives::getUploadStore( void ) const {
+const string						&Directives::getUploadStore( void ) const {
 	return (this->upload_store);
 }
 
@@ -139,18 +137,18 @@ const UintStrMap					&Directives::getErrorPages( void ) const {
 	return (this->error_page);
 }
 
-bool	Directives::isSet( unsigned int key ) const {
+bool								Directives::isSet( unsigned int key ) const {
 	UintStrMap::const_iterator  It = this->error_page.find(key);
 	if (It == this->error_page.cend())
 		return (false);
 	return (true);
 }
 
-void			Directives::addServer( Server *serv ) {
+void								Directives::addServer( Server *serv ) {
 	this->servers.push_back(serv);
 }
 
-void			Directives::addLocation( Location *loc ) {
+void								Directives::addLocation( Location *loc ) {
 	this->locations.push_back(loc);
 }
 
