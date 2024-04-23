@@ -2,3 +2,11 @@
 *.o
 *.d
 .DS_Store
+*.swp
+.DS_Store
+.vscode
+.vscode/*
+webserv
+obj/
+*.o
+*.d
