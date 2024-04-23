@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 13:40:00 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 20:07:59 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ string ParseContent::total_directives[ N_DIRECTIVES ] = {
 
 StrBoolPair	ParseContent::_canRepeatDirectiveList[ N_DIRECTIVES ] = {
 	make_pair<	const string, bool >( "root", false ),
-	make_pair<	const string, bool >( "listen", true ),
+	make_pair<	const string, bool >( "listen", false ),
 	make_pair<	const string, bool >( "server_name", true ),
 	make_pair<	const string, bool >( "error_page", true ),
 	make_pair<	const string, bool >( "client_max_body_size", false ),
@@ -104,7 +104,14 @@ int	ParseContent::getLocAllowDirectives( const string & directive ) {
 	return (ERROR);
 }
 
-string	&ParseContent::checkValidIp( string ip ) {
+
+void	ParseContent::checkValidPort( unsigned int port ) {
+	(void)port;
+	return ;
+}
+
+
+void	ParseContent::checkValidIp( string ip ) {
 	StrVector	masks;
 	
 	if (checkIpSyntax(ip) == false)
@@ -139,6 +146,48 @@ bool	ParseContent::checkIpSyntax( string ip ) {
 	return (true);
 }
 
-bool	ParseContent::checkValidRangeIpMask( string mask, size_t pos, size_t size ) {
-	
+string	ParseContent::decompressIp( string ip ) {
+	StrVector	args;
+	string		decompress;
+
+	split( args, ip, "." );
+	for ( size_t i = 0; i < args.size(); i++ )
+	{
+		decompress += decompressBytes( args[ i ], i, args.size() );
+		if ( i + 1 < args.size() )
+			decompress += ".";
+	}
+	return ( decompress );
+}
+
+string	ParseContent::decompressBytes( string compressed, size_t pos, size_t size ) {
+	string		decompress;
+	unsigned int	num;
+
+	decompress = compressed;
+	if ( pos == ( size - 1 ) )
+	{
+		decompress = "";
+		num = stoui( compressed );
+		for ( int i = 4 - size; i >= 0; i-- )
+		{
+			decompress += long_to_string( ( num >> ( i * 8 ) ) & 0xFF );
+			if ( i - 1 >= 0 )
+				decompress += ".";
+		}
+	}
+	return ( decompress );
+}
+
+unsigned int	ParseContent::getMaskLimit( size_t pos ) {
+	return ( MAX_NUMERIC_LIMITS( unsigned int ) >> (pos * 8) );
+}
+
+bool	ParseContent::checkValidRangeIpMask( string num, size_t pos, size_t size ) {
+	string limit;
+
+	limit = long_to_string((pos == (size - 1)) ? ParseContent::getMaskLimit(pos) : 0xFF);
+	if ( compareNumbersAsStrings( num, limit ) > 0 )
+		return ( false );
+	return (true);
 }

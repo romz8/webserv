@@ -6,16 +6,43 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 14:29:06 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 07:09:37 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 20:05:28 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Utils.hpp>
 #include <iostream>
 
-using namespace std;
 
 namespace SUtils {
+
+	string		long_to_string( long int num ) {
+		stringstream ss;
+
+		ss << num;
+		return (ss.str());
+	}
+
+	int	compareNumbersAsStrings( const string _num1, const string _num2 ) {
+		string num1( deleteExtraZeros( _num1 ) );
+		string num2( deleteExtraZeros( _num2 ) );
+		if (_num1.length() > _num2.length())
+			return (1);
+		if (_num1.length() < _num2.length())
+			return (-1);
+		return (_num1.compare(_num2));
+	}
+
+	string	deleteExtraZeros( const string number ) {
+		string res(number);
+
+		size_t idx = res.find_first_not_of("0");
+		if (idx != string::npos)
+			res.erase(0, idx);
+		else
+			res = "0";
+		return (res);
+	}
 
 	string		&treat_comments( string & str ) {
 		size_t pos = str.find_first_of("#");
@@ -34,7 +61,7 @@ namespace SUtils {
 		string	directive;
 		size_t separator_pos = line.find_first_of(";{}");
 	
-		directive_line = SUtils::split(directive_line, line, " \t");
+		split(directive_line, line, " \t");
 		if (directive_line.size() == 0)
 			return ;
 		directive = directive_line[0];
@@ -82,7 +109,7 @@ namespace SUtils {
 		StrVector line;
 		
 		string treated_line = SUtils::treat_comments(content[n_line]);
-		line = SUtils::split(line, treated_line, " \t");
+		split(line, treated_line, " \t");
 		treated_line.clear();
 		int expected_close = 1;
 		int expected_open = 1;
@@ -97,7 +124,7 @@ namespace SUtils {
 		for (int i = n_line; i < len; i++)
 		{
 			treated_line = SUtils::treat_comments(content[i]);
-			line = SUtils::split(line, treated_line, " \t");
+			split(line, treated_line, " \t");
 	
 			size_t size = line.size();
 			for (size_t j = 0; j < size; j++)

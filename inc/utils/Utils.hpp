@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 13:12:13 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/22 23:27:39 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 20:03:58 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,16 +15,19 @@
 
 # include <TypeDefines.hpp>
 # include <Defines.hpp>
+# include <sstream>
 
 namespace SUtils {
 
-StrVector             &split( StrVector & v, std::string strArr, std::string delimiter );
-std::string	        &treat_comments( std::string & str );
-std::string		    trim( std::string );
-int				    check_brackets( StrVector & content, int n_line );
-void		    	parse_line( const std::string & , int );
-unsigned int	    stoui( const std::string &num );
-
+StrVector		&split( StrVector & v, std::string strArr, std::string delimiter );
+std::string		&treat_comments( std::string & str );
+std::string		long_to_string( long int );
+std::string		trim( std::string );
+int				check_brackets( StrVector & content, int n_line );
+void			parse_line( const std::string & , int );
+unsigned int	stoui( const std::string &num );
+string			deleteExtraZeros( const string );
+int				compareNumbersAsStrings( const string , const string );
 }
 std::string		trim_left( std::string );
 std::string		trim_right( std::string );

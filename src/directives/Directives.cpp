@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 12:33:18 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 20:06:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ Directives::Directives( const Directives & src ) {
 
 Directives::Directives( const Directives & src, int ) {
 	*this = src;
-	this->ports = src.getPorts();
+	this->port = src.getPort();
 	this->client_max_body_size = src.client_max_body_size;
 	this->server_names = src.getSNames();
 	this->ip = src.getIp();

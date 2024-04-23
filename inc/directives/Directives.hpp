@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 12:15:33 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 20:06:09 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@ class Directives {
 	friend class ParseDirectives;
 	friend class Location;
 
+	private:
+		string					def_err_page;
 	private:
 		string					root;
 		unsigned int			port;

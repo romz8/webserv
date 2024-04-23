@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 12:28:12 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/23 20:03:00 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,12 +83,13 @@ void	ParseDirectives::save_listen( Directives *d, const StrVector & line ) {
 	string value = line[1].substr(0, line[1].find_last_of(";"));
 	size_t pos = value.find_last_of(":");
 	if (pos != string::npos) {
-		d->ip = ParseContent::checkValidIp(value.substr(0, pos));
-		string	port = value.substr(pos + 1, value.length());
-		d->port = ParseContent::checkValidPort(stoui(port));
+		ParseContent::checkValidIp(value.substr(0, pos));
+		d->ip = ParseContent::decompressIp(value.substr(0, pos));
+		d->port = stoui(value.substr(pos + 1, value.length()));
 	}
 	else
-		d->port = ParseContent::checkValidPort(stoui(port));
+		d->port = stoui(value.substr(pos + 1, value.length()));
+	ParseContent::checkValidPort(d->port);
 }
 
 void	ParseDirectives::save_error_page( Directives *d, const StrVector & line ) {
