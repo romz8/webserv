@@ -3,56 +3,74 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
+#    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/04/11 21:09:10 by rjobert          ###   ########.fr        #
+#    Created: 2023/07/17 07:41:15 by jsebasti          #+#    #+#              #
+#    Updated: 2024/04/23 09:15:28 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-CC = c++
-FLAGS = -MMD # -Wall -Wextra -Werror -std=c++98
-NAME = testserv
+NAME		= webserv
+NPD			= --no-print-directory
+OBJ_DIR		= obj/
+
+
+# ----Libraryes----
+INC_DIR = inc/
+
+INC = -I $(INC_DIR)defines -I $(INC_DIR)directives -I $(INC_DIR)parser -I $(INC_DIR)utils
+
+# =============
+
+# -------------
 RM = rm -rf
+MP = mkdir -p
+CC = c++
+CFLAGS = -Werror -Wextra -Wall -O3 -g -std=c++98 #-fsanitize=address
+# =============
 
-SRC_DIR = ./srcs/
-INC_DIR = ./include/
-OBJS_PATH	= ./OBJS/
+FILES = main Parser ParseContent ParseDirectives Signals Utils Server Directives Location
 
-SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp http/Response.cpp
-INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h Location.hpp
+SRC = $(addsuffix .cpp, $(FILES))
+
+vpath %.cpp src
+vpath %.cpp src/directives
+vpath %.cpp src/parser
+vpath %.cpp src/utils
+
+# -------------
+OBJ = $(addprefix $(OBJ_DIR), $(SRC:.cpp=.o))
+DEP = $(addsuffix .d, $(basename $(OBJ)))
+# =============
+
+all:
+	@$(MAKE) $(NAME) $(NPD)
+
+$(OBJ_DIR)%.o: %.cpp
+	@$(MP) $(dir $@)
+	@$(CC) $(CFLAGS) -MMD $(INC) -c $< -o $@
+	@echo "Object of the file $(basename $<) has been created 🤐"
 
 
-SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))
-INCS = $(addprefix $(INC_DIR), $(INC_NAME))
-ALL_INC = -I $(INC_DIR)
+$(NAME):: $(OBJ)
+	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@echo "Compiling $(NAME) 😈"
 
-OBJS = $(SRC:$(SRC_DIR)%.cpp=$(OBJS_PATH)%.o)
-DEPS	= $(addprefix $(OBJS_PATH), $(OBJ:.o=.d))
-
-all: $(OBJS_PATH) $(NAME)
-
--include $(DEPS)
-$(NAME): $(OBJS)
-	$(CC) $(FLAGS) $(OBJS) $(ALL_INC) -o $(NAME)
-
-
-$(OBJS_PATH):
-	mkdir -p $(OBJS_PATH)
-	# mkdir -p $(OBJS_PATH)/networking
-	
-$(OBJS_PATH)%.o: $(SRC_DIR)%.cpp Makefile
-	@mkdir -p $(dir $@) 
-	$(CC) $(FLAGS) $(ALL_INC) -c $< -o $@
+$(NAME)::
+	@echo "Hello, $(NAME) already compiled 😇"
 
 clean:
-	$(RM) $(OBJS) $(DEPS)
-	$(RM) $(OBJS_PATH)
+	@$(RM) $(OBJ_DIR)
+	@echo "$(OBJ_DIR) and company leave 42 🗑"
 
 fclean: clean
-	$(RM) $(NAME)
+	@$(RM) $(NAME)
+	@echo "$(NAME) has been black holed 🕳"
 
-re: fclean all
+re:
+	@$(MAKE) fclean $(NPD)
+	@$(MAKE) $(NPD)
+	
+-include $(DEP)
 
 .PHONY: all clean fclean re
-	
