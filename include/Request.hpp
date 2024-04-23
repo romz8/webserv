@@ -41,7 +41,7 @@ private:
 	int				_maxBodySize;
 	std::string		_chunkBody;
 	std::string		_body;
-	//std::string		_root; //will be used to remap the path to the root of the server
+	Location		_location;
 	std::map<std::string, std::string> _headers;
 
 public:
@@ -66,6 +66,7 @@ public:
 	void		processChunkBody(std::string buffer);
 	void		handlePostRequest();
 	void		handleDeleteRequest();
+	void		handleGetRequest();
 	void		DeleteDirectory();
 	
 	bool		isValidMethod() const;
@@ -74,7 +75,7 @@ public:
 	void		sanitizeUrl();
 	bool		isHiddenAccess(const std::string& url);
 	
-	void		setStatus();
+	void		StatusCode();
 	void		buildRequest();
 	std::string	getMethod() const;
 	std::string	getPath() const;
@@ -84,10 +85,12 @@ public:
 	std::map<std::string, std::string> getHeader() const;
 	std::string getBody() const;
 	void		setBody(const std::string& body);
+	void		setStatus(int status);
+	void		setLocation(const Location& loc);
 	bool		isDirectory() const;
 	
 	bool		hasReadAccess() const;
-	bool		typeCheck();
+	bool		hasWriteAccess() const;
 	void		normalizeDirPath();
 	void		initRequest();
 	

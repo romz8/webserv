@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Location.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:57:04 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/16 17:18:41 by romainjober      ###   ########.fr       */
+/*   Updated: 2024/04/23 22:21:30 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,19 +19,24 @@
 class Location 
 {
 private:
-	std::string _urlKey;
 	std::string _path;
-	std::vector<std::string> _methods;
+	std::string _rootDir;
+	std::vector<std::string> _allowedMethods;
+	std::string _uploadDirectory;
 	std::string _index;
+	bool _AutoIndex;      
+	
 public:
-	Location(const std::string& url, const std::string& path) : _urlKey(url), _path(path){}
-	~Location(){}
-	bool match(const std::string& requestPath) const
-	{
-		return (requestPath.substr(0, this->_urlKey.size()) == this->_urlKey);
-	}
-	std::string getPath() const { return this->_path;}
-	int getPrefixSize() const { return this->_urlKey.size();}
+	Location();
+	Location(const std::string& path, const std::vector<std::string>& methods,
+             const std::string& root, const std::string& index, bool autoIdx, const std::string& uploadDir);
+	~Location();
+	bool isMethodAllowed(const std::string& method) const;
+	bool match(const std::string& requestPath) const;
+	std::string getPath() const;
+	int getPrefixSize() const;
+	std::string getRootDir() const;
+	std::string getUploadFile() const;
 };
 
 

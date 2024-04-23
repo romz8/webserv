@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/12 12:56:57 by romainjober      ###   ########.fr       */
+/*   Updated: 2024/04/23 22:23:26 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
 	Config test;
 	test.host = "0"; test.port = "4242"; test.serverName = "testing Server";
-	test.root = "/"; test.index = "index.html"; test.hostName = "localhost:4242";
+	test.root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"; test.index = "index.html"; test.hostName = "localhost:4242";
 	
 	try
 	{

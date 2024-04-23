@@ -103,6 +103,7 @@ void Request::parseStartLine(const std::string& line)
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
 }
+
 /*
 Parses a single Request line, extracting the Request name and value, and storing them after trimming whitespace.
 Skip empty lines to prevent parsing errors, then Locate the delimiter between Request name and value.
@@ -188,8 +189,8 @@ bool	Request::parseContentLenBody()
 bool Request::hasBody()
 {
 	std::map<std::string, std::string>::const_iterator it;
-	it = this->_headers.find("Content-Length");
-	if (it != this->_headers.end())
+	it = this->_headers.find("Content-Length"); 
+	if (it != this->_headers.end()  && it->second != "0")
 		return (parseContentLenBody());
 	it = this->_headers.find("Transfer-Encoding");
 	if (it != this->_headers.end() && it->second == "chunked")
@@ -220,21 +221,27 @@ Core of the engine after Request parsing
 */
 void	Request::buildRequest()
 {
-	std::cout << BG_BLUE "INIT _PATH : " << this->_path << RESET << std::endl;
 	sanitizeUrl();
 	std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
+	std::cout << BG_CYAN << "method is " << this->_method << std::endl;
+	
+	//setStatus(); 
 	if (this->_status >= 400)
-		return; //later on add the location check and GET / POST / DELETE switch
-	setStatus();
-	std::cout << BG_CYAN << "status PRE _METHOD and path are " << this->_status << " and " << this->_path << std::endl;
-	if (this->_method == "POST") //later on add the location check
+		return; 
+	if (this->_method == "POST") 
 		this->handlePostRequest();
-	if (this->_method == "DELETE" && !(this->_status >= 400))
+	else if (this->_method == "DELETE")
 		this->handleDeleteRequest();
+	else if (this->_method == "GET")
+		this->handleGetRequest();
+	else
+		this->_status = 405;
+
 	if (this->_status != 200)
 		this->_extension = ".html";
 	else
 		this->_extension = parseExtension(this->_parsePath, ".html");
+	
 	std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
 	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }
@@ -258,19 +265,21 @@ Process Flow:
    available). If access is granted, sets the status code to 200 (OK); otherwise, sets it to
    403 (Forbidden).
 */
-void	Request::setStatus()
+void	Request::StatusCode() //later on add the location check and GET / POST / DELETE switch
 {
+	if (this->_status >= 400)
+		return;
 	if (!isValidMethod())
 	{
 		this->_status = 405;
 		return ;
 	}
-	if (!isValidVersion())
+	if (!isValidVersion()) 
 	{
 		this->_status = 505;
 		return ;
 	}
-	if (!isValidPath())
+	if (!isValidPath()) // TAKE IT OFF OR YOU HAVE DOUBLE PATH ADDING IN THE GET REQUEST LATER IN buildRequest
 	{
 		this->_status = 404;
 		return ;
@@ -300,6 +309,32 @@ bool Request::isValidVersion() const
 		return (true);
 	return (false);
 }
+
+/*
+*********************************************************************
+*************************** GET Request Logic ***********************
+*********************************************************************
+*/
+
+void		Request::handleGetRequest()
+{
+	if (!isValidPath())
+	{
+		this->_status = 404;
+		return ;
+	}
+	if (this->_isDirectory)
+	{
+		this->normalizeDirPath();
+		if (this->_isDirNorm)
+		{
+			this->_status = 301;
+			return;
+		}	
+	}
+	this->_status = hasReadAccess() ? 200 : 403;
+}
+
 /*
 *********************************************************************
 *************************** POST Request Logic ***********************
@@ -308,11 +343,7 @@ bool Request::isValidVersion() const
 
 
 void	Request::handlePostRequest()
-{
-	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
-	
+{	
 	std::map<std::string, std::string> data;
 	std::string body = this->_body;
 	std::map<std::string, std::string>::const_iterator it;
@@ -320,39 +351,37 @@ void	Request::handlePostRequest()
 	if (it == this->_headers.end() || it->second.empty())
 	{
 		this->_status = 400;
-		std::cout << BG_GREEN << "ERROR : Empty Header" << RESET << std::endl;
 		return ;
 	}
 	if (it->second.find("multipart/form-data") != std::string::npos)
 	{
 		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
+		if (boundary.empty())
+		{
+			this->_status = 400;
+			return ;
+		}
 		processMultipartForm(body, boundary);
 	}
 	else
-		processFormData(body, loc[0]);
+		processFormData(body, this->_location);
 }
+
 void	Request::processFormData(const std::string& input, const Location& loc)
 {
 		std::istringstream stream(input);
 		
-		std::ofstream file(loc.getPath() + this->_parsePath + "postData.txt", std::ios::app); //very testy ..update with Location and actual logic
-		std::cout << "parsed path is : " << this->_parsePath + "postData.txt" << std::endl;
+		std::ofstream file(loc.getRootDir() + loc.getPath() + "LocationPostData.txt", std::ios::app); //very testy ..update with Location and actual logic
 		if (!file.is_open())
 		{
 			this->_status = 500;
-			std::cout << BG_GREEN << "ERROR : File not open" << RESET << std::endl;
-			struct stat path_stat;
-			if (stat(this->_parsePath.c_str(), &path_stat) == -1)
-				std::cout << BG_GREEN << "INEXISTANT PATH" << RESET << std::endl;
-			if (access(this->_parsePath.c_str(), W_OK) != 0)
-				std::cout << BG_GREEN << "PERMISSION ISSUE FOLDER" << RESET << std::endl;
-			if (access((this->_parsePath + "postData.txt" ).c_str(), W_OK) != 0)
-				std::cout << BG_GREEN << "PERMISSION ISSUE FILE" << RESET << std::endl;
 			return ;
 		}
 		file << input << std::endl;
 		file.close();
 		this->_status = 201;
+		this->_parsePath = loc.getRootDir() + loc.getPath(); // TESTING
+		std::cout << BG_GREEN << "path is : " << this->_parsePath << RESET << std::endl;
 }
 
 
@@ -365,7 +394,6 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 
 	start += delimiter.length() + 2; 
 	end = input.find(endDelimiter) - 2;
-	std::cout <<"start is : " << start << " and end is : " << end << std::endl;
 	std::string part = input.substr(start, end - start);
 	size_t headerpos= part.find("\r\n\r\n");	
 	std::string headers = part.substr(0, headerpos);
@@ -377,19 +405,17 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	{
 		if (line.find("filename=") != std::string::npos)
 		{
-			std::cout << BG_CYAN << "line is : " << line << RESET << std::endl;
 			size_t pos = line.find("filename=\"") + 10;
 			size_t bracketpos = line.substr(pos).find('\"');
 			fname = line.substr(pos, bracketpos);
-			std::cout << BG_RED << "fname is : " << fname << RESET << std::endl;
 		}
 	}
-	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	std::ofstream file(loc[0].getPath() + "upload/" + fname); //very testy ..update with Location and actual logic
+	std::ofstream file(this->_location.getUploadFile() + fname); //very testy ..update with Location and actual logic
+	std::cout << "POST UPLOAD file Ressource is : " << this->_location.getUploadFile() + fname << std::endl;
 	file << body;
 	file.close();
 	this->_status = 201;
+	this->_parsePath =this->_location.getUploadFile(); // TESTING
 }
 
 void	Request::processChunkBody(std::string input)
@@ -398,21 +424,16 @@ void	Request::processChunkBody(std::string input)
 
 	size_t pos = 0;
 	data.clear();
-	std::cout << BG_CYAN << "WE ARE IN CHUNK PROCESS input is " << input << RESET  << std::endl;
 	while (true)
 	{
 		size_t endBlock = input.find("\r\n", pos);
 		size_t chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
-		std::cout << BG_RED "chunksize iss" << chunkSize << RESET << std::endl;
 		if (chunkSize == 0)
 			break;
 		std::string unchunked = input.substr(endBlock + 2, chunkSize);
-		std::cout << BG_RED "unckcubnked block is :" << unchunked << RESET << std::endl;
 		data.append(unchunked);
 		pos = endBlock + chunkSize + 2 + 2;
-		
-	}	
-	std::cout << BG_RED "UN CHUNKED Data is : " << data << RESET << std::endl;
+	}
 	this->_body = data;
 }
 
@@ -446,39 +467,29 @@ void	Request::processChunkBody(std::string input)
  */
 void	Request::handleDeleteRequest()
 {
-	std::vector<Location> loc;
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
 	
-	sanitizeUrl();
-	if (loc[0].match(this->_path))
-		this->_parsePath = loc[0].getPath() + this->_path.substr(loc[0].getPrefixSize());
-    
-	struct stat path_stat;
-    if ((stat(this->_parsePath.c_str(), &path_stat) == -1) || this->_path.empty() || this->_path[0] != '/')
+	this->_parsePath = _location.getPath() + this->_path.substr(_location.getPath().size());
+    std::cout << "DELETE METHOD PATH IS : " << this->_parsePath << std::endl;
+    if (!isValidPath())
 	{
         _status = 404;  
         return;
     }
-	if (access(this->_parsePath.c_str(), W_OK) != 0)
+	if (!hasWriteAccess())
 	{
 		this->_status = 403;
 		return;
 	}
-	if(S_ISDIR(path_stat.st_mode))
-	{
-		this->_isDirectory = true;
+
+	if(this->_isDirectory)
 		DeleteDirectory();
-	}
-	else if(S_ISREG(path_stat.st_mode))
+	else
 	{
-		this->_isDirectory = false;
 		if(!deleteResource(this->_parsePath))
 			this->_status = 500;
 		else
 			this->_status = 204;
 	}
-	else
-		this->_status = 400;
 }
 
 void Request::DeleteDirectory()
@@ -487,7 +498,10 @@ void Request::DeleteDirectory()
 	bool emptyDir = true;
 
 	if (path[path.size() - 1] != '/')
-		path.append("/");
+	{
+		this->_status = 409;
+		return;
+	}
 	DIR *dir = opendir(path.c_str());
 	if (dir == NULL)
 	{
@@ -505,7 +519,6 @@ void Request::DeleteDirectory()
 	if (!emptyDir)
 	{
 		this->_status = 409;
-		std::cout << "Directory not empty for DELETE request" << std::endl;
 		return;
 	}
 	if (!deleteResource(path))
@@ -527,28 +540,11 @@ if neither -> raiseError by returning null, otherwise update Response State
 */
 bool Request::isValidPath() 
 {
-	std::vector<Location> loc;
-	//loc.push_back(Location("/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/"));
-	//loc.push_back(Location("/recipe/", "/Users/romainjobert/Desktop/42/Webserv/proto/html/asset/"));
-	loc.push_back(Location("/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/"));
-	loc.push_back(Location("/recipe/", "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/asset/"));
-	
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
-	if (loc[0].match(this->_path))
-	{
-		this->_parsePath = loc[0].getPath() + this->_path.substr(loc[0].getPrefixSize());
-		std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
-		std::cout << BG_YELLOW << "full path from loc is from root 1" << std::endl;
-	}
-	if (loc[1].match(this->_path))
-	{
-		this->_parsePath = loc[1].getPath() + this->_path.substr(loc[1].getPrefixSize());
-		std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
-		std::cout << BG_YELLOW << "full path from loc is from root 2" << std::endl;
-	}
+	this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
 	std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
-	
+	std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
 	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
@@ -586,6 +582,10 @@ bool Request::hasReadAccess() const
 	return (false); 
 }
 
+bool Request::hasWriteAccess() const 
+{
+    return (access(this->_parsePath.c_str(), W_OK) == 0);
+}
 
 
 /*
@@ -695,7 +695,6 @@ std::map<std::string, std::string> Request::getHeader() const
 
 void Request::setBody(const std::string& body)
 {
-	std::cout << BG_RED "Body BEFORE set STAGE is : " << body << RESET << std::endl;
 	if (this->_status == 413)
 		return;
 	std::map<std::string, std::string>::const_iterator it;
@@ -704,13 +703,22 @@ void Request::setBody(const std::string& body)
 		processChunkBody(body);
 	else
 		this->_body = body;
-	std::cout << BG_RED "Body at set STAGE is : " << this->_body << RESET << std::endl;
 }
 
 std::string  Request::getBody() const
 {
-	
 	return(this->_body);
+}
+
+void	Request::setStatus(int status)
+{
+	this->_status = status;
+}
+
+void	Request::setLocation(const Location& loc)
+{
+	this->_location = loc;
+
 }
 
 /************************** UTILS **********************************/

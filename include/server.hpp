@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/19 12:01:16 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/23 21:50:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ typedef struct Config
 	std::string	root;
 	std::string	index;
 	std::string	hostName;
-	//Location	loc; 	//later on std::vector<Location> locs;
+	// Location	loc; 	//later on std::vector<Location> locs;
 } Config;
 
 
@@ -35,10 +35,11 @@ class Server
 private:
 	std::string	_host;
 	std::string	_port;
+	std::string	_root;
 	std::string	_serverName;
 	std::string	_hostName;
 	int		_maxBodySize;
-	//Location _locs; //will be a vector later-on if several routes inf conf file
+	std::vector<Location>	_locations; 
 	const sockaddr_in _servAddr;
 	Socket _sock;
 	
@@ -56,7 +57,7 @@ public:
 	std::string getResponse();
 	void	run();
 	void	handleConnection();
-	
+	const Location* findLocationForRequest(const std::string& requestPath) const;
 	static const sockaddr_in setServAddr(const Config& conf);
 };
 

@@ -39,6 +39,8 @@ public:
 	std::string getResponse() const;
 	void	excecuteGetResponse();
 	void	handle200();
+	void	handle201();
+	void	handle204();
 	void	handle301();
 	void	handleError();
 	void	addHeaders();

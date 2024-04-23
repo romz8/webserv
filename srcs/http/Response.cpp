@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/21 17:04:12 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/23 18:20:36 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,13 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 	_mimeTypes(initMimeMaps()), _content_len("0"), _headerResponse(""), _body(""), \
 	_response(""), _assetPath(""), _extension(".html")
 {
-	std::cout << BG_BLUE "RESP built with : " << this->_status << RESET <<std::endl;
 	if (this->_status >= 400)
 		this->_assetPath = _root + getErrorPage(this->_status);
 	else if (head.getParsePath().empty())
 		this->_assetPath = _root + _errPages[404];
 	else
 		this->_assetPath = head.getParsePath();
+	std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
 	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
 	std::cout << "extension is " << this->_extension << std::endl;
 }
@@ -141,7 +141,7 @@ std::string Response::getResponse() const
 
 void	Response::addHeaders()
 {
-	if (this->_status == 301)
+	if (this->_status == 301 || this->_status == 201)
 		_headers["Location"] = this->_assetPath;
 	else
 	{	
@@ -161,6 +161,17 @@ void 	Response::handle200()
 void 	Response::handle301()
 {
 	addHeaders();
+}
+
+void 	Response::handle201()
+{
+	addHeaders();
+}
+
+void 	Response::handle204()
+{
+	_headers.clear();
+    _body = "";
 }
 
 void 	Response::handleError()
