@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 20:03:00 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/25 00:11:28 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,9 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 void	ParseDirectives::save_root( Directives *d, const StrVector &line ) {
 	if ( line.size() != 2 )
 		throw logic_error("Unexpected amount of arguments");
+	if (d->dirSet["alias"] == true)
+		throw logic_error("Alias already setted before");
+	d->root.clear();
 	d->root = line[1].substr(0, line[1].find_first_of(";"));
 }
 
@@ -83,12 +86,12 @@ void	ParseDirectives::save_listen( Directives *d, const StrVector & line ) {
 	string value = line[1].substr(0, line[1].find_last_of(";"));
 	size_t pos = value.find_last_of(":");
 	if (pos != string::npos) {
-		ParseContent::checkValidIp(value.substr(0, pos));
 		d->ip = ParseContent::decompressIp(value.substr(0, pos));
+		ParseContent::checkValidIp(d->ip);
 		d->port = stoui(value.substr(pos + 1, value.length()));
 	}
 	else
-		d->port = stoui(value.substr(pos + 1, value.length()));
+		d->port = stoui(value);
 	ParseContent::checkValidPort(d->port);
 }
 

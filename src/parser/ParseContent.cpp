@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 20:07:59 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/25 00:10:48 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,12 +104,10 @@ int	ParseContent::getLocAllowDirectives( const string & directive ) {
 	return (ERROR);
 }
 
-
 void	ParseContent::checkValidPort( unsigned int port ) {
-	(void)port;
-	return ;
+	if (port > MAX_NUMERIC_LIMITS( unsigned short ))
+		throw logic_error("Invalid port");
 }
-
 
 void	ParseContent::checkValidIp( string ip ) {
 	StrVector	masks;
@@ -190,4 +188,10 @@ bool	ParseContent::checkValidRangeIpMask( string num, size_t pos, size_t size ) 
 	if ( compareNumbersAsStrings( num, limit ) > 0 )
 		return ( false );
 	return (true);
+}
+
+void	ParseContent::checkFolder( string _dir ) {
+	if (_dir[_dir.length() - 1] != '/')
+		_dir.append("/");
+	
 }
