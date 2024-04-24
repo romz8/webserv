@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/23 22:07:55 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/24 21:48:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	this->_serverName = conf.serverName;
 	this->_hostName = conf.hostName;
 	this->_root = conf.root;
+	this->_errPageGlobal = conf.errPageGlobal;
 	this->_maxBodySize = 10000000; //to replace with config max body size
 	
 	std::vector<std::string> methods1;
@@ -27,10 +28,18 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	methods2.push_back("GET");
 	methods2.push_back("POST");
 
-	_locations.push_back(Location("/", methods1, _root, "index.html", true, ""));
-    _locations.push_back(Location("/getorder", methods2, _root, "index.html", false, "./uploads"));
-    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, "./uploads"));
+	std::map<int, std::string> custom404;
+	custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
+	// _locations.push_back(Location("/", methods1, _root, "index.html", true, ""));
+	_locations.push_back(Location("/getorder", methods2, _root, "index.html", false, true,"./upload/"));
+    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, false, "./upload/"));
+	_locations[0].addErrPage(custom404);
     //_locations.Location("/delete", {"DELETE"}, serverRoot, "test.html", false);
+	// _locations.push_back(Location("/nimp", methods1, _root, "index.html", true, ""));
+    // _locations.push_back(Location("/nimo2", methods2, _root, "index.html", false, "./upload/"));
+    // _locations.push_back(Location("/blabla", methods2, _root, "index.html", false, "./upload/"));
+	_rootloc = Location("/", methods1, _root, "index.html", true, false, "");
+	_rootloc.addErrPage(_errPageGlobal);
 	
 	printSockAddrIn(_servAddr);
 }
@@ -91,19 +100,16 @@ void	Server::handleConnection()
 	std::cout << "rawHead: " << rawhead << std::endl;
 	Request request(head, _hostName, _maxBodySize); //to replace with config max body size
 	request.printHeader();
-	const Location* matchLoc = findLocationForRequest(request.getPath());
-	if (matchLoc == NULL)
-		request.setStatus(404);
-	else
-		request.setLocation(*matchLoc);
-	std::cout << "Location found : " << matchLoc->getPath() << std::endl;
-	
 	if (request.hasBody())
 	{
 		std::string body = this->_sock.readBody(io_fd, request.getHeader(), rawhead);
 		request.setBody(body);
 	}
-	
+	const Location* matchLoc = findLocationForRequest(request.getPath());
+	if (matchLoc == NULL)
+		request.setLocation(_rootloc);
+	else
+		request.setLocation(*matchLoc);
 	std::cout << BG_GREEN "********* DONE READING : NOW Build Request ********* " RESET << std::endl;
 	request.buildRequest();
 	request.printRequest();
@@ -132,12 +138,31 @@ Socket Server::socketFactory(const sockaddr_in& addr)
     }
 }
 
+/*
+Pointer to store the best matchLength of the longest path match found
+Check if the location path is a prefix of the request path with compare()
+Update the length of the longest match
+Return the best match found, or NULL if no match was found
+*/
 const Location* Server::findLocationForRequest(const std::string& requestPath) const 
 {
-    for (size_t i = 0; i < _locations.size(); ++i) {
-        if (requestPath.find(_locations[i].getPath()) == 0) {
-            return &_locations[i];
+    const Location* bestMatch = NULL;  // Pointer to store the best match
+    size_t longestMatchLength = 0;     // Length of the longest path match found
+
+    for (size_t i = 0; i < _locations.size(); ++i) 
+	{
+        const std::string& locationPath = _locations[i].getPath();
+       
+        if (requestPath.compare(0, locationPath.length(), locationPath) == 0) 
+		{
+            std::cout << BG_RED "select Location is : " RESET<< locationPath << std::endl;
+			if (locationPath.length() > longestMatchLength) 
+			{
+                bestMatch = &_locations[i];
+                longestMatchLength = locationPath.length();  
+            }
         }
     }
-    return NULL;
+	return bestMatch; 
 }
+

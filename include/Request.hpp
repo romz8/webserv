@@ -87,6 +87,7 @@ public:
 	void		setBody(const std::string& body);
 	void		setStatus(int status);
 	void		setLocation(const Location& loc);
+	Location	getLocation() const;
 	bool		isDirectory() const;
 	
 	bool		hasReadAccess() const;
@@ -103,5 +104,7 @@ std::string extractBoundary(const std::string& contentType);
 bool	endsWithCRLF(const std::string& str);
 bool 	hasConsecutiveSpace(const std::string& str);
 bool	deleteResource(const std::string& path);
+bool	fileExists(const std::string& path);
+size_t safeStrToSizeT(const std::string& str);
 
 #endif

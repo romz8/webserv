@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/23 18:20:36 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/24 19:35:57 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,14 @@ in the response body.
 TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
 */
 Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
-	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _errPages(initErrMaps()), \
-	_mimeTypes(initMimeMaps()), _content_len("0"), _headerResponse(""), _body(""), \
-	_response(""), _assetPath(""), _extension(".html")
+	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _mimeTypes(initMimeMaps()), \
+	_content_len("0"), _headerResponse(""), _body(""), _response(""), _assetPath(""), \
+	_extension(".html"), _location(head.getLocation())
 {
 	if (this->_status >= 400)
-		this->_assetPath = _root + getErrorPage(this->_status);
+		this->_assetPath = _location.getRootDir() + getErrorPage(this->_status);
 	else if (head.getParsePath().empty())
-		this->_assetPath = _root + _errPages[404];
+		this->_assetPath = _location.getRootDir() + getErrorPage(404);
 	else
 		this->_assetPath = head.getParsePath();
 	std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
@@ -289,20 +289,20 @@ std::map<int, std::string>	Response::initStatusMaps()
 }
 
 // Initializing Error Pages
-std::map<int, std::string> Response::initErrMaps()
-{
-    std::map<int, std::string> e;
-	e[400] = "/error_pages/400.html";
-	e[403] = "/error_pages/403.html";
-    e[404] = "/error_pages/404.html";
-    e[405] = "/error_pages/405.html";
-	e[409] = "/error_pages/409.html";
-	e[413] = "/error_pages/413.html";
-	e[500] = "/error_pages/500.html";
-    e[505] = "/error_pages/505.html";
+// std::map<int, std::string> Response::initErrMaps()
+// {
+//     std::map<int, std::string> e;
+// 	e[400] = "/error_pages/400.html";
+// 	e[403] = "/error_pages/403.html";
+//     e[404] = "/error_pages/404.html";
+//     e[405] = "/error_pages/405.html";
+// 	e[409] = "/error_pages/409.html";
+// 	e[413] = "/error_pages/413.html";
+// 	e[500] = "/error_pages/500.html";
+//     e[505] = "/error_pages/505.html";
 	
-	return e;
-}
+// 	return e;
+// }
 
 // Get the MIME type based on file extension
 std::string Response::getMimeType(const std::string& extension) const 
@@ -326,9 +326,9 @@ std::string Response::getStatusMessage(int statusCode) const
 
 std::string Response::getErrorPage(int statusCode) const 
 {
-	std::map<int, std::string>::const_iterator it = _errPages.find(statusCode);
-	if (it != _errPages.end()) 
-		return it->second;
+	std::string pagePath = this->_location.getErrPage(statusCode);
+	if (!pagePath.empty()) 
+		return (pagePath);
 	else
 		return "/error_pages/def_err.html"; // Default message if not found
 }

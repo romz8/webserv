@@ -16,7 +16,7 @@ private:
 	std::string		_assetPath;
 	std::string		_extension;
 	std::map<int, std::string> _statusMsgs;
-	std::map<int, std::string> _errPages;
+	// std::map<int, std::string> _errPages; replaced by location, keep for testing
 	std::map<std::string, std::string> _mimeTypes;
 	std::map<std::string, std::string> _headers;
 	std::string		_content_len;
@@ -24,6 +24,7 @@ private:
 	std::string		_headerResponse;
 	std::string		_body;
 	std::string		_response;
+	Location		_location;
 	static const std::string	_root; //for testing
 
 public:

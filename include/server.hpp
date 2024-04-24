@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/23 21:50:08 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/24 18:20:50 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ typedef struct Config
 	std::string	root;
 	std::string	index;
 	std::string	hostName;
+	std::map<int, std::string> errPageGlobal;
 	// Location	loc; 	//later on std::vector<Location> locs;
 } Config;
 
@@ -41,6 +42,8 @@ private:
 	int		_maxBodySize;
 	std::vector<Location>	_locations; 
 	const sockaddr_in _servAddr;
+	std::map<int, std::string> _errPageGlobal;
+	Location _rootloc; //if no url match a location, use root location
 	Socket _sock;
 	
 	Server(const Server& src);

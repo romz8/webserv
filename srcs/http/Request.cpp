@@ -224,8 +224,9 @@ void	Request::buildRequest()
 	sanitizeUrl();
 	std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
 	std::cout << BG_CYAN << "method is " << this->_method << std::endl;
+	std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
 	
-	//setStatus(); 
+	StatusCode();
 	if (this->_status >= 400)
 		return; 
 	if (this->_method == "POST") 
@@ -279,21 +280,31 @@ void	Request::StatusCode() //later on add the location check and GET / POST / DE
 		this->_status = 505;
 		return ;
 	}
-	if (!isValidPath()) // TAKE IT OFF OR YOU HAVE DOUBLE PATH ADDING IN THE GET REQUEST LATER IN buildRequest
+	if (this->_method == "GET" && _location.isMethodAllowed("GET")== false)
 	{
-		this->_status = 404;
+		this->_status = 405;
 		return ;
 	}
-	if (this->_isDirectory)
+	if (this->_method == "POST" && _location.isMethodAllowed("POST")== false)
 	{
-		this->normalizeDirPath();
-		if (this->_isDirNorm)
-		{
-			this->_status = 301;
-			return;
-		}	
+		this->_status = 405;
+		return ;
 	}
-	this->_status = hasReadAccess() ? 200 : 403;
+	if (this->_method == "DELETE" && _location.isMethodAllowed("DELETE")== false)
+	{
+		this->_status = 405;
+		return ;
+	}
+	if (this->_method=="POST" && _location.getUploadAllowed() == false)
+	{
+		this->_status = 403;
+		return ;
+	}
+	if (this->_method=="POST" && safeStrToSizeT(this->_headers["Content-Length"]) > _maxBodySize)
+	{
+		this->_status = 413;
+		return ;
+	}
 }
 
 bool Request::isValidMethod() const
@@ -325,12 +336,20 @@ void		Request::handleGetRequest()
 	}
 	if (this->_isDirectory)
 	{
+		std::string index = this->_location.getIndex();
 		this->normalizeDirPath();
 		if (this->_isDirNorm)
 		{
 			this->_status = 301;
 			return;
-		}	
+		}
+		else if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
+			this->_parsePath = _location.getRootDir() + this->_path + index;
+		else
+		{
+			this->_status = 404; //to replace with Autoindexing
+			return;
+		}
 	}
 	this->_status = hasReadAccess() ? 200 : 403;
 }
@@ -370,8 +389,11 @@ void	Request::handlePostRequest()
 void	Request::processFormData(const std::string& input, const Location& loc)
 {
 		std::istringstream stream(input);
-		
-		std::ofstream file(loc.getRootDir() + loc.getPath() + "LocationPostData.txt", std::ios::app); //very testy ..update with Location and actual logic
+		std::string filePath = _location.getRootDir() + _location.getUploadFile() + "LocationPostData.txt";
+		std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
+		std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
+		std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
+		std::ofstream file(filePath, std::ios::app); //very testy ..update with Location and actual logic
 		if (!file.is_open())
 		{
 			this->_status = 500;
@@ -410,12 +432,18 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 			fname = line.substr(pos, bracketpos);
 		}
 	}
-	std::ofstream file(this->_location.getUploadFile() + fname); //very testy ..update with Location and actual logic
-	std::cout << "POST UPLOAD file Ressource is : " << this->_location.getUploadFile() + fname << std::endl;
+	std::string filePath = _location.getRootDir() + _location.getUploadFile() + fname;
+	std::cout << "POST UPLOAD file Ressource is : " << filePath << std::endl;
+	std::ofstream file(filePath); //very testy ..update with Location and actual logic
+	if (!file.is_open())
+	{
+		this->_status = 500;
+		return;
+	}
 	file << body;
 	file.close();
 	this->_status = 201;
-	this->_parsePath =this->_location.getUploadFile(); // TESTING
+	this->_parsePath = _location.getRootDir() + _location.getUploadFile(); // TESTING
 }
 
 void	Request::processChunkBody(std::string input)
@@ -718,7 +746,13 @@ void	Request::setStatus(int status)
 void	Request::setLocation(const Location& loc)
 {
 	this->_location = loc;
+	std::cout << BG_GREEN "Location in REQUEST is : " << _location.getPath() << RESET << std::endl;
 
+}
+
+Location Request::getLocation() const
+{
+	return(this->_location);
 }
 
 /************************** UTILS **********************************/
@@ -815,4 +849,29 @@ bool deleteResource(const std::string& path)
         return true;  // Successfully deleted
     else
         return false;  // Error in deleting the resource
+}
+
+bool fileExists(const std::string& path) 
+{
+    struct stat buffer;   
+    return (stat(path.c_str(), &buffer) == 0);  // Use stat to check for file existence
+}
+
+size_t safeStrToSizeT(const std::string& str) 
+{
+    char* end;
+    errno = 0; // To detect overflow
+    long val = std::strtol(str.c_str(), &end, 10);
+
+    // Check for conversion errors
+    if (end == str.c_str() || *end != '\0' || errno == ERANGE || val < 0) 
+	{
+        if (val < 0 || errno == ERANGE)
+            throw std::runtime_error("Overflow or underflow occurred in strtol conversion");
+        throw std::runtime_error("Conversion error occurred in strtol");
+    }
+    // if (val > static_cast<long>(SIZE_MAX))
+    //     throw std::runtime_error("Value too large for size_t");
+
+    return static_cast<size_t>(val);
 }
