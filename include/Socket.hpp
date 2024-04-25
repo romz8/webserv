@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/21 17:59:13 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/25 23:23:38 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,8 @@
 
 
 # define MAX_Q 10
-# define BUFSIZE 200
+# define BUFSIZE 8194
+# define MAX_HEADER_SIZE 8193
 
 class Socket
 {

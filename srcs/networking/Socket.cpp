@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/21 20:40:59 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/25 23:40:40 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,24 +99,15 @@ const std::string Socket::readHeader(const int io_socket)
 {
 	int byteRead = 1;
 	std::string rawRequest;
-	size_t endheader = std::string::npos;
-	
-	while(byteRead > 0)
-	{
-		char buffer[BUFSIZE];
-		byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
-		if (byteRead < 0)
-			throw std::runtime_error("Impossible read message from client");
-		if (byteRead == 0)
-			throw std::runtime_error("Client closed connection in HEADER reading");
-		buffer[byteRead] = '\0';
-		rawRequest.append(buffer, byteRead);
-		endheader = rawRequest.find("\r\n\r\n");
-		if (endheader != std::string::npos)
-			break ;
-	}
-	if (endheader == std::string::npos)
-		throw std::runtime_error("Header too long");
+	std::cout << "ARRIVED IN HEADER READING" << std::endl;
+	char buffer[BUFSIZE];
+	byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
+	if (byteRead < 0)
+		throw std::runtime_error("Impossible read message from client");
+	if (byteRead == 0)
+		throw std::runtime_error("Client closed connection in HEADER reading");
+	buffer[byteRead] = '\0';
+	rawRequest.append(buffer, byteRead);
 	std::cout << "********* DONE RECEIVING HEADER DATA *********" << std::endl;
 	return (rawRequest);
 }
@@ -130,7 +121,7 @@ const std::string Socket::readBody(const int io_socket, const std::map<std::stri
 		readChunkEncodingBody(io_socket, body);
 	else if (header.find("Content-Length") != header.end())
 	{
-		size_t contentLength = atoi((header.find("Content-Length")->second).c_str());
+		size_t contentLength = std::stol((header.find("Content-Length")->second).c_str());
 		body = readFixedLengthBody(io_socket, contentLength, body);
 	}
 	else
@@ -138,7 +129,12 @@ const std::string Socket::readBody(const int io_socket, const std::map<std::stri
 	std::cout << "********* DONE READING BODY DATA *********" << std::endl;
 	return (body);
 }
-
+/*
+initially a loop on recv with a purpose to have the content added to initilay partial
+body to be reconstructed in the end, but issue is that with a test made in a script in python
+you can actually send a content-length of 10000 and empty body -> infinte loop so currenlty set up 
+for a fixed length body to be read
+*/
 std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body) 
 {
     
@@ -146,10 +142,11 @@ std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, 
     size_t totalRead = 0;
 	std::cout << "Content length : " << contentLength << std::endl;
 	std::cout << "Body size : " << body.size() << std::endl;
-	std::cout << "Body is : " << body << std::endl;
+	
 	char buffer[contentLength + 1];
     while (body.size() < contentLength) 
 	{
+		std::cout << "total read : " << totalRead << std::endl;
 		bytesRead = recv(clientSocket, buffer, contentLength  - body.size(), 0);
 		if (bytesRead > 0)
             totalRead += bytesRead;
@@ -159,6 +156,9 @@ std::string Socket::readFixedLengthBody(int clientSocket, size_t contentLength, 
             throw std::runtime_error("Error reading from socket");
 		buffer[bytesRead] = '\0';
 		body.append(buffer, bytesRead);
+		if (totalRead == 0)
+			throw std::runtime_error("Empty read");
+		std::cout << "total read after first time : " << totalRead << std::endl;
     }
 	std::cout << "Bytes read : " << bytesRead << std::endl;
 	std::cout << "Total read : " << totalRead << std::endl;

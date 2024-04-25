@@ -16,9 +16,17 @@
 Request string. It sets up initial request parameters and catches any exceptions 
 during parsing, setting an error status if needed.
 */
-Request::Request(const std::string& rawRequest, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
+Request::Request(const std::string& rawHead, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
 {
+	std::string rawRequest;
 	initRequest();
+	if (rawHead.find("\r\n\r\n") == std::string::npos)
+	{
+		this->_status = 400;
+		return ;
+	}
+	else
+		rawRequest = rawHead.substr(0, rawHead.find("\r\n\r\n") + 4);
 	try
 	{
 		parseHeader(rawRequest);
@@ -55,26 +63,51 @@ Request& Request::operator=(const Request& src)
 **************** PARSING OF THE REQUEST HEADER ***********************
 *********************************************************************
 */
-/*
-first we parse the start line (containing the method, path and version)
-after skipping any empty lines or lines that contain only whitespace or CRLF
-then we parse the Requests as key value pairs inside a map
-we implement a trimming for key, value for insrting in the map
-*/
+
+/** 
+ * Parses the HTTP request headers from a given string buffer (THE BIG BERTA of the Request parsing )
+ *
+ * @param head A string containing all the header lines read from a request.
+ *
+ * This function processes each line of the headers, validates that each is correctly formatted with
+ * CRLF termination, and extracts key-value pairs from each header line. It checks the cumulative size
+ * of the headers against a maximum allowable limit (8192 as per Nginx default setup on HTTP1.1)
+ * to prevent potential denial-of-service attacks due to excessively large headers.
+ *
+ * Steps:
+ * 1. Initializes a stream to sequentially read lines from the header string, check for lone CR.
+ * 2. Skips any initial empty lines or lines consisting solely of whitespace.
+ * 3. Reads and processes each header line:
+ *    a. Checks if the line correctly ends with '\r' (the '\n' is consumed by getline).
+ *    b. Removes the trailing '\r' for correct parsing.
+ *    c. Ends reading headers upon reaching an empty line (headers are terminated by an empty line).
+ *    d. Parses the header line to extract key-value pairs.
+ *    e. Adds the length of the line to a cumulative counter to ensure it does not exceed the max limit.
+ * 4. Throws exceptions if headers are not properly terminated or if individual lines are malformed.
+ * 5. Validates that a "Host" header exists and is correct.
+ *
+ * @throws std::runtime_error If header lines are not properly formatted or exceed size limits.
+ */
 void Request::parseHeader(const std::string& head)
 {
 	std::istringstream stream(head);
 	bool	headersFinished = false;
 	std::string line;
+	size_t	headerSize = 0;
 	
+	if (loneCR(head))
+			throw std::runtime_error("Error parsing Request : lone CR found in header");
 	while (std::getline(stream, line, '\n') && (line.empty() || line.find_first_not_of(" \t\n\r\f\v") == std::string::npos))
 		continue;
 	try
 	{
 		parseStartLine(line);
+		line.clear();
 		while (std::getline(stream, line,'\n'))
 		{
-			if (!line.empty() && line[line.size() - 1] == '\r')
+			if (!line.empty() && line[line.size() - 1] != '\r')
+				throw std::runtime_error("Error parsing Request : no CRLF terminated at line " + line);
+			else
 				line.erase(line.size() - 1);
 			if (line.empty())
 			{
@@ -82,9 +115,12 @@ void Request::parseHeader(const std::string& head)
 				break;
 			}
 			parseHeaderLine(line);
+			headerSize += line.size() + 2;
+			if (headerSize > MAX_HEADER_SIZE)
+				throw std::runtime_error("Error parsing Request : header size exceeded");
 		}
 		if (!headersFinished)
-			throw std::runtime_error("Headers not properly terminated (CRLFCRLF)");
+			throw std::runtime_error("Headers not properly terminated (Double CRLF)");
 		hasCorrectHost();
 	}
 	catch(const std::exception& e)
@@ -96,7 +132,7 @@ void Request::parseHeader(const std::string& head)
 // Extracts the HTTP method, path, and version from the start line of the request.
 void Request::parseStartLine(const std::string& line)
 {
-	std::cout << BG_RED "line is : " << line << RESET <<std::endl;
+	std::cout << BG_RED "REQUEST LINE is : " << line << RESET <<std::endl;
 	std::istringstream lineStream(line);
 	
 	if (!isValidRL(line))
@@ -122,9 +158,9 @@ bool Request::isValidRL(const std::string& line)
 	if (line[0] == SP[0] || line[line.size() - 1] == SP[0])
 		return (false);
 	firstspace = line.find(SP);
-	if (firstspace == std::string::npos || firstspace == 0 || line[firstspace + 1] == ' ')
+	if (firstspace == std::string::npos || firstspace == 0 || line[firstspace + 1] == ' ') //potential SF ?
 		return (false);
-	secondspace = line.find(SP, firstspace + 1);
+	secondspace = line.find(SP, firstspace + 1); //should we not count number of space (only 2) and not consecutie ?
 	if (secondspace == std::string::npos || secondspace == firstspace + 1) 
 		return(false);
 	size_t nextsp = line.find(SP, secondspace + 1);
@@ -142,16 +178,31 @@ bool Request::isValidRL(const std::string& line)
 	return (true);
 }
 
-
+/**
+ * Parses an individual HTTP header line to extract the key and value, ensuring correct formatting.
+ *
+ * @param line A single header line excluding the CRLF termination.
+ * @throws std::runtime_error If the line is malformed (no colon, invalid whitespace).
+ * This function validates the header line's format, checks for the presence of a colon (':') as
+ * the delimiter between the key and value, and ensures there is no disallowed whitespace before
+ * the colon. It then extracts the key and value, trims any surrounding whitespace, and stores them
+ * in the header map.
+ */
 void	Request::parseHeaderLine(const std::string& line)
 {
 	if (line.empty())
 		return;
+	std::cout << BG_GREEN "HEADER LINE Is " << line << std::endl;
 	size_t pos = line.find(":");
 	if (pos == std::string::npos)
-		throw std::runtime_error("Error parsing Request : no colon (:) at line " + line);
+		throw std::runtime_error("Error parsing Request : no colon (:) at headerline " + line);
+	
 	std::string key = trim(line.substr(0, pos));
+	if (key.empty())
+		throw std::runtime_error("Error parsing Request : empty key in headerline " + line);
 	std::string value = trim(line.substr(pos + 1));
+	if (line.find_first_of(" \t") < pos)
+		throw std::runtime_error("Whitespace found before colon in headerline" + line);
 	this->_headers[key] = value;
 }
 
@@ -170,20 +221,31 @@ bool	Request::hasCorrectHost() const
 
 bool	Request::parseContentLenBody()
 {
+	std::cout << BG_GREEN "WE ARRIVE IN BODY PARSING" << std::endl;
 	bool bodyok = false;
 	if (_headers["Content-Length"].empty())
+	{
 		this->_status = 400;
-	long int	len = atoi(_headers["Content-Length"].c_str());
-	if (len <= 0)
-		this->_status = 400;
-	if (len > this->_maxBodySize)
-	{ 
-		this->_status = 413;
-		return(true);
+		return (false);
 	}
-	else
-		bodyok = true;
-	return (bodyok);
+	try
+	{
+		size_t len = safeStrToSizeT(_headers["Content-Length"]);
+		if (len <= 0)
+			this->_status = 400;
+		if (len > this->_maxBodySize)
+		{ 
+			this->_status = 413;
+			return(true);
+		}
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << "overflow or error in content-length" << e.what() << std::endl;
+		this->_status = 400;
+		return (false);
+	}
+	return (true);
 }
 
 bool Request::hasBody()
@@ -208,7 +270,23 @@ void	Request::initRequest()
 	this->_version.clear();
 	this->_parsePath.clear();
 	this->_body.clear();
+	this->_respbody.clear();
 	this->_extension.clear();
+}
+
+bool	loneCR(const std::string& header)
+{
+	std::string::const_iterator it = header.begin();
+	for(;it != header.end(); it++)
+	{
+		if (*it == '\r')
+		{
+			if (it + 1 == header.end() || *(it + 1) != '\n')
+				return (true);
+		}
+	}	
+	return (false);
+
 }
 
 /*
@@ -222,9 +300,9 @@ Core of the engine after Request parsing
 void	Request::buildRequest()
 {
 	sanitizeUrl();
-	std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
-	std::cout << BG_CYAN << "method is " << this->_method << std::endl;
-	std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
+	// std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
+	// std::cout << BG_CYAN << "method is " << this->_method << std::endl;
+	// std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
 	
 	StatusCode();
 	if (this->_status >= 400)
@@ -237,7 +315,6 @@ void	Request::buildRequest()
 		this->handleGetRequest();
 	else
 		this->_status = 405;
-
 	if (this->_status != 200)
 		this->_extension = ".html";
 	else
@@ -334,6 +411,11 @@ void		Request::handleGetRequest()
 		this->_status = 404;
 		return ;
 	}
+	if (!hasReadAccess())
+	{
+		this->_status = 403;
+		return ;
+	}
 	if (this->_isDirectory)
 	{
 		std::string index = this->_location.getIndex();
@@ -345,13 +427,19 @@ void		Request::handleGetRequest()
 		}
 		else if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
 			this->_parsePath = _location.getRootDir() + this->_path + index;
+		else if(_location.getAutoIndex() == true)
+		{
+			DirectoryListing dirList(this->_location.getRootDir() + this->_path);
+			this->_respbody = dirList.getHTMLListing();
+			return;
+		}
 		else
 		{
-			this->_status = 404; //to replace with Autoindexing
+			this->_status = 404;
 			return;
 		}
 	}
-	this->_status = hasReadAccess() ? 200 : 403;
+	this->_status = 200;
 }
 
 /*
@@ -738,6 +826,11 @@ std::string  Request::getBody() const
 	return(this->_body);
 }
 
+std::string  Request::getrespBody() const
+{
+	return(this->_respbody);
+}
+
 void	Request::setStatus(int status)
 {
 	this->_status = status;
@@ -870,8 +963,5 @@ size_t safeStrToSizeT(const std::string& str)
             throw std::runtime_error("Overflow or underflow occurred in strtol conversion");
         throw std::runtime_error("Conversion error occurred in strtol");
     }
-    // if (val > static_cast<long>(SIZE_MAX))
-    //     throw std::runtime_error("Value too large for size_t");
-
     return static_cast<size_t>(val);
 }

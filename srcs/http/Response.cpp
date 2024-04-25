@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/24 19:35:57 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/25 20:23:36 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
 */
 Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
 	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _mimeTypes(initMimeMaps()), \
-	_content_len("0"), _headerResponse(""), _body(""), _response(""), _assetPath(""), \
+	_content_len("0"), _headerResponse(""), _body(head.getrespBody()), _response(""), _assetPath(""), \
 	_extension(".html"), _location(head.getLocation())
 {
 	if (this->_status >= 400)
@@ -32,9 +32,9 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 		this->_assetPath = _location.getRootDir() + getErrorPage(404);
 	else
 		this->_assetPath = head.getParsePath();
-	std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
+	// std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
 	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
-	std::cout << "extension is " << this->_extension << std::endl;
+	// std::cout << "extension is " << this->_extension << std::endl;
 }
 
 Response::~Response(){}
@@ -72,16 +72,12 @@ Returns the full HTTP response message as a string.
 //MISSING TIME AND SERVER_NAME
 void Response::buildResponse()
 {
-	if(this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE") // to improve the logic later on
-		this->excecuteGetResponse();
-	// else if (this->_method == "POST")
-	// 	this->excecutePostResponse();
-	else
-		return ; //later on we will do the POST, DELETE and UNknown case
+	//if(this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE") // to improve the logic later on
+	this->excecuteGetResponse();
 	finalizeResponse();
 	
-	std::cout << "Status-Line is : " << this->_statusLine << std::endl;
-	std::cout << "file path is : " << this->_assetPath << std::endl;
+	// std::cout << "Status-Line is : " << this->_statusLine << std::endl;
+	// std::cout << "file path is : " << this->_assetPath << std::endl;
 }
 
 // void	Response::excecuteGetResponse()
@@ -188,7 +184,7 @@ std::string Response::assembHeaders()
 	std::map<std::string, std::string>::const_iterator it = this->_headers.begin();
 	for (; it != _headers.end(); ++it)
 	{
-		std::cout << RED "Resp header IS : " << it->first << " : " << it->second << RESET << std::endl;
+		// std::cout << RED "Resp header IS : " << it->first << " : " << it->second << RESET << std::endl;
 		RequestStream << it->first << ": " << it->second << "\r\n";
 	}
 	RequestStream << "\r\n";
@@ -215,8 +211,16 @@ void	Response::setBody()
 {
 	try
 	{
-		this->_body = readWebFile(this->_assetPath);
-		this->_extension = parseExtension(this->_assetPath, this->_extension);   	
+		if (!(this->_body.empty()))
+		{
+			this->_extension = ".html";
+			this->_content_len = std::to_string(this->_body.size());
+		}
+		else
+		{
+			this->_body = readWebFile(this->_assetPath);
+			this->_extension = parseExtension(this->_assetPath, this->_extension);
+		}
 	}
 	catch(std::exception& e)
 	{

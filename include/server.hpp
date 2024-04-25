@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/24 18:20:50 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/25 23:12:54 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include "Response.hpp"
 # include "colors.h"
 
+# define MAX_BODY_SIZE 1000000
 
 typedef struct Config
 {
@@ -39,7 +40,7 @@ private:
 	std::string	_root;
 	std::string	_serverName;
 	std::string	_hostName;
-	int		_maxBodySize;
+	size_t		_maxBodySize;
 	std::vector<Location>	_locations; 
 	const sockaddr_in _servAddr;
 	std::map<int, std::string> _errPageGlobal;

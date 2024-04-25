@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/24 21:48:08 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/25 23:23:58 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	this->_hostName = conf.hostName;
 	this->_root = conf.root;
 	this->_errPageGlobal = conf.errPageGlobal;
-	this->_maxBodySize = 10000000; //to replace with config max body size
+	this->_maxBodySize = MAX_BODY_SIZE; //to replace with config max body size
 	
 	std::vector<std::string> methods1;
 	std::vector<std::string> methods2;
@@ -32,7 +32,7 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
 	// _locations.push_back(Location("/", methods1, _root, "index.html", true, ""));
 	_locations.push_back(Location("/getorder", methods2, _root, "index.html", false, true,"./upload/"));
-    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, false, "./upload/"));
+    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, true, "./upload/"));
 	_locations[0].addErrPage(custom404);
     //_locations.Location("/delete", {"DELETE"}, serverRoot, "test.html", false);
 	// _locations.push_back(Location("/nimp", methods1, _root, "index.html", true, ""));
@@ -96,9 +96,8 @@ void	Server::handleConnection()
 {
 	int io_fd = this->_sock.acceptConnection();
 	std::string rawhead = this->_sock.readHeader(io_fd);
-	std::string head = rawhead.substr(0, rawhead.find("\r\n\r\n") + 4);
 	std::cout << "rawHead: " << rawhead << std::endl;
-	Request request(head, _hostName, _maxBodySize); //to replace with config max body size
+	Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
 	request.printHeader();
 	if (request.hasBody())
 	{
@@ -112,7 +111,7 @@ void	Server::handleConnection()
 		request.setLocation(*matchLoc);
 	std::cout << BG_GREEN "********* DONE READING : NOW Build Request ********* " RESET << std::endl;
 	request.buildRequest();
-	request.printRequest();
+	//request.printRequest();
 	Response resp(request); // later on build with location routing Response response(Request, _locs);
 	resp.buildResponse();
 	std::string response = resp.getResponse();
