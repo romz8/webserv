@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 13:29:34 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 01:04:35 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,24 +30,28 @@ int	ParseDirectives::parseServer( Directives *d, StrVector & content, int n_line
 	string content_parsed;
 	Server *serv = new Server;
 
-	string treated_line = treat_comments((content[n_line]));
-	parse_line(treated_line, n_line + 1);
-	serv->parse_server_line(content[n_line]);
-	treated_line.clear();
-	for (int i = n_line; i < last; i++)
-	{
-		string treated_line = treat_comments((content[i]));
-		parse_line(treated_line, i + 1);
-		split(line, content[i], " \t");
-		for (size_t j = 0; j < line.size(); j++)
-			content_parsed += line[j] + " ";
-		line.clear();
-		treated_line.clear();
-		content_parsed += "\n";
+	try {
+		serv->parse_server_line(content[n_line]);
+		for (int i = n_line; i < last; i++)
+		{
+			string treated_line = treat_comments((content[i]));
+			parse_line(treated_line, i + 1);
+			split(line, content[i], " \t");
+			for (size_t j = 0; j < line.size(); j++)
+				content_parsed += line[j] + " ";
+			line.clear();
+			treated_line.clear();
+			content_parsed += "\n";
+		}
+		serv->parse(content_parsed);
+		d->addServer(serv);
+		d->dirSet["server"] = true;
 	}
-	serv->parse(content_parsed);
-	d->addServer(serv);
-	d->dirSet["server"] = true;
+	catch (exception &e)
+	{
+		delete serv;
+		throw logic_error(e.what());
+	}
 	return (last);
 }
 
@@ -58,19 +62,26 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 	string treated_line;
 	Location *loc = new Location;
 
-	loc->parse_location_line(content[n_line]);
-	for (int i = n_line + 1; i < last; i++)
-	{
-		string treated_line = treat_comments((content[i]));
-		split(line, content[i], " \t");
-		for (size_t j = 0; j < line.size(); j++)
-			content_parsed += line[j] + " ";
-		line.clear();
-		treated_line.clear();
-		content_parsed += "\n";
+	try {
+		loc->parse_location_line(content[n_line]);
+		for (int i = n_line; i < last; i++)
+		{
+			string treated_line = treat_comments((content[i]));
+			split(line, content[i], " \t");
+			for (size_t j = 0; j < line.size(); j++)
+				content_parsed += line[j] + " ";
+			line.clear();
+			treated_line.clear();
+			content_parsed += "\n";
+		}
+		loc->parse(d, content_parsed);
+		d->addLocation(loc);
 	}
-	loc->parse(d, content_parsed);
-	d->addLocation(loc);
+	catch (exception &e)
+	{
+		delete loc;
+		throw logic_error(e.what());
+	}
 	return (last - 1);
 }
 
@@ -193,6 +204,8 @@ void	ParseDirectives::save_autoindex(Directives *d, const StrVector & line ) {
 void	ParseDirectives::save_alias( Directives *d, const StrVector & line ) {
 	if (line.size() != 2)
 		throw logic_error("Unexpected amount of arguments");
+	if (d->dirSet["root"] == true)
+		throw logic_error("Root already setted before");
 	string value = line[1].substr(0, line[1].find_first_of(";"));
 	d->alias = value;
 }
@@ -256,9 +269,6 @@ void	ParseDirectives::checkDuplicate( const string & directive, StrBoolMap dirSe
 }
 
 int	ParseDirectives::parseServerDirectives( Directives *d, StrVector & line, int type, StrVector &content, int n_line ) {
-	cout << line[0] << endl;
-	ParseDirectives::checkDuplicate(line[0], d->dirSet);
-	d->dirSet[ line[0] ] = true;
 	switch (type)
 	{
 		case 0:
@@ -288,6 +298,8 @@ int	ParseDirectives::parseServerDirectives( Directives *d, StrVector & line, int
 		default:
 			throw logic_error("\"" + line[0] + "\" not a valid directive for Server");
 	}
+	ParseDirectives::checkDuplicate(line[0], d->dirSet);
+	d->dirSet[ line[0] ] = true;
 	return (n_line);
 }
 

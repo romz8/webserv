@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 10:48:47 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 13:25:50 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 00:55:22 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,8 +43,8 @@ void	Server::parse_server_line( std::string &s_line ) {
 
 	sline = SUtils::split(sline, line, " \t");
 	size_t len = sline.size();
-	if (len != 2 && len != 1)
-		throw std::logic_error("Unexpected amount of arguments");
+	if (len != 2)
+		throw std::logic_error("Unexpected amount of arguments. Expected \"server {\"");
 }
 
 void	Server::parse( std::string &content ) {

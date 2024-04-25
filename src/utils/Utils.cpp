@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 14:29:06 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 13:31:08 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 00:57:04 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,12 @@ namespace SUtils {
 			if (directive.compare("{") && directive.compare("}"))
 				throw logic_error("Expected separator \";\" in line " + to_string(n_line));
 		}
+		else if (separator_pos == string::npos && (!directive.compare("location") || !directive.compare("server")))
+		{
+			prev_directive.clear();
+			prev_directive = directive;
+			return ;
+		}
 		else if (separator_pos != string::npos && directive.compare("location") && directive.compare("server"))
 		{
 			if (!directive.compare("{") && prev_directive.compare("location") && prev_directive.compare("server"))
@@ -81,9 +87,9 @@ namespace SUtils {
 			else if (line[separator_pos] != ';' && directive.compare("}"))
 				throw logic_error("Expected separator \";\" in line " + to_string(n_line));
 		}
-		else if (separator_pos != string::npos)
+		else if (separator_pos != string::npos && (!directive.compare("server") || !directive.compare("location")) )
 		{
-			if ( (!directive.compare("server") || !directive.compare("location")) && line[separator_pos] != '{' )
+			if ( line[separator_pos] != '{' )
 				throw logic_error("Expected separator \"{\" in line " + to_string(n_line));
 		}
 		else if (separator_pos == string::npos && (!prev_directive.compare("location") || !prev_directive.compare("server")))

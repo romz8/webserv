@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 03:04:10 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 13:09:16 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 00:59:46 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,11 @@ int		main(int ac, char **av)
 	{
 		Parser parser(ac, av);
 		Directives *d = parser.getDirectives();
-		const Server *s = d->getServer(0);
-		for (int i = 300; i < 310; i++)	
-			std::cout << s->getErrorPage(i) << std::endl;
+		const Server *s = d->getServer(0); //NO LLAMAR A GET LOCATIONS DESDE AQUI, CREA LEAKS
 		const Location *l = s->getLocation(0);
 		std::cout << " ----- Locations -----\n";
-		std::cout << l << std::endl;
-		// std::cout << l->getErrorPage(301) << std::endl;
-		// std::cout << l->getUri() << std::endl;
+		std::cout << l->getErrorPage(301) << std::endl;
+		std::cout << l->getUri() << std::endl;
 		std::cout << " ------- Deleting location ------ " << std::endl;
 		delete l;
 		std::cout << " ------- Deleting server -------- " << std::endl;
