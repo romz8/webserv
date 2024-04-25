@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 01:04:35 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 01:15:48 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,7 +225,10 @@ void	ParseDirectives::save_allow_upload( Directives *d, const StrVector & line )
 void	ParseDirectives::save_return( Directives *d, const StrVector & line ) {
 	if (line.size() < 2 || line.size() > 3)
 		throw logic_error("Unexpected amount of arguments");
-	string value = line[1].substr(0, line[1].find_first_of(";"));
+	if (line.size() == 2)
+		string value = line[1].substr(0, line[1].find_first_of(";"));
+	else
+		string value = line[2].substr(0, line[1].find_first_of(";"));
 	d->return_url = value;
 }
 
