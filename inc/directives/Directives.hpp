@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 20:06:09 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/25 12:18:10 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ class Directives {
 		string					alias;
 		
 		string					return_url;
+
+		StrMap					cgi;
 
 		string					index;
 		bool					autoindex;
@@ -79,7 +81,8 @@ class Directives {
 		const bool						&getAutoindex( void ) const;
 		const string					&getUploadStore( void ) const;
 		
-		bool							isSet( unsigned int ) const ;
+		bool							errorPageSet( unsigned int ) const;
+		bool							cgiSet( string ) const;
 		
 		void			addServer( Server * );
 		void			addLocation( Location * );

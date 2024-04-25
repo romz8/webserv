@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 00:11:28 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/25 13:29:34 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,10 @@ int	ParseDirectives::parseServer( Directives *d, StrVector & content, int n_line
 	string content_parsed;
 	Server *serv = new Server;
 
+	string treated_line = treat_comments((content[n_line]));
+	parse_line(treated_line, n_line + 1);
 	serv->parse_server_line(content[n_line]);
+	treated_line.clear();
 	for (int i = n_line; i < last; i++)
 	{
 		string treated_line = treat_comments((content[i]));
@@ -68,7 +71,7 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 	}
 	loc->parse(d, content_parsed);
 	d->addLocation(loc);
-	return (last);
+	return (last - 1);
 }
 
 void	ParseDirectives::save_root( Directives *d, const StrVector &line ) {
@@ -106,9 +109,9 @@ void	ParseDirectives::save_error_page( Directives *d, const StrVector & line ) {
 		unsigned int key = stoui(line[i]);
 		if (key < 300 || key > 599)
 			throw logic_error("Value " + line[i] + " not valid for error_page");
-		if (d->isSet(key))
+		if (d->errorPageSet(key))
 			d->error_page.erase(key);
-		d->error_page.insert(pair<unsigned int, string>(key, value));
+		d->error_page.insert(UintStrPair(key, value));
 	}
 	
 }
@@ -231,12 +234,31 @@ void	ParseDirectives::save_allow_methods( Directives *d, const StrVector & line 
 	}
 }
 
+void	ParseDirectives::save_cgi( Directives *d, const StrVector & line ) {
+	string ext;
+	string path;
+	
+	if (line.size() != 3)
+		throw logic_error("Unexpected amount of arguments");
+	
+	ext = line[1];
+	path = line[2].substr(0, line[2].find_first_of(";"));
+	if (ext[0] != '.')
+		throw logic_error("Invalid extension \"" + ext + "\" in cgi");
+	if (d->cgiSet(ext))
+		d->cgi.erase(ext);
+	d->cgi.insert(StrPair(ext, path));
+}
+
 void	ParseDirectives::checkDuplicate( const string & directive, StrBoolMap dirSet) {
 	if ( dirSet[ directive ] == true && ParseContent::canRepeatDirectiveList.at( directive ) == false )
-		throw std::logic_error( "\"" + directive + "\" directive is duplicate" );
+		throw logic_error( "\"" + directive + "\" directive is duplicate" );
 }
 
 int	ParseDirectives::parseServerDirectives( Directives *d, StrVector & line, int type, StrVector &content, int n_line ) {
+	cout << line[0] << endl;
+	ParseDirectives::checkDuplicate(line[0], d->dirSet);
+	d->dirSet[ line[0] ] = true;
 	switch (type)
 	{
 		case 0:
@@ -266,8 +288,6 @@ int	ParseDirectives::parseServerDirectives( Directives *d, StrVector & line, int
 		default:
 			throw logic_error("\"" + line[0] + "\" not a valid directive for Server");
 	}
-	ParseDirectives::checkDuplicate(line[0], d->dirSet);
-	d->dirSet[ line[0] ] = true;
 	return (n_line);
 }
 
@@ -300,9 +320,9 @@ void	ParseDirectives::parseLocationDirectives( Directives *d, StrVector & line, 
 		case 8:
 			ParseDirectives::save_allow_methods(d, line);
 			break ;
-		// case 9:
-		// 	ParseDirectives::save_cgi(d, line);
-		// 	break ;
+		case 9:
+			ParseDirectives::save_cgi(d, line);
+			break ;
 		default:
 			throw logic_error("\"" + line[0] + "\" not a valid directive for Location");
 	}

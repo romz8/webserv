@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 20:06:37 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/25 12:28:22 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,9 +137,16 @@ const UintStrMap					&Directives::getErrorPages( void ) const {
 	return (this->error_page);
 }
 
-bool								Directives::isSet( unsigned int key ) const {
+bool								Directives::errorPageSet( unsigned int key ) const {
 	UintStrMap::const_iterator  It = this->error_page.find(key);
 	if (It == this->error_page.cend())
+		return (false);
+	return (true);
+}
+
+bool								Directives::cgiSet( string key ) const {
+	StrMap::const_iterator  It = this->cgi.find(key);
+	if (It == this->cgi.cend())
 		return (false);
 	return (true);
 }

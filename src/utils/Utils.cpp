@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 14:29:06 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 20:05:28 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/25 13:31:08 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,12 @@ namespace SUtils {
 		if (directive_line.size() == 0)
 			return ;
 		directive = directive_line[0];
-		if (separator_pos != string::npos && directive.compare("location") && directive.compare("server"))
+		if (separator_pos == string::npos && directive.compare("location") && directive.compare("server"))
+		{
+			if (directive.compare("{") && directive.compare("}"))
+				throw logic_error("Expected separator \";\" in line " + to_string(n_line));
+		}
+		else if (separator_pos != string::npos && directive.compare("location") && directive.compare("server"))
 		{
 			if (!directive.compare("{") && prev_directive.compare("location") && prev_directive.compare("server"))
 				throw logic_error("Unxpected separator \"{\" in line " + to_string(n_line));
