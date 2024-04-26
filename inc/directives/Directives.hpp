@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:28:23 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 11:54:32 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ class Directives {
 
 	private:
 		string					def_err_page;
+		string					def_serv_name;
 	private:
 		string					root;
 		unsigned int			port;
@@ -81,6 +82,10 @@ class Directives {
 		const UintStrMap				&getErrorPages( void ) const;
 		const bool						&getAutoindex( void ) const;
 		const string					&getUploadStore( void ) const;
+		const string					&getReturnValue( void ) const;
+		const int						&getReturnCode( void ) const;
+		const StrMap					&getCgiMap( void ) const;
+		const string					getCgiExe( string ) const;
 		
 		bool							errorPageSet( unsigned int ) const;
 		bool							cgiSet( string ) const;

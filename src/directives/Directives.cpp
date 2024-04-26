@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:44:59 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 11:49:31 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,6 +149,25 @@ bool								Directives::cgiSet( string key ) const {
 	if (It == this->cgi.cend())
 		return (false);
 	return (true);
+}
+
+const StrMap						&Directives::getCgiMap( void ) const {
+	return (this->cgi);
+}
+
+const string						Directives::getCgiExe( string ext ) const {
+	StrMap::const_iterator	It = this->cgi.find(ext);
+	if (It == this->cgi.cend())
+		return ("");
+	return (this->cgi.at(ext));
+}
+
+const int							&Directives::getReturnCode( void ) const {
+	return (this->_return.first);
+}
+
+const string						&Directives::getReturnValue( void ) const {
+	return (this->_return.second);
 }
 
 void								Directives::addServer( Server *serv ) {

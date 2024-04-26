@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:41:00 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 11:30:43 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,10 +241,8 @@ void	ParseDirectives::save_return( Directives *d, const StrVector & line ) {
 	else{
 		value = line[2].substr(0, line[2].find_first_of(";"));
 		code = ParseContent::checkErrorCode(line[1]);
-		if (ParseContent::checkHttpPrefix(value))
+		if (code != -1)
 			uri = value;
-		else
-			code = -1;
 	}
 	d->_return = IntStrPair(code, value);
 }

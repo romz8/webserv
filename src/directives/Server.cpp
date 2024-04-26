@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 10:48:47 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:42:40 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 12:05:34 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Server::Server( void ) {
 	this->directives = new Directives();
-	this->directives->server_names.push_back("webserv");
+	this->directives->def_serv_name = "webserv";
 	return ;
 }
 
@@ -66,10 +66,21 @@ void	Server::parse( std::string &content ) {
 	}
 }
 
-const UintStrMap::mapped_type			&Server::getErrorPage( unsigned int error_code ) const {
+const UintStrMap::mapped_type		&Server::getErrorPage( unsigned int error_code ) const {
 	return (this->directives->getErrorPage(error_code));
 }
 
 const Location						*Server::getLocation( unsigned int num ) const {
 	return (this->directives->getLocation(num));
+}
+
+int									Server::getStrongCoincidence( string name ) const {
+	if (this->directives->dirSet["server_name"] == false)
+		return (-1);
+	for (size_t i = 0; i < this->directives->server_names.size(); i++)
+	{
+		if (!name.compare(this->directives->server_names[i]))
+			return (i);
+	}
+	return (-1);
 }
