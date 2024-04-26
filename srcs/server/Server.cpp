@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/25 23:23:58 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/26 13:06:17 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,8 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	std::map<int, std::string> custom404;
 	custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
 	// _locations.push_back(Location("/", methods1, _root, "index.html", true, ""));
-	_locations.push_back(Location("/getorder", methods2, _root, "index.html", false, true,"./upload/"));
-    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, true, "./upload/"));
+	_locations.push_back(Location("/getorder", methods2, _root, "index.html", false, true,"./upload/formData/"));
+    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, true, "./upload/files/"));
 	_locations[0].addErrPage(custom404);
     //_locations.Location("/delete", {"DELETE"}, serverRoot, "test.html", false);
 	// _locations.push_back(Location("/nimp", methods1, _root, "index.html", true, ""));

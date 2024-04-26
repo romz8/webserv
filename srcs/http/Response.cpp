@@ -6,20 +6,18 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/25 20:23:36 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/26 13:25:02 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Response.hpp"
 
-const std::string Response::_root = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html"; // Definition
-//const std::string Response::_root =  "/Users/romainjobert/Desktop/42/Webserv/proto/html"; //has to be different root that locaiton to ensure correct path to error pages ??
-
-/*
-Initializes a Response object using the provided Request object.
-Sets the HTTP status, version, and the path to the asset to be returned 
-in the response body.
-TBD : INCLUDE A AUTO ERROR /FETCH ERROR PAGE logic if code not 200
+/* Response Constructor
+   Initializes a Response object using the provided Request object. Sets the HTTP status,
+   version, and the path to the asset to be returned in the response body. Automatically selects
+   an error page if the HTTP status code indicates a client or server error.
+   Parameters:
+   - head: A reference to the Request object based on which the Response is constructed.
 */
 Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
 	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _mimeTypes(initMimeMaps()), \
@@ -44,6 +42,7 @@ Response::Response(const Response& src)
 	*this = src;
 }
 
+/*TBD : PUT ALL THE MEMBER ATTRIBUTE*/
 Response& Response::operator=(const Response& src)
 {
 	if (this != &src)
@@ -57,70 +56,36 @@ Response& Response::operator=(const Response& src)
 }
 
 /*
-Constructs the full HTTP response message.
-Calls setBody to load the response body from the specified asset path.
-Sets the reason phrase based on the HTTP status code.
-Constructs the response Requests, including Content-Length and Content-Type.
-Assembles the full response string, ready to be sent back to the client.
-void Response::setReasonPhrase(int sCode)
-Sets the reason phrase (_statusMsg) based on the provided status code (sCode).
-Handles several common status codes (200, 405, 505, 404) with default messages.
-std::string Response::getResponse() const
-Returns the full HTTP response message as a string.
+ * ------------------------
+ * Constructs the complete HTTP response message based on the state of the Response object.
+ * This function "orchestrates" the assembly of the status line, headers, and body into a
+ * single coherent response string. It ensures that the response adheres to the HTTP
+ * standard by including appropriate status lines, headers, and content.
+ * Workflow:
+ *   1. Sets the status line using the current status code.
+ *   2. Adds all necessary HTTP headers by calling `addHeaders`.
+ *   3. If the status is not one of the types that should have no body (like 204 No Content),
+ *      it calls `setBody` to prepare the response content.
+ *   4. Finally, it calls `finalizeResponse` to restructure all parts into the full HTTP response.
+ * The resulting full HTTP response is stored in `_response`, ready to be sent to the client.
 */
-//additional check on the response to allow 404 (impossible to open thought the pathfile was fine)
 //MISSING TIME AND SERVER_NAME
 void Response::buildResponse()
 {
-	//if(this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE") // to improve the logic later on
-	this->excecuteGetResponse();
-	finalizeResponse();
-	
-	// std::cout << "Status-Line is : " << this->_statusLine << std::endl;
-	// std::cout << "file path is : " << this->_assetPath << std::endl;
-}
-
-// void	Response::excecuteGetResponse()
-// {
-// 	setStatusLine(this->_status);
-// 	addHeaders();
-// 	if (this->_status == 301)
-// 		return;
-// 	try
-// 	{
-// 		setBody();
-// 	}
-// 	catch(const std::exception& e)
-// 	{
-// 		std::cerr << e.what() << '\n';
-		
-// 	}
-// }
-
-void	Response::excecuteGetResponse()
-{
 	setStatusLine(this->_status);
-	
-	//to check - delete later on 
 	std::cout << "Status-Line is : " << this->_statusLine << std::endl;
 	std::cout << "file path is : " << this->_assetPath << std::endl;
-
-	switch(this->_status)
-	{
-		case(200):
-			handle200();
-			break;
-		case(301):
-			handle301();
-			break;
-		default:
-			handleError();
-			break;
-	}
-	std::cout << "Header is  : " << this->_headerResponse << std::endl;
-	//std::cout << "Body is  : " << this->_body << std::endl;
+	if (!(this->_status == 301 || this->_status == 201 || this->_status == 204))
+		this->setBody();
+	addHeaders();
+	finalizeResponse();
 }
 
+/* setStatusLine
+   Sets up the HTTP status line using the current status code.
+   Parameters:
+   - sCode: The HTTP status code to set in the status line.
+*/
 void Response::setStatusLine(int sCode) 
 {
     std::ostringstream StatusLine;
@@ -135,10 +100,21 @@ std::string Response::getResponse() const
 	return(this->_response);
 }
 
+/* addHeaders
+   Adds necessary HTTP headers based on the current state of the Response object.
+   Sets headers such as 'Location' and 'Content-Length' as appropriate.
+*/
 void	Response::addHeaders()
 {
-	if (this->_status == 301 || this->_status == 201)
+	if (this->_status == 301)
 		_headers["Location"] = this->_assetPath;
+	else if (this->_status == 204)
+		_headers.clear();
+	else if (this->_status == 201)
+	{
+		_headers["Location"] = this->_assetPath; //migth be useless - to test
+		_headers["content-length"] = "0";
+	}
 	else
 	{	
 		_headers["Content-Type"] = getMimeType(this->_extension);
@@ -146,50 +122,20 @@ void	Response::addHeaders()
 	}
 }
 
-void 	Response::handle200()
-{
-	std::ostringstream head;
-	
-	this->setBody();
-	addHeaders();
-}
-
-void 	Response::handle301()
-{
-	addHeaders();
-}
-
-void 	Response::handle201()
-{
-	addHeaders();
-}
-
-void 	Response::handle204()
-{
-	_headers.clear();
-    _body = "";
-}
-
-void 	Response::handleError()
-{
-	std::ostringstream head;
-	
-	this->setBody();
-	addHeaders();
-}
-
+/* assembHeaders
+   Constructs the headers part of the HTTP response from the headers map.
+   Returns: A string formatted as HTTP headers.
+*/
 std::string Response::assembHeaders()
 {
 	std::ostringstream RequestStream;
 	std::map<std::string, std::string>::const_iterator it = this->_headers.begin();
 	for (; it != _headers.end(); ++it)
-	{
-		// std::cout << RED "Resp header IS : " << it->first << " : " << it->second << RESET << std::endl;
 		RequestStream << it->first << ": " << it->second << "\r\n";
-	}
 	RequestStream << "\r\n";
 	return (RequestStream.str());
 }
+
 
 void Response::finalizeResponse()
 {
@@ -197,15 +143,13 @@ void Response::finalizeResponse()
 	this->_response = this->_statusLine + headContent;
 	this->_response.append(_body);
 	
-	std::cout << "Header is  : " << this->_headerResponse << std::endl;
+	std::cout << "Header is  : " << headContent << std::endl;
 }
 
-/*
-Opens and reads the content of the asset file specified by _assetPath.
-Sets the _body member to the content of the file, updating _content_length 
-accordingly.
-Handles the error case where the file cannot be opened by setting the
-status to 500.
+/* setBody
+   Opens and reads the content of the asset file specified by the asset path.
+   Sets the _body member to the content of the file, updating the content length accordingly.
+   Handles the error case where the file cannot be opened by setting the status to 500.
 */
 void	Response::setBody()
 {
@@ -227,9 +171,21 @@ void	Response::setBody()
 		std::cerr << "Error settign body response ";
 		std::cerr << e.what() << std::endl;
 		this->_status = 500;
+		this->_body.clear();
+        this->_content_len = "0";
 	}
 }
 
+/* readWebFile
+* Opens and reads the contents of a file specified by `assetPath`.
+ * This function is designed to handle binary file reading, for serving non-text 
+ * files like images or PDFs. It opens the file in binary mode then do byte measurement 
+ * with ptrs (seekg, tellg) and reads all contents into a buffer, 
+ * which is then returned as a string.
+   Parameters:
+   - assetPath: The path to the file to read.
+   Returns: A string containing the contents of the file.
+*/
 std::string Response::readWebFile(const std::string& assetPath)
 {
 	std::ifstream file(assetPath, std::ios::binary | std::ios::ate);
@@ -249,14 +205,17 @@ std::string Response::readWebFile(const std::string& assetPath)
 	return (std::string(buffer.begin(), buffer.end()));
 }
 
-// Initializing MIME Types
+/* initMimeMaps
+   Initializes the map that associates file extensions with MIME types.
+   Returns: A map where keys are string extensions and values are the corresponding MIME types.
+*/
  std::map<std::string, std::string> Response::initMimeMaps() 
 {
     std::map<std::string, std::string> m;
 	
 	m[".html"] = "text/html";
     m[".css"] = "text/css";
-    m[".jpg"] = "image/jpeg";
+    m[".jpeg"] = "image/jpeg";
     m[".png"] = "image/png";
     m[".gif"] = "image/gif";
     m[".js"] = "application/javascript";
@@ -271,7 +230,11 @@ std::string Response::readWebFile(const std::string& assetPath)
 	return m;
 }
 
-// Initializing Status Messages
+
+/* initStatusMaps
+   Initializes the map associating HTTP status codes with their textual descriptions.
+   Returns: A map of integer HTTP status codes to string messages.
+*/
 std::map<int, std::string>	Response::initStatusMaps()
 {
     std::map<int, std::string> s;
@@ -292,23 +255,12 @@ std::map<int, std::string>	Response::initStatusMaps()
 	return s;
 }
 
-// Initializing Error Pages
-// std::map<int, std::string> Response::initErrMaps()
-// {
-//     std::map<int, std::string> e;
-// 	e[400] = "/error_pages/400.html";
-// 	e[403] = "/error_pages/403.html";
-//     e[404] = "/error_pages/404.html";
-//     e[405] = "/error_pages/405.html";
-// 	e[409] = "/error_pages/409.html";
-// 	e[413] = "/error_pages/413.html";
-// 	e[500] = "/error_pages/500.html";
-//     e[505] = "/error_pages/505.html";
-	
-// 	return e;
-// }
-
-// Get the MIME type based on file extension
+/* getMimeType
+   Retrieves the MIME type associated with a file extension.
+   Parameters:
+   - extension: The file extension to look up.
+   Returns: The MIME type as a string, defaults to 'text/plain' if not found.
+*/
 std::string Response::getMimeType(const std::string& extension) const 
 {
     std::map<std::string, std::string>::const_iterator it = _mimeTypes.find(extension);
@@ -318,7 +270,12 @@ std::string Response::getMimeType(const std::string& extension) const
         return "text/plain"; // Default MIME type if not found
 }
 
-// Get the status message based on status code
+/* getStatusMessage
+   Retrieves the message associated with an HTTP status code.
+   Parameters:
+   - statusCode: The HTTP status code to look up.
+   Returns: The associated message as a string, defaults to 'Unknown Status' if not found.
+*/
 std::string Response::getStatusMessage(int statusCode) const 
 {
     std::map<int, std::string>::const_iterator it = _statusMsgs.find(statusCode);
@@ -328,6 +285,12 @@ std::string Response::getStatusMessage(int statusCode) const
         return "Unknown Status"; // Default message if not found
 }
 
+/* getErrorPage
+   Retrieves the path to the error page associated with a specific HTTP status code.
+   Parameters:
+   - statusCode: The HTTP status code for which to retrieve the error page path.
+   Returns: The path to the error page, defaults to a generic error page if specific not found.
+*/
 std::string Response::getErrorPage(int statusCode) const 
 {
 	std::string pagePath = this->_location.getErrPage(statusCode);

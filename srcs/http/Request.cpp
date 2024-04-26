@@ -12,10 +12,15 @@
 
 #include "Request.hpp"
 
-/* Constructor: Initializes the Request object by parsing the provided raw HTTP 
-Request string. It sets up initial request parameters and catches any exceptions 
-during parsing, setting an error status if needed.
-*/
+/**
+ * Constructor: Initializes a Request object by parsing the raw HTTP request string.
+ * It sets up initial request parameters and handles exceptions during parsing,
+ * assigning an error status as needed.
+ *
+ * @param rawRequest The raw HTTP request string.
+ * @param hostName The host name from the HTTP request.
+ * @param maxBody The maximum body size allowed for the request.
+ */
 Request::Request(const std::string& rawHead, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
 {
 	std::string rawRequest;
@@ -35,7 +40,7 @@ Request::Request(const std::string& rawHead, const std::string& hostName, int ma
 	{
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
-		std::cout << BG_GREEN << "ERROR IN Header" << RESET << std::endl;
+		std::cout << BG_RED << "ERROR IN Header" << RESET << std::endl;
 	}
 }
 
@@ -129,7 +134,11 @@ void Request::parseHeader(const std::string& head)
 	}
 }
 
-// Extracts the HTTP method, path, and version from the start line of the request.
+/**
+ * Parses the start line of the HTTP request to extract the method, path, and version.
+ * @param line The start line of the HTTP request.
+ * @throws std::runtime_error if the start line is invalid.
+ */
 void Request::parseStartLine(const std::string& line)
 {
 	std::cout << BG_RED "REQUEST LINE is : " << line << RESET <<std::endl;
@@ -140,12 +149,11 @@ void Request::parseStartLine(const std::string& line)
 	lineStream >> this->_method >> this->_path >> this->_version;
 }
 
-/*
-Parses a single Request line, extracting the Request name and value, and storing them after trimming whitespace.
-Skip empty lines to prevent parsing errors, then Locate the delimiter between Request name and value.
-If no delimiter is found, the Request line is malformed. We then extract and trim the Request name and value, 
-storing them in the Request map. Finally Store the key-value pair in the Request map
-*/ 
+/**
+ * Validates the correctness of the request line based on HTTP standards.
+ * @param line The request line to validate.
+ * @return true if the request line is valid, false otherwise.
+ */
 bool Request::isValidRL(const std::string& line)
 {
 	const std::string SP  = " ";
@@ -192,11 +200,9 @@ void	Request::parseHeaderLine(const std::string& line)
 {
 	if (line.empty())
 		return;
-	std::cout << BG_GREEN "HEADER LINE Is " << line << std::endl;
 	size_t pos = line.find(":");
 	if (pos == std::string::npos)
 		throw std::runtime_error("Error parsing Request : no colon (:) at headerline " + line);
-	
 	std::string key = trim(line.substr(0, pos));
 	if (key.empty())
 		throw std::runtime_error("Error parsing Request : empty key in headerline " + line);
@@ -206,6 +212,11 @@ void	Request::parseHeaderLine(const std::string& line)
 	this->_headers[key] = value;
 }
 
+/**
+ * Checks if the 'Host' header is present and correct (as per RFC 9112)
+ * @return true if the 'Host' header is correct, throws an exception otherwise.
+ * @throws std::runtime_error if the 'Host' header is missing or incorrect.
+ */
 bool	Request::hasCorrectHost() const
 {
 	std::map<std::string, std::string>::const_iterator it;
@@ -248,6 +259,16 @@ bool	Request::parseContentLenBody()
 	return (true);
 }
 
+/**
+ * Decides if the body should be parsed based on 'Content-Length' 
+ * or 'Transfer-Encoding' headers.
+ * For 'Content-Length', it checks if the specified length does not 
+ * exceed the maximum allowed body size,
+ * setting the status to 413 (Payload Too Large) if it does.
+ *  If 'Transfer-Encoding' is set to 'chunked', it prepares the request 
+ * for handling a chunked body. This function is key to handling HTTP persistence
+ * and ensuring that the server can manage varying content sizes as specified by the client.
+ */
 bool Request::hasBody()
 {
 	std::map<std::string, std::string>::const_iterator it;
@@ -260,6 +281,10 @@ bool Request::hasBody()
 	return (false);
 }
 
+/**
+ * Initializes a Request object to default states, 
+ * clearing any existing data (if any).
+ */
 void	Request::initRequest()
 {
 	this->_isDirectory = false;
@@ -274,6 +299,12 @@ void	Request::initRequest()
 	this->_extension.clear();
 }
 
+/**
+ *check if the headers alone (without body) contain a lone CR character.
+ *to enforce RFC 9112 CRLF policy.
+ * @param header The complete header string to check.
+ * @return true if a lone CR is found, false otherwise.
+ */
 bool	loneCR(const std::string& header)
 {
 	std::string::const_iterator it = header.begin();
@@ -295,7 +326,12 @@ bool	loneCR(const std::string& header)
 *********************************************************************
 */
 /*
-Core of the engine after Request parsing
+ * Core of the engine after Request parsing
+ * Completes the building of a Request by sanitizing the URL to prevent security vulnerabilities and
+ * determining the appropriate HTTP response based on the method of the request.
+ * This function orchestrates the response generation by checking if the request method is supported,
+ * validating the request, and then delegating to the specific method handler (GET, POST, DELETE).
+ * It handles errors by setting appropriate status codes when methods are unsupported.
 */
 void	Request::buildRequest()
 {
@@ -324,25 +360,13 @@ void	Request::buildRequest()
 	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }
 
-/*
-Analyzes the HTTP request details stored in the Request object to determine the appropriate
-HTTP response status code. This function sequentially checks various aspects of the request,
-including the HTTP method, version, and the requested path's validity and accessibility.
-
-Process Flow:
-1. Checks if the request uses a valid HTTP method (e.g., GET, POST). If not, sets the
-   status code to 405 (Method Not Allowed) and exits.
-2. Validates the HTTP version specified in the request. If it's not supported, sets the
-   status code to 505 (HTTP Version Not Supported) and exits.
-3. Examines the requested path to ensure it exists and is correctly formatted. If the path
-   is invalid, sets the status code to 404 (Not Found) and exits.
-4. For requests targeting a directory, it checks if the path needs normalization (i.e., adding
-   a trailing slash). If so, it normalizes the path and sets the status code to 301 (Moved
-   Permanently) to redirect the client to the normalized path.
-5. Finally, it checks if the requested resource is accessible (e.g., read permissions are
-   available). If access is granted, sets the status code to 200 (OK); otherwise, sets it to
-   403 (Forbidden).
-*/
+/**
+ * Determines the appropriate HTTP status code for the Request based on its validity, method support,
+ * and the server's ability to fulfill it. This function checks the HTTP method & version compatibility
+ * It updates the status code to reflect issues such as unsupported methods (405),(505)
+ *  then it compares request method and location endpoint settings to determine if the method and 
+ * requirements are possible -> if not update object state to correct http status code
+ */
 void	Request::StatusCode() //later on add the location check and GET / POST / DELETE switch
 {
 	if (this->_status >= 400)
@@ -404,6 +428,14 @@ bool Request::isValidVersion() const
 *********************************************************************
 */
 
+/**
+ * Processes GET requests by validating the requested path and retrieving content if available.
+ * This function first checks if the path is valid and accessible. If the request targets a directory,
+ * it may return a directory listing or a specific index file if configured. The function sets
+ * appropriate response codes based on the existence and accessibility of the target resource,
+ * such as 404 for Not Found or 200 for successfully retrieving the content. It handles directory
+ * path normalization by ensuring they end with a slash and redirecting if necessary.
+ */
 void		Request::handleGetRequest()
 {
 	if (!isValidPath())
@@ -431,7 +463,7 @@ void		Request::handleGetRequest()
 		{
 			DirectoryListing dirList(this->_location.getRootDir() + this->_path);
 			this->_respbody = dirList.getHTMLListing();
-			return;
+			//return; ->otherwise no 200 status
 		}
 		else
 		{
@@ -448,7 +480,13 @@ void		Request::handleGetRequest()
 *********************************************************************
 */
 
-
+/**
+ * Handles POST requests by processing submitted data according to the Content-Type.
+ * This function supports different forms of data handling, including form submissions and file uploads.
+ * It distinguishes between 'multipart/form-data' for file uploads and other types for simple form submissions.
+ * Errors during processing set the status to 400 (Bad Request), while successful handling updates the status
+ * to 201 (Created) or uses other appropriate success codes.
+ */
 void	Request::handlePostRequest()
 {	
 	std::map<std::string, std::string> data;
@@ -477,11 +515,13 @@ void	Request::handlePostRequest()
 void	Request::processFormData(const std::string& input, const Location& loc)
 {
 		std::istringstream stream(input);
-		std::string filePath = _location.getRootDir() + _location.getUploadFile() + "LocationPostData.txt";
+		std::string ftime = formattedTime();
+
+		std::string filePath = _location.getRootDir() + _location.getUploadFile() + ftime + ".txt";
 		std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
 		std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
 		std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
-		std::ofstream file(filePath, std::ios::app); //very testy ..update with Location and actual logic
+		std::ofstream file(filePath, std::ios::app);
 		if (!file.is_open())
 		{
 			this->_status = 500;
@@ -490,7 +530,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		file << input << std::endl;
 		file.close();
 		this->_status = 201;
-		this->_parsePath = loc.getRootDir() + loc.getPath(); // TESTING
+		this->_parsePath = loc.getRootDir() + loc.getPath();
 		std::cout << BG_GREEN << "path is : " << this->_parsePath << RESET << std::endl;
 }
 
@@ -650,9 +690,12 @@ void Request::DeleteDirectory()
 *********************************************************************
 */
 /*
-verify that path is ok at first (not empty, starting with /)
-then check if the path is either a file or a dir (with stat())
-if neither -> raiseError by returning null, otherwise update Response State
+verify that path is ok at first (not empty, starting with /) then,
+based on the obejct state (path) -> update the _parsePath with the full path
+based on the location endpoint path and root settings.
+then check if the path exists and if is either a file or a dir (with stat())
+if issue -> returning false
+otherwise return true
 */
 bool Request::isValidPath() 
 {
@@ -698,6 +741,7 @@ bool Request::hasReadAccess() const
 	return (false); 
 }
 
+// W_OK tests for write only
 bool Request::hasWriteAccess() const 
 {
     return (access(this->_parsePath.c_str(), W_OK) == 0);
@@ -808,7 +852,10 @@ std::map<std::string, std::string> Request::getHeader() const
 	return (this->_headers);
 }
 
-
+/**
+ * based on header parsing, headers map building and read and if no 413
+ * it will then process the body from a string accordingly to the header
+ */
 void Request::setBody(const std::string& body)
 {
 	if (this->_status == 413)
@@ -882,6 +929,7 @@ std::string trim(const std::string& str)
     return str.substr(first, (last - first + 1));
 }
 
+//extract exttension (.something) from a path
 std::string parseExtension(const std::string& path, const std::string& def)
 {
 	if (path.empty())
@@ -908,6 +956,7 @@ void Request::printRequest() const
 	//std::cout << BG_CYAN "Body is : " << this->_body << RESET << std::endl;
 }
 
+
 void Request::printHeader() const
 {
 	std::map<std::string, std::string>::const_iterator it;
@@ -917,6 +966,7 @@ void Request::printHeader() const
 	}
 }
 
+//check if the last character of a string is a CRLF
 bool	endsWithCRLF(const std::string& str) 
 {
     if (str.size() < 3) 
@@ -925,7 +975,7 @@ bool	endsWithCRLF(const std::string& str)
     return (str[str.size() - 1] == '\r');
 }
 
-
+//check if there is a consecutive space in a string
 bool hasConsecutiveSpace(const std::string& str)
 {
 	for (size_t i = 0; i < str.size(); ++i)
@@ -936,32 +986,43 @@ bool hasConsecutiveSpace(const std::string& str)
     return false;
 } 
 
+//remove ressource from the filesystem, raise an error if not possible
 bool deleteResource(const std::string& path) 
 {
     if (std::remove(path.c_str()) == 0)
-        return true;  // Successfully deleted
+        return true;
     else
-        return false;  // Error in deleting the resource
+        return false;
 }
 
+//check if a file exists in the filesystem
 bool fileExists(const std::string& path) 
 {
     struct stat buffer;   
     return (stat(path.c_str(), &buffer) == 0);  // Use stat to check for file existence
 }
 
+//safe conversion from string to size_t -> avoid overflow, non-numeric input and underflow
 size_t safeStrToSizeT(const std::string& str) 
 {
     char* end;
-    errno = 0; // To detect overflow
+    errno = 0; 
     long val = std::strtol(str.c_str(), &end, 10);
 
-    // Check for conversion errors
     if (end == str.c_str() || *end != '\0' || errno == ERANGE || val < 0) 
 	{
         if (val < 0 || errno == ERANGE)
             throw std::runtime_error("Overflow or underflow occurred in strtol conversion");
         throw std::runtime_error("Conversion error occurred in strtol");
     }
-    return static_cast<size_t>(val);
+    return (static_cast<size_t>(val));
+}
+
+//get the current time in a formatted string (YYYY-MM-DD_HH-MM-SS)
+std::string formattedTime() {
+    char buffer[80];
+    time_t now = time(0);
+    struct tm *timeinfo = localtime(&now);
+    strftime(buffer, 80, "%Y-%m-%d_%H-%M-%S", timeinfo);
+    return (std::string(buffer));
 }

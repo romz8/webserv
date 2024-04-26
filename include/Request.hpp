@@ -23,6 +23,7 @@
 # include <sys/stat.h>
 # include <unistd.h>
 # include <dirent.h>
+# include <ctime>
 # include "colors.h"
 # include "Location.hpp"
 # include "Socket.hpp" //just for MAX_HEADER_SIZE -> maybe macro it in config.hpp later on
@@ -111,5 +112,6 @@ bool	deleteResource(const std::string& path);
 bool	fileExists(const std::string& path);
 size_t safeStrToSizeT(const std::string& str);
 bool	loneCR(const std::string& header);
+std::string	formattedTime();
 
 #endif
