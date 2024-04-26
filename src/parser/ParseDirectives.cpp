@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 01:15:48 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 09:29:13 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,13 +223,29 @@ void	ParseDirectives::save_allow_upload( Directives *d, const StrVector & line )
 }
 
 void	ParseDirectives::save_return( Directives *d, const StrVector & line ) {
+	string value;
+	int code = HTTP_TEMP_RED_CODE;
+	string	uri;
+	
 	if (line.size() < 2 || line.size() > 3)
 		throw logic_error("Unexpected amount of arguments");
 	if (line.size() == 2)
-		string value = line[1].substr(0, line[1].find_first_of(";"));
-	else
-		string value = line[2].substr(0, line[1].find_first_of(";"));
-	d->return_url = value;
+	{
+		value = line[1].substr(0, line[1].find_first_of(";"));
+		if (ParseContent::checkHttpPrefix(value))
+			uri = value;
+		else
+			code = -1;
+	}
+	else{
+		value = line[2].substr(0, line[2].find_first_of(";"));
+		code = ParseContent::checkErrorCode(line[1]);
+		if (ParseContent::checkHttpPrefix(value))
+			uri = value;
+		else
+			code = -1;
+	}
+	d->_return = IntStrPair(code, value);
 }
 
 void	ParseDirectives::save_allow_methods( Directives *d, const StrVector & line ) {
@@ -272,6 +288,8 @@ void	ParseDirectives::checkDuplicate( const string & directive, StrBoolMap dirSe
 }
 
 int	ParseDirectives::parseServerDirectives( Directives *d, StrVector & line, int type, StrVector &content, int n_line ) {
+	ParseDirectives::checkDuplicate(line[0], d->dirSet);
+	d->dirSet[ line[0] ] = true;
 	switch (type)
 	{
 		case 0:
@@ -301,12 +319,12 @@ int	ParseDirectives::parseServerDirectives( Directives *d, StrVector & line, int
 		default:
 			throw logic_error("\"" + line[0] + "\" not a valid directive for Server");
 	}
-	ParseDirectives::checkDuplicate(line[0], d->dirSet);
-	d->dirSet[ line[0] ] = true;
 	return (n_line);
 }
 
 void	ParseDirectives::parseLocationDirectives( Directives *d, StrVector & line, int type ) {
+	ParseDirectives::checkDuplicate(line[0], d->dirSet);
+	d->dirSet[ line[0] ] = true;
 	switch (type)
 	{
 		case 0:
@@ -341,6 +359,4 @@ void	ParseDirectives::parseLocationDirectives( Directives *d, StrVector & line, 
 		default:
 			throw logic_error("\"" + line[0] + "\" not a valid directive for Location");
 	}
-	ParseDirectives::checkDuplicate(line[0], d->dirSet);
-	d->dirSet[ line[0] ] = true;
 }

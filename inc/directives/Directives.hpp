@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 12:18:10 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 09:28:23 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,8 @@ class Directives {
 		
 		string					alias;
 		
-		string					return_url;
+		IntStrPair				_return;
+		
 
 		StrMap					cgi;
 

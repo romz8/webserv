@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/25 12:25:55 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 09:27:27 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,8 +190,22 @@ bool	ParseContent::checkValidRangeIpMask( string num, size_t pos, size_t size ) 
 	return (true);
 }
 
-void	ParseContent::checkFolder( string _dir ) {
-	if (_dir[_dir.length() - 1] != '/')
-		_dir.append("/");
+bool	ParseContent::checkHttpPrefix( string uri ) {
+	string http = HTTP_PREFIX;
+	string https = HTTPS_PREFIX;
 	
+	if (!uri.compare(0, http.length(), http))
+		return (true);
+	if (!uri.compare(0, https.length(), https))
+		return (true);
+	return (false);
+}
+
+int	ParseContent::checkErrorCode( string code ) {
+	if (code.find_first_not_of(ISNUM) != string::npos)
+		return (-1);
+	int _code = atoi(code.c_str());
+	if (_code < 0 || _code > 999)
+		return (-1);
+	return (_code);
 }
