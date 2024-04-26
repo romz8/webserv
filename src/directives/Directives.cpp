@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:31:13 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 09:44:59 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ Directives	*Directives::parseDirectives( const string & content ) {
 		{
 			string treated_line = treat_comments(lines[i]);
 			split(line, treated_line, " \t");
-			if (!line[0].compare("server"))
+			if (!line[0].compare("server") || !line[0].compare("server{"))
 			{
 				n_server++;
 				i = ParseDirectives::parseServer(d, lines, i);
