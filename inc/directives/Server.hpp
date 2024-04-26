@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 12:05:30 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/04/26 13:34:31 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,13 @@
 # include <Directives.hpp>
 # include <ParseContent.hpp>
 # include <ParseDirectives.hpp>
+# include <Socket.hpp>
 
 class Server
 {
 	private:
 		Directives		*directives;
+		Socket			socket;
 	
 	public:
 		Server( void );
