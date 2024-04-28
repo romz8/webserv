@@ -94,6 +94,7 @@ public:
 	std::string getParsePath() const;
 	std::string	getExtension() const;
 	std::map<std::string, std::string> getHeader() const;
+	std::string getHeaderField(const std::string& key) const;
 	std::string getBody() const;
 	std::string getrespBody() const;
 	void		setBody(const std::string& body);

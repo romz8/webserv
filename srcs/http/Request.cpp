@@ -852,6 +852,15 @@ std::map<std::string, std::string> Request::getHeader() const
 	return (this->_headers);
 }
 
+std::string Request::getHeaderField(const std::string& key) const
+{
+	std::map<std::string, std::string>::const_iterator it;
+	it = this->_headers.find(key);
+	if (it != this->_headers.end())
+		return (it->second);
+	return ("");
+}
+
 /**
  * based on header parsing, headers map building and read and if no 413
  * it will then process the body from a string accordingly to the header
