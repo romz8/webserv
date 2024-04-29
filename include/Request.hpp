@@ -26,6 +26,7 @@
 # include <ctime>
 # include "colors.h"
 # include "Location.hpp"
+# include "CGI.hpp"
 # include "Socket.hpp" //just for MAX_HEADER_SIZE -> maybe macro it in config.hpp later on
 # include "DirectoryListing.hpp"
 
@@ -46,6 +47,7 @@ private:
 	std::string		_body;
 	std::string		_respbody;
 	Location		_location;
+	bool 			_hasCgi;
 	std::map<std::string, std::string> _headers;
 	//static const std::string CRLF = "\r\n";
 
@@ -87,6 +89,7 @@ public:
 	bool		hasReadAccess() const;
 	bool		hasWriteAccess() const;
 	void		normalizeDirPath();
+	bool		hasCgi() const;
 
 	std::string	getMethod() const;
 	std::string	getPath() const;

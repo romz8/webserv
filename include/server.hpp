@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/25 23:12:54 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/29 16:16:18 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ typedef struct Config
 	std::string	index;
 	std::string	hostName;
 	std::map<int, std::string> errPageGlobal;
+	std::vector<CgiConfig> cgiConf;
 	// Location	loc; 	//later on std::vector<Location> locs;
 } Config;
 

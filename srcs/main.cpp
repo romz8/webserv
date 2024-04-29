@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/25 17:51:40 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/29 17:16:27 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
 	test.errPageGlobal.insert(std::pair<int, std::string>(404,"error_pages/404.html"));
 	test.errPageGlobal.insert(std::pair<int, std::string>(500, "error_pages/500.html"));
 	test.errPageGlobal.insert(std::pair<int, std::string>(400, "error_pages/400.html"));
+	
+	test.cgiConf.push_back(CgiConfig(".sh", "/bin/bash"));
 	try
 	{
 		Server serv(test);

@@ -1,6 +1,6 @@
 #!/bin/bash
-echo 'Content-Type: text/html'
-echo
+# echo 'Content-Type: text/html'
+# echo
 echo '<!DOCTYPE html>'
 echo '<html>'
 echo '   <head>'

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 21:09:16 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/24 21:49:38 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/29 18:39:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ Location::Location(const std::string& path, const std::vector<std::string>& meth
  _path(path), _allowedMethods(methods), _rootDir(root), _index(index), _AutoIndex(autoIdx), \
  _allowUpload(allowup), _uploadDirectory(upload)
 {
+	_cgiConfigs.clear();
 	std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
 	std::cout << " and upload path is " << this->_uploadDirectory << std::endl;
 }
@@ -77,4 +78,39 @@ bool Location::getAutoIndex() const
 bool Location::getUploadAllowed() const
 {
 	return (this->_allowUpload);
+}
+
+void Location::setCgi(const CgiConfig& cgi)
+{
+	_cgiConfigs.push_back(cgi);
+}
+
+// void Location::setCgi(const std::map<std::string, const std::string>& cgiMap)
+// {
+// 	_cgiConfigs.push_back({ext, cgiMap.});
+// }
+
+std::vector<CgiConfig> Location::getCgi() const
+{
+	return (this->_cgiConfigs);
+}
+
+bool Location::hasCgi(const std::string& extension) const 
+{
+    for (std::vector<CgiConfig>::const_iterator it = _cgiConfigs.begin(); it != _cgiConfigs.end(); ++it) 
+	{
+        if (it->extension == extension)
+            return true;
+    }
+    return false;
+}
+
+std::string Location::getCgiHandler(const std::string& extension) const 
+{
+    for (size_t i = 0; i < _cgiConfigs.size(); ++i) {
+        if (_cgiConfigs[i].extension == extension) {
+            return (_cgiConfigs[i].handlerPath);
+        }
+    }
+    return "";  // Return an empty string if no handler is found
 }

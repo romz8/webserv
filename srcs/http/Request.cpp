@@ -289,6 +289,7 @@ void	Request::initRequest()
 {
 	this->_isDirectory = false;
 	this->_isDirNorm = false;
+	this->_hasCgi = false;
 	this->_status = 0;
 	this->_method.clear();
 	this->_path.clear();
@@ -422,6 +423,7 @@ bool Request::isValidVersion() const
 	return (false);
 }
 
+
 /*
 *********************************************************************
 *************************** GET Request Logic ***********************
@@ -446,6 +448,21 @@ void		Request::handleGetRequest()
 	if (!hasReadAccess())
 	{
 		this->_status = 403;
+		return ;
+	}
+	if (_location.hasCgi(parseExtension(this->_path, "")))
+	{
+		this->_path = _location.getPath() + this->_path.substr(_location.getPath().size());
+		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
+		CGI cgi(*this, execpath);
+		cgi.executeCGI();
+		std::cout << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
+		this->_status = cgi.getStatus();
+		if (this->_status == 200)
+			this->_respbody = cgi.getBody();
+		this->_hasCgi = true;
+		std::cout << BG_GREEN << "CGI EXECUTED" << RESET << std::endl;
+		std::cout <<"body is :" << _respbody << std::endl;
 		return ;
 	}
 	if (this->_isDirectory)
@@ -1035,3 +1052,16 @@ std::string formattedTime() {
     strftime(buffer, 80, "%Y-%m-%d_%H-%M-%S", timeinfo);
     return (std::string(buffer));
 }
+
+
+void	getQueryParams(const std::string& path, std::map<std::string, std::string>& params)
+{
+	size_t pos = path.find("?");
+	if (pos == std::string::npos)
+		return ;
+	std::string query = path.substr(pos + 1);
+	std::istringstream stream(query);
+	std::string key, value;
+	while (std::getline(stream, key, '=') && std::getline(stream, value, '&'))
+		params[key] = value;
+}	

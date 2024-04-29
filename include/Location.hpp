@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:57:04 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/24 21:49:05 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/29 18:38:39 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,14 @@
 # include <iostream>
 # include <vector>
 # include <map>
+
+struct CgiConfig 
+{
+    std::string extension;
+    std::string handlerPath;
+	CgiConfig(const std::string& ext, const std::string& handler)
+    : extension(ext), handlerPath(handler) {}
+};
 
 class Location 
 {
@@ -28,6 +36,7 @@ private:
 	bool _AutoIndex;
 	bool _allowUpload;
 	std::map<int, std::string> _errPages;
+	std::vector<CgiConfig> _cgiConfigs;
 	
 public:
 	Location();
@@ -45,6 +54,11 @@ public:
 	std::string getErrPage(int code) const;
 	bool getAutoIndex() const;
 	bool getUploadAllowed() const;
+	std::vector<CgiConfig> getCgi() const;
+	void setCgi(const CgiConfig& cgi);
+	//void setCgi(const std::map<std::string, const std::string>& cgiMap);
+	bool hasCgi(const std::string& extension) const;
+	std::string	getCgiHandler(const std::string& extension) const;
 };
 
 

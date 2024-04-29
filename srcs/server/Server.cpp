@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/26 13:06:17 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/04/29 16:36:33 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,16 +29,18 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	methods2.push_back("POST");
 
 	std::map<int, std::string> custom404;
-	custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
+	//custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
 	// _locations.push_back(Location("/", methods1, _root, "index.html", true, ""));
 	_locations.push_back(Location("/getorder", methods2, _root, "index.html", false, true,"./upload/formData/"));
     _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, true, "./upload/files/"));
-	_locations[0].addErrPage(custom404);
+	//custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
+	//_locations[0].addErrPage(custom404);
     //_locations.Location("/delete", {"DELETE"}, serverRoot, "test.html", false);
 	// _locations.push_back(Location("/nimp", methods1, _root, "index.html", true, ""));
     // _locations.push_back(Location("/nimo2", methods2, _root, "index.html", false, "./upload/"));
     // _locations.push_back(Location("/blabla", methods2, _root, "index.html", false, "./upload/"));
 	_rootloc = Location("/", methods1, _root, "index.html", true, false, "");
+	_rootloc.setCgi(conf.cgiConf[0]);
 	_rootloc.addErrPage(_errPageGlobal);
 	
 	printSockAddrIn(_servAddr);
