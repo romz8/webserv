@@ -13,6 +13,7 @@
 #ifndef __SOCKET_HPP__
 # define __SOCKET_HPP__
 
+# include <iostream>
 # include <sys/socket.h>
 
 class Socket

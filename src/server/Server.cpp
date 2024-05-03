@@ -31,10 +31,6 @@ Server::Server( const Server & src ) {
 
 Server	&Server::operator=( const Server & src ) {
 	if (this != &src)
-	{
-		if (this->directives)
-			delete this->directives;
 		this->directives = new Directives(*src.directives, 1);
-	}
 	return (*this);
 }

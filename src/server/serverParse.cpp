@@ -39,4 +39,6 @@ void	Server::parse( std::string &content ) {
 		line.clear();
 		treated_line.clear();
 	}
+	this->sock_fd = Socket::createSocket( AF_INET, SOCK_STREAM, 0 );
+	std::cout << this->sock_fd << std::endl;
 }

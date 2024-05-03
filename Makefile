@@ -18,7 +18,7 @@ OBJ_DIR		= obj/
 # ----Libraryes----
 INC_DIR = inc/
 
-INC = -I $(INC_DIR)defines -I $(INC_DIR)directives -I $(INC_DIR)parser -I $(INC_DIR)utils
+INC = -I $(INC_DIR)defines -I $(INC_DIR)directives -I $(INC_DIR)parser -I $(INC_DIR)utils -I $(INC_DIR)network
 
 # =============
 
@@ -26,10 +26,10 @@ INC = -I $(INC_DIR)defines -I $(INC_DIR)directives -I $(INC_DIR)parser -I $(INC_
 RM = rm -rf
 MP = mkdir -p
 CC = c++
-CFLAGS = -Werror -Wextra -Wall -O3 -g -std=c++98 #-fsanitize=address
+CFLAGS = -Werror -Wextra -Wall -O3 -g -std=c++98 -fsanitize=address
 # =============
 
-FILES = main Parser ParseContent ParseDirectives Signals Utils Server Directives Location
+FILES = main Parser ParseContent ParseDirectives Signals Utils Server Directives Location serverParse serverGetters Socket
 
 SRC = $(addsuffix .cpp, $(FILES))
 
