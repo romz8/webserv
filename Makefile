@@ -6,7 +6,7 @@
 #    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/17 07:41:15 by jsebasti          #+#    #+#              #
-#    Updated: 2024/04/26 00:58:47 by jsebasti         ###   ########.fr        #
+#    Updated: 2024/05/03 18:41:16 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -37,6 +37,8 @@ vpath %.cpp src
 vpath %.cpp src/directives
 vpath %.cpp src/parser
 vpath %.cpp src/utils
+vpath %.cpp src/server
+vpath %.cpp src/network
 
 # -------------
 OBJ = $(addprefix $(OBJ_DIR), $(SRC:.cpp=.o))

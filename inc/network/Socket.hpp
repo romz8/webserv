@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 13:27:44 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/03 09:27:51 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/03 11:30:20 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ class Socket
 public:
     Socket( void );
     ~Socket( void );
-    static socket_t createSocket( int, int, int );
+    static int createSocket( int, int, int );
 };
 
 #endif
