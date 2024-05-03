@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 13:34:31 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/03 09:28:25 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ class Server
 {
 	private:
 		Directives		*directives;
-		Socket			socket;
+		socket_t		sock_fd;
 	
 	public:
 		Server( void );
