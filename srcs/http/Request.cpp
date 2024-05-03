@@ -336,7 +336,9 @@ bool	loneCR(const std::string& header)
 */
 void	Request::buildRequest()
 {
+	hexDecoding(_path);
 	sanitizeUrl();
+	getQueryParams();
 	// std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
 	// std::cout << BG_CYAN << "method is " << this->_method << std::endl;
 	// std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
@@ -1053,15 +1055,50 @@ std::string formattedTime() {
     return (std::string(buffer));
 }
 
-
-void	getQueryParams(const std::string& path, std::map<std::string, std::string>& params)
+//is this good to split with params or should we only split the between query and path
+//and therefore only save the _query = path
+//careful to put it before "isvalidpath and on _path to clean ressoruce lookup in get"
+/*
+* with query == "/cgi-bin/script.sh?name=hi"
+* will be query == "name=hi" and name == "/cgi-bin/script.sh"
+*/
+void	Request::getQueryParams()
 {
-	size_t pos = path.find("?");
+	std::cout << "before entering the Query Parmas we have : " << _path << std::endl;
+	size_t pos = _path.find("?");
 	if (pos == std::string::npos)
 		return ;
-	std::string query = path.substr(pos + 1);
+	std::string query = _path.substr(pos + 1);
 	std::istringstream stream(query);
 	std::string key, value;
 	while (std::getline(stream, key, '=') && std::getline(stream, value, '&'))
-		params[key] = value;
-}	
+		_params[key] = value;
+	this->_query = query;
+	this->_path = _path.substr(pos);
+	std::cout << BG_GREEN "After Query Parmas we have : " << _path << std::endl;
+	std::cout << "and query : " << _query << RESET << std::endl;
+}
+
+//check ok good on all hex size of 3 including the %
+void hexDecoding(std::string& url)
+{
+	std::cout << "Pre hexDecoding url is : " << url << std::endl;
+	while (42)
+	{
+		std::string decode = url;
+		size_t hexpos = decode.find("%"); //will it iterate over all of them ?
+		if ( hexpos != std::string::npos)
+		{
+			//suposing there are all 3 characters (%20)
+			std::string tmp = decode.substr(hexpos + 1, hexpos + 4); //why npos in std::string tmp = subName.substr(pos + 1, std::string::npos);? there are only 3 no ?
+			char *temp_c = (char *) tmp.c_str();
+			long c = strtol(temp_c, NULL, 16); //why put null ?
+			url.replace(url.find("%"), 3, (const char *) c); // why not &c ?
+		}
+		else if (size_t pos = decode.find("+") != std::string::npos)
+			url.replace(pos, 1, " ");
+		else
+			break;
+	}
+	std::cout << "After hexDecoding url is : " << url << std::endl;
+}

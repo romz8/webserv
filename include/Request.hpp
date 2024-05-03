@@ -48,6 +48,8 @@ private:
 	std::string		_respbody;
 	Location		_location;
 	bool 			_hasCgi;
+	std::string		_query;
+	std::map<std::string, std::string>	_params;
 	std::map<std::string, std::string> _headers;
 	//static const std::string CRLF = "\r\n";
 
@@ -104,6 +106,7 @@ public:
 	void		setStatus(int status);
 	void		setLocation(const Location& loc);
 	Location	getLocation() const;
+	void		getQueryParams();
 }; 
 
 /********************* utils ******************************/
@@ -117,5 +120,6 @@ bool	fileExists(const std::string& path);
 size_t safeStrToSizeT(const std::string& str);
 bool	loneCR(const std::string& header);
 std::string	formattedTime();
+void	hexDecoding(std::string& url);
 
 #endif
