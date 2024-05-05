@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 11:30:43 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/05 23:16:08 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,7 @@ void	ParseDirectives::save_listen( Directives *d, const StrVector & line ) {
 		throw logic_error("Unexpected amount of arguments");
 	string value = line[1].substr(0, line[1].find_last_of(";"));
 	size_t pos = value.find_last_of(":");
+	d->ip = "";
 	if (pos != string::npos) {
 		d->ip = ParseContent::decompressIp(value.substr(0, pos));
 		ParseContent::checkValidIp(d->ip);

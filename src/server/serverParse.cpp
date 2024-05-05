@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/03 18:42:24 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/03 18:42:35 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 00:49:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,5 @@ void	Server::parse( std::string &content ) {
 		line.clear();
 		treated_line.clear();
 	}
-	this->sock_fd = Socket::createSocket( AF_INET, SOCK_STREAM, 0 );
-	std::cout << this->sock_fd << std::endl;
+	this->init_sock();
 }
