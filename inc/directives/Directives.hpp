@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 09:29:55 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:38:21 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ class Directives {
 	private:
 		string					def_err_page;
 		string					def_serv_name;
+
 	private:
 		string					root;
 		unsigned int			port;
@@ -62,6 +63,7 @@ class Directives {
 	
 		void			cleanLocations( void );
 		void			cleanServers( void );
+
 	public:
 		Directives( void );
 		~Directives( void );

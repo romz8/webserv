@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 13:31:30 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 09:52:39 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:22:38 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,11 @@ Socket::~Socket( void ) {
     return ;
 }
 
-int    Socket::createSocket( int domain, int type, int protocol ) {
-    int sock_fd = socket(domain, type, protocol);
-    if (sock_fd < 0)
-        throw std::runtime_error("Error setting the socket for domain: " + std::to_string(domain));
-    return (sock_fd);
+sockaddr_in    Socket::createSocket( const Directives &d ) {
+    this->_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->_sock_fd < 0)
+        throw std::runtime_error("Error creating the socket");
+    return (this->makeConnections(d, this->_sock_fd));
 }
 
 sockaddr_in	    Socket::makeConnections( const Directives &d, int sock_fd ) {
@@ -33,16 +33,26 @@ sockaddr_in	    Socket::makeConnections( const Directives &d, int sock_fd ) {
     std::string ip = d.getIp();
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(d.getPort());
-	
+	this->_addr_size = sizeof(const struct sockaddr_in);
+    
 	if (ip.empty() || !ip.compare("0.0.0.0"))
 		addr.sin_addr.s_addr = INADDR_ANY;
 	else
 		inet_pton(addr.sin_family, ip.c_str(), &addr.sin_addr);
     
-    if (bind(sock_fd, (const struct sockaddr *)&addr, sizeof(const struct sockaddr_in)) < 0)
+    if (bind(sock_fd, (const struct sockaddr *)&addr, this->_addr_size) < 0)
     {
         std::string error = strerror(errno);
         throw runtime_error("Socket binding the socket: " + error);
     }
     return (addr);
+}
+
+int             Socket::acceptConnections( void ) {
+    this->_accepted_fd = accept(this->_sock_fd, (struct sockaddr *)&this->_client_addr, (unsigned int *)this->_addr_size);
+    if (this->_accepted_fd < 0)
+    {
+        std::string error = strerror(errno);
+        throw runtime_error("Socket error: " + error);
+    }
 }

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/03 18:42:24 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 00:49:37 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:00:44 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void	Server::parse( std::string &content ) {
 		if (!line[0].compare("{") || !line[0].compare("}"))
 			continue ;
 		int type = ParseContent::getServAllowDirectives(line[0]);
-		i = ParseDirectives::parseServerDirectives( this->directives, line, type, lines, i);
+		i = ParseDirectives::parseServerDirectives( this->_d, line, type, lines, i);
 		line.clear();
 		treated_line.clear();
 	}

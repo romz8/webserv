@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/18 22:37:36 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:03:07 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,8 @@ Directives	*Parser::getDirectives( void ) {
 	try
 	{
 		this->getInfo();
-		this->directives = Directives::parseDirectives(this->content);
-		return (this->directives);
+		this->_d = Directives::parseDirectives(this->content);
+		return (this->_d);
 	} catch ( std::exception &e ) {
 		throw std::logic_error(e.what());
 	}

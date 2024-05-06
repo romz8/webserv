@@ -6,30 +6,24 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 01:00:21 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:37:32 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __SERVER_HPP__
 # define __SERVER_HPP__
 
-# include <string>
-# include <vector>
-# include <Directives.hpp>
 # include <ParseContent.hpp>
 # include <ParseDirectives.hpp>
+# include <Directives.hpp>
 # include <Socket.hpp>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <sys/types.h>
 
 class Server
 {
 	private:
-		Directives		*directives;
-		int				sock_fd;
-		sockaddr_in		sockAddr;
+		Directives		*_d;
+		struct sockaddr_in	_servAddr;
+		Socket			_sock;
 	public:
 		Server( void );
 		~Server( void );

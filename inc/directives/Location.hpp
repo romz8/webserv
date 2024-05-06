@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/17 21:26:21 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/23 07:47:01 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:05:35 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,9 @@
 class Location
 {
     private:
-        Directives  *directives;
-        std::string uri;
-        bool        isDir;
+        Directives  *_d;
+        std::string _uri;
+        bool        _isDir;
 
     public:
         Location( void );

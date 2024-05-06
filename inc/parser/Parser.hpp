@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/18 22:37:03 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 20:03:26 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,7 @@ class Directives;
 
 class Parser {
 	private:
-		Directives		*directives;
-		ServersVector	server;
+		Directives	*_d;
 		std::string file;
 		std::string	content;
 
