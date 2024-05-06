@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 15:54:16 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 17:41:55 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,10 +133,14 @@ void	ParseDirectives::save_error_page( Directives *d, const StrVector & line ) {
 void	ParseDirectives::save_server_name( Directives *d, StrVector & line ) {
 	if (line.size() < 2)
 		throw logic_error("Unexpected amount of arguments");
-	if (!line[line.size() - 1].compare(";"))
+	int last_pos = line.size() - 1;
+	if (!line[last_pos].compare(";"))
 		line.pop_back();
 	else
-		line[line.size() - 1].pop_back();
+	{
+		int pos = line[last_pos].find_first_of(";");
+		line[last_pos] = line[last_pos].substr(0, pos);
+	}
 	for (size_t i = 1; i < line.size(); i++)
 		d->server_names.push_back(line[i]);
 }

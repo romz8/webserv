@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 14:29:06 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:23:49 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 18:04:36 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,6 +193,16 @@ namespace SUtils {
 
 	string	trim( string str ) {
 		return (trim_right( trim_left( str ) ) );
+	}
+}
+
+namespace std {
+	template <typename T>
+	string	to_string(const T &n )
+	{
+		ostringstream	ss;
+		ss << n;
+		return (ss.str());
 	}
 }
 
