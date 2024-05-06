@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/29 18:41:02 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/06 19:33:53 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,9 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 	_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	_env["PATH_INFO"] = req.getParsePath();
 	_env["PATH_TRANSLATED"] = req.getParsePath();
-	_env["QUERY_STRING"] = req.getHeaderField("Query"); //to be implemented
+	_env["QUERY_STRING"] = req.getQueryString();
+	std::cout << BG_YELLOW "QUERY STRING : " << req.getQueryString() << RESET << std::endl;
+	std::cout << BG_YELLOW "QUERY STRING in env: " << _env["QUERY_STRING"] << RESET << std::endl;
 	_env["REMOTE_ADDR"] = "0.0.0.0";
 	_env["SERVER_NAME"] = "webserv"; // from config
 	_env["SERVER_PROTOCOL"] = "HTTP/1.1";
@@ -64,9 +66,11 @@ char **CGI::setEnvExecve(void)
 	
 	for (; it != _env.end(); ++it)
 	{
-		std::string envEntry = it->first + "=" + it->second + '\0';
+		std::string envEntry = it->first + "=" + it->second + "\0";
 		env[i] = new char[envEntry.size() + 1];
-		env[i] = const_cast<char *>(envEntry.c_str());
+		env[i] = std::strcpy(env[i], envEntry.c_str());
+		i++;
+		//delete envEntry;`
 	}
 	env[i] = NULL;
 	return (env);
@@ -74,6 +78,8 @@ char **CGI::setEnvExecve(void)
 void	CGI::executeCGI()
 {
 	char **env = setEnvExecve();
+	for (int i = 0; env[i]; i++)
+		std::cerr << BG_GREEN "env is " << env[i] << "and add is " << &env[i] <<RESET << std::endl;
 	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != NULL)
     	std::cout << "Current working dir: " << cwd << std::endl;
@@ -118,6 +124,11 @@ void	CGI::executeCGI()
 	close(_fdout[0]);
 	waitpid(pid, NULL, 0);
 	_respbody = newbody;
+	
+	for (int i = 0; env[i]; i++)
+		delete env[i];
+	delete env;	
+	
 	this->_status = 200;
 }
 	

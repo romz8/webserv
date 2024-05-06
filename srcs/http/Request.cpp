@@ -298,6 +298,7 @@ void	Request::initRequest()
 	this->_body.clear();
 	this->_respbody.clear();
 	this->_extension.clear();
+	this->_query.clear();
 }
 
 /**
@@ -336,13 +337,17 @@ bool	loneCR(const std::string& header)
 */
 void	Request::buildRequest()
 {
-	hexDecoding(_path);
+	
+	std::cout << "init path path is ; " << this->_path << std::endl;
 	sanitizeUrl();
 	getQueryParams();
+	hexDecoding(_path); //CAREFULL SF (tested with /cgi-bin/hello.py?firstname=lljfamf&lastname=%3Bl%3Blf&address=%3B%3Blkfkdkf)
 	// std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
 	// std::cout << BG_CYAN << "method is " << this->_method << std::endl;
 	// std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
-	
+	std::cout << "path is ; " << this->_path << std::endl;
+	std::cout << "query string is : " << this->_query << std::endl;
+
 	StatusCode();
 	if (this->_status >= 400)
 		return; 
@@ -923,6 +928,11 @@ Location Request::getLocation() const
 	return(this->_location);
 }
 
+std::string Request::getQueryString() const
+{
+	return(this->_query);
+}
+
 /************************** UTILS **********************************/
 
 /*
@@ -1070,35 +1080,31 @@ void	Request::getQueryParams()
 		return ;
 	std::string query = _path.substr(pos + 1);
 	std::istringstream stream(query);
-	std::string key, value;
-	while (std::getline(stream, key, '=') && std::getline(stream, value, '&'))
-		_params[key] = value;
 	this->_query = query;
-	this->_path = _path.substr(pos);
+	this->_path = _path.substr(0, pos);
 	std::cout << BG_GREEN "After Query Parmas we have : " << _path << std::endl;
 	std::cout << "and query : " << _query << RESET << std::endl;
 }
 
-//check ok good on all hex size of 3 including the %
+//issue on unicode for comlex like curl "http://localhost:4242/unicode%20%3F%F0%9F%98%80%F0%9F%92%A9"
 void hexDecoding(std::string& url)
 {
 	std::cout << "Pre hexDecoding url is : " << url << std::endl;
-	while (42)
+	size_t hexpos = 0, pos = 0;
+
+	while (( hexpos = url.find("%", hexpos)) != std::string::npos)
 	{
-		std::string decode = url;
-		size_t hexpos = decode.find("%"); //will it iterate over all of them ?
-		if ( hexpos != std::string::npos)
-		{
-			//suposing there are all 3 characters (%20)
-			std::string tmp = decode.substr(hexpos + 1, hexpos + 4); //why npos in std::string tmp = subName.substr(pos + 1, std::string::npos);? there are only 3 no ?
-			char *temp_c = (char *) tmp.c_str();
-			long c = strtol(temp_c, NULL, 16); //why put null ?
-			url.replace(url.find("%"), 3, (const char *) c); // why not &c ?
-		}
-		else if (size_t pos = decode.find("+") != std::string::npos)
-			url.replace(pos, 1, " ");
-		else
+		if (hexpos + 3 > url.size())
 			break;
+		std::string tmp = url.substr(hexpos + 1, 2); //why npos in std::string tmp = subName.substr(pos + 1, std::string::npos);? there are only 3 no ?
+		long c = strtol((char *) tmp.c_str(), NULL, 16);
+		char c_char = static_char<char> c;
+		std::cout << BG_GREEN "we are replacing : " << tmp << " with " << c_char << RESET << " for long value : " << c << std::endl;
+		url.replace(hexpos, 3, (const char *) &c_char); // why not &c ?
 	}
+
+	while ((pos = url.find("+", pos)) != std::string::npos)
+		url.replace(pos, 1, " ");
+
 	std::cout << "After hexDecoding url is : " << url << std::endl;
 }

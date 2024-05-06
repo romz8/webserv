@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 21:09:16 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/29 18:39:08 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/06 16:49:46 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,8 @@ bool Location::hasCgi(const std::string& extension) const
 {
     for (std::vector<CgiConfig>::const_iterator it = _cgiConfigs.begin(); it != _cgiConfigs.end(); ++it) 
 	{
-        if (it->extension == extension)
+        std::cout << "Checking extension : " << it->extension << std::endl;
+		if (it->extension == extension)
             return true;
     }
     return false;

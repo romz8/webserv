@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/29 16:36:33 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/06 20:29:48 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
     // _locations.push_back(Location("/blabla", methods2, _root, "index.html", false, "./upload/"));
 	_rootloc = Location("/", methods1, _root, "index.html", true, false, "");
 	_rootloc.setCgi(conf.cgiConf[0]);
+	_rootloc.setCgi(conf.cgiConf[1]);
 	_rootloc.addErrPage(_errPageGlobal);
 	
 	printSockAddrIn(_servAddr);
@@ -100,7 +101,7 @@ void	Server::handleConnection()
 	std::string rawhead = this->_sock.readHeader(io_fd);
 	std::cout << "rawHead: " << rawhead << std::endl;
 	Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
-	request.printHeader();
+	//request.printHeader();
 	if (request.hasBody())
 	{
 		std::string body = this->_sock.readBody(io_fd, request.getHeader(), rawhead);

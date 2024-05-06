@@ -24,6 +24,7 @@
 # include <unistd.h>
 # include <dirent.h>
 # include <ctime>
+# include <cstdlib>
 # include "colors.h"
 # include "Location.hpp"
 # include "CGI.hpp"
@@ -49,7 +50,6 @@ private:
 	Location		_location;
 	bool 			_hasCgi;
 	std::string		_query;
-	std::map<std::string, std::string>	_params;
 	std::map<std::string, std::string> _headers;
 	//static const std::string CRLF = "\r\n";
 
@@ -97,6 +97,7 @@ public:
 	std::string	getPath() const;
 	int			getStatus() const;
 	std::string getParsePath() const;
+	std::string getQueryString() const;
 	std::string	getExtension() const;
 	std::map<std::string, std::string> getHeader() const;
 	std::string getHeaderField(const std::string& key) const;
