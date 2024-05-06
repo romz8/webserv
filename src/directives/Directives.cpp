@@ -128,7 +128,7 @@ const string						&Directives::getUploadStore( void ) const {
 
 const UintStrMap::mapped_type		&Directives::getErrorPage( unsigned int key ) const {
 	UintStrMap::const_iterator  It = this->error_page.find(key);
-	if (It == this->error_page.cend())
+	if (It == this->error_page.end())
 		return (this->def_err_page);
 	return (this->error_page.at(key));
 }
@@ -139,14 +139,14 @@ const UintStrMap					&Directives::getErrorPages( void ) const {
 
 bool								Directives::errorPageSet( unsigned int key ) const {
 	UintStrMap::const_iterator  It = this->error_page.find(key);
-	if (It == this->error_page.cend())
+	if (It == this->error_page.end())
 		return (false);
 	return (true);
 }
 
 bool								Directives::cgiSet( string key ) const {
 	StrMap::const_iterator  It = this->cgi.find(key);
-	if (It == this->cgi.cend())
+	if (It == this->cgi.end())
 		return (false);
 	return (true);
 }
@@ -157,7 +157,7 @@ const StrMap						&Directives::getCgiMap( void ) const {
 
 const string						Directives::getCgiExe( string ext ) const {
 	StrMap::const_iterator	It = this->cgi.find(ext);
-	if (It == this->cgi.cend())
+	if (It == this->cgi.end())
 		return ("");
 	return (this->cgi.at(ext));
 }

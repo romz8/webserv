@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include <Socket.hpp>
+#include <errno.h>
 
 Socket::Socket( void ) {
     return ;
