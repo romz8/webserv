@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 10:48:47 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 00:58:37 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 09:51:46 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,5 +37,13 @@ Server	&Server::operator=( const Server & src ) {
 
 void	Server::init_sock( void ) {
 	this->sock_fd = Socket::createSocket(AF_INET, SOCK_STREAM, 0);
-	this->sockAddr = Socket::makeConnections( *this->directives );
+	this->sockAddr = Socket::makeConnections( *this->directives, this->sock_fd );
 }
+
+// void	Server::acceptConnections( void ) {
+	
+// }
+
+// void	Server::run( void ) {
+	
+// }

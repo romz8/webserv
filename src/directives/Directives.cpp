@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 11:49:31 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 15:22:17 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Directives::Directives( void ) : root("/"), client_max_body_size(10240), allow_upload(false), autoindex(false) {
 	this->port = 443;
-	this->ip = "42.42.42.42";
+	this->ip = "0.0.0.0";
 	this->def_err_page = "./def_err.html";
 	this->upload_store = "./uploads/";
 	for (int i = 0; i < N_DIRECTIVES; i++)

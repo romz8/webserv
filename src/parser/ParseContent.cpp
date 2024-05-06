@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/04/26 09:27:27 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 15:29:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ void	ParseContent::checkValidIp( string ip ) {
 	StrVector	masks;
 	
 	if (checkIpSyntax(ip) == false)
-		throw logic_error("Invalid syntax in IP");
+		throw logic_error("Invalid syntax in IP " + ip);
 	split(masks, ip, ".");
 	if (masks.size() > 4)
 		throw logic_error("Invalid IP");
