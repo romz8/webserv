@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 20:37:32 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 21:25:20 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,14 @@
 
 # include <ParseContent.hpp>
 # include <ParseDirectives.hpp>
-# include <Directives.hpp>
 # include <Socket.hpp>
 
 class Server
 {
 	private:
 		Directives		*_d;
-		struct sockaddr_in	_servAddr;
 		Socket			_sock;
+		struct sockaddr_in	_servAddr;
 	public:
 		Server( void );
 		~Server( void );
@@ -40,6 +39,7 @@ class Server
 		//has the stronger coincidence. (Maybe I move it to the directives to check with all the servers).
 		int								getStrongCoincidence( string ) const;
 		void							init_sock( void );
+		void							run( void ) const ;
 };
 
 #endif

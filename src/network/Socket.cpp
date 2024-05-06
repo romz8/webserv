@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 13:31:30 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 20:22:38 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/06 21:28:06 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,17 @@ sockaddr_in	    Socket::makeConnections( const Directives &d, int sock_fd ) {
     return (addr);
 }
 
-int             Socket::acceptConnections( void ) {
-    this->_accepted_fd = accept(this->_sock_fd, (struct sockaddr *)&this->_client_addr, (unsigned int *)this->_addr_size);
+void             Socket::acceptConnections( void ) {
+    this->_accepted_fd = accept(this->_sock_fd, (struct sockaddr *)&this->_client_addr, &this->_addr_size);
     if (this->_accepted_fd < 0)
     {
         std::string error = strerror(errno);
         throw runtime_error("Socket error: " + error);
     }
+    fcntl(this->_accepted_fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+}
+
+void            Socket::listenConnections( void ) const {
+    if (listen(this->_sock_fd, 0) < 0)
+        return ;
 }
