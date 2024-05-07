@@ -23,6 +23,7 @@ private:
 	std::string		_headerResponse;
 	std::string		_body;
 	std::string		_response;
+	bool			_fromCgi;
 	Location		_location;
 
 public:

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/26 13:25:02 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/07 20:39:03 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
 	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _mimeTypes(initMimeMaps()), \
 	_content_len("0"), _headerResponse(""), _body(head.getrespBody()), _response(""), _assetPath(""), \
-	_extension(".html"), _location(head.getLocation())
+	_extension(".html"), _location(head.getLocation()), _fromCgi(head.execCgi())
 {
 	if (this->_status >= 400)
 		this->_assetPath = _location.getRootDir() + getErrorPage(this->_status);
@@ -106,6 +106,8 @@ std::string Response::getResponse() const
 */
 void	Response::addHeaders()
 {
+	if (_fromCgi)
+		return;
 	if (this->_status == 301)
 		_headers["Location"] = this->_assetPath;
 	else if (this->_status == 204)
@@ -139,6 +141,11 @@ std::string Response::assembHeaders()
 
 void Response::finalizeResponse()
 {
+	if (_fromCgi)
+	{
+		this->_response = this->_statusLine + this->_body;
+		return;
+	}
 	std::string headContent = assembHeaders();
 	this->_response = this->_statusLine + headContent;
 	this->_response.append(_body);

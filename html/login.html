@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+	<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+	<div>
+    <h1>Start your Session</h1>
+    <p>Please login using your favourite username</p>
+	<form  action="/cgi-bin/cookie.py" method="GET">
+		<div>
+            <label for="user">User Name:</label>
+            <input type="text" id="user" name="username" required>
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+	</div>
+</body>
+</html>

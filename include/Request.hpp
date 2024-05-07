@@ -48,7 +48,7 @@ private:
 	std::string		_body;
 	std::string		_respbody;
 	Location		_location;
-	bool 			_hasCgi;
+	bool 			_execCgi;
 	std::string		_query;
 	std::map<std::string, std::string> _headers;
 	//static const std::string CRLF = "\r\n";
@@ -90,8 +90,9 @@ public:
 	bool		isHiddenAccess(const std::string& url);
 	bool		hasReadAccess() const;
 	bool		hasWriteAccess() const;
+	bool		hasExecAccess() const;
 	void		normalizeDirPath();
-	bool		hasCgi() const;
+	bool		execCgi() const;
 
 	std::string	getMethod() const;
 	std::string	getPath() const;

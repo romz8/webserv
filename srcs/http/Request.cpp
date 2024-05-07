@@ -289,7 +289,7 @@ void	Request::initRequest()
 {
 	this->_isDirectory = false;
 	this->_isDirNorm = false;
-	this->_hasCgi = false;
+	this->_execCgi = false;
 	this->_status = 0;
 	this->_method.clear();
 	this->_path.clear();
@@ -438,12 +438,30 @@ bool Request::isValidVersion() const
 */
 
 /**
+ ON GENERAL LOGIC
  * Processes GET requests by validating the requested path and retrieving content if available.
  * This function first checks if the path is valid and accessible. If the request targets a directory,
  * it may return a directory listing or a specific index file if configured. The function sets
  * appropriate response codes based on the existence and accessibility of the target resource,
  * such as 404 for Not Found or 200 for successfully retrieving the content. It handles directory
  * path normalization by ensuring they end with a slash and redirecting if necessary.
+ 
+ ON CGI Block
+ * if the location object has a CGI handler configured for the requested extension, the function
+ * adjusts the internal request path to match the filesystem path required for CGI script execution.
+ *  
+ * The function combines the base path configured for the location object with the remainder
+ * of the requested path that comes after the location's base path ( in case the public URL 
+ * does not directly correspond to the filesystem path on the server to access scripts).
+ * 
+ * Example:
+ *  - If a CGI script is requested via the URL `http://example.com/cgi-bin/script.sh`, and the
+ *    server is configured to handle requests under `/cgi-bin/` at a filesystem location like
+ *    `/var/www/cgi-bin/`, this block will adjust the internal path to `/var/www/cgi-bin/script.sh`.
+ * 
+ * then it extract the executable path from the location object and creates a CGI object to execute the script.
+ * then it sets the response status to the CGI object's status and retrieves the response body.
+ * 
  */
 void		Request::handleGetRequest()
 {
@@ -459,15 +477,21 @@ void		Request::handleGetRequest()
 	}
 	if (_location.hasCgi(parseExtension(this->_path, "")))
 	{
+		if (!hasExecAccess())
+		{
+			this->_status = 403;
+			return ;
+		}
 		this->_path = _location.getPath() + this->_path.substr(_location.getPath().size());
 		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
+		std::cout << BG_RED "CGI EXEC PATH IS : " << execpath << std::endl;
 		CGI cgi(*this, execpath);
 		cgi.executeCGI();
 		std::cout << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
 		this->_status = cgi.getStatus();
 		if (this->_status == 200)
 			this->_respbody = cgi.getBody();
-		this->_hasCgi = true;
+		this->_execCgi = true;
 		std::cout << BG_GREEN << "CGI EXECUTED" << RESET << std::endl;
 		std::cout <<"body is :" << _respbody << std::endl;
 		return ;
@@ -520,6 +544,26 @@ void	Request::handlePostRequest()
 	if (it == this->_headers.end() || it->second.empty())
 	{
 		this->_status = 400;
+		return ;
+	}
+	if (_location.hasCgi(parseExtension(this->_path, "")))
+	{
+		if (!hasExecAccess())
+		{
+			this->_status = 403;
+			return ;
+		}
+		this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
+		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
+		_query = _body;
+		CGI cgi(*this, execpath);
+		cgi.executeCGI();
+		std::cerr << BG_RED "CGI status :" << cgi.getStatus() << std::endl;
+		std::cerr << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
+		this->_status = cgi.getStatus();
+		if (this->_status == 200)
+			this->_respbody = cgi.getBody();
+		this->_execCgi = true;
 		return ;
 	}
 	if (it->second.find("multipart/form-data") != std::string::npos)
@@ -771,6 +815,11 @@ bool Request::hasWriteAccess() const
     return (access(this->_parsePath.c_str(), W_OK) == 0);
 }
 
+// W_OK tests for write only
+bool Request::hasExecAccess() const 
+{
+    return (access(this->_parsePath.c_str(), X_OK) == 0);
+}
 
 /*
 ********************************************************************
@@ -933,6 +982,10 @@ std::string Request::getQueryString() const
 	return(this->_query);
 }
 
+bool Request::execCgi() const
+{
+	return(this->_execCgi);
+}
 /************************** UTILS **********************************/
 
 /*
@@ -1086,7 +1139,21 @@ void	Request::getQueryParams()
 	std::cout << "and query : " << _query << RESET << std::endl;
 }
 
-//issue on unicode for comlex like curl "http://localhost:4242/unicode%20%3F%F0%9F%98%80%F0%9F%92%A9"
+/**
+ * Decodes percent-encoded characters within a URL.
+ *
+ * scans through the provided URL string and replaces any
+ * percent-encoded sequences (e.g., "%20" for space) with their corresponding
+ * ASCII characters. It also converts any occurrences of the '+' character
+ * to spaces, as '+' is used to represent spaces in URL query parameters.
+ *
+ * @param url A reference to the string containing the URL to be decoded.
+ *
+ * Example usage:
+ * std::string url = "http://example.com/search?q=C%2B%2B";
+ * hexDecoding(url);
+ * // Output: http://example.com/search?q=C++
+ */
 void hexDecoding(std::string& url)
 {
 	std::cout << "Pre hexDecoding url is : " << url << std::endl;
@@ -1098,9 +1165,10 @@ void hexDecoding(std::string& url)
 			break;
 		std::string tmp = url.substr(hexpos + 1, 2); //why npos in std::string tmp = subName.substr(pos + 1, std::string::npos);? there are only 3 no ?
 		long c = strtol((char *) tmp.c_str(), NULL, 16);
-		char c_char = static_char<char> c;
+		const char c_char = static_cast<char> (c);
 		std::cout << BG_GREEN "we are replacing : " << tmp << " with " << c_char << RESET << " for long value : " << c << std::endl;
-		url.replace(hexpos, 3, (const char *) &c_char); // why not &c ?
+		url.erase(hexpos, 3);
+		url.insert(hexpos, 1, c_char);
 	}
 
 	while ((pos = url.find("+", pos)) != std::string::npos)

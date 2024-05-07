@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/06 19:33:53 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/07 20:10:42 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,8 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 	_env["CONTENT_LENGTH"] = std::to_string(_body.size());
 	_env["CONTENT_TYPE"] = req.getHeaderField("Content-Type");
 	_env["GATEWAY_INTERFACE"] = "CGI/1.1";
-	_env["PATH_INFO"] = req.getParsePath();
-	_env["PATH_TRANSLATED"] = req.getParsePath();
+	_env["PATH_INFO"] = req.getPath();
+	_env["PATH_TRANSLATED"] = req.getPath();
 	_env["QUERY_STRING"] = req.getQueryString();
 	std::cout << BG_YELLOW "QUERY STRING : " << req.getQueryString() << RESET << std::endl;
 	std::cout << BG_YELLOW "QUERY STRING in env: " << _env["QUERY_STRING"] << RESET << std::endl;
@@ -79,7 +79,7 @@ void	CGI::executeCGI()
 {
 	char **env = setEnvExecve();
 	for (int i = 0; env[i]; i++)
-		std::cerr << BG_GREEN "env is " << env[i] << "and add is " << &env[i] <<RESET << std::endl;
+		std::cerr << BG_GREEN "env is : " << env[i] << RESET << std::endl;
 	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != NULL)
     	std::cout << "Current working dir: " << cwd << std::endl;
