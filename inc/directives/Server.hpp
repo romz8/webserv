@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 21:25:20 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/08 19:20:28 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ class Server
 		//has the stronger coincidence. (Maybe I move it to the directives to check with all the servers).
 		int								getStrongCoincidence( string ) const;
 		void							init_sock( void );
+		int								setlisten( void );
 		void							run( void ) const ;
 };
 

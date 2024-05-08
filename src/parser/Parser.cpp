@@ -6,11 +6,13 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 20:03:07 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/08 17:29:59 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Parser.hpp>
+#include <ParseContent.hpp>
+#include <ParseDirectives.hpp>
 
 Parser::Parser( void ) {
 }

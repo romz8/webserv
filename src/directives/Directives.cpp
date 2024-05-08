@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 15:22:17 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/08 18:21:20 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,12 @@ Directives	*Directives::parseDirectives( const string & content ) {
 	}
 }
 
+void								Directives::setServersToListen( void ) {
+	for (size_t i = 0; i < this->servers.size(); i++) {
+		this->servers[i]->setlisten();
+	}
+}
+
 const string						&Directives::getIp( void ) const {
 	return (this->ip);
 }
@@ -102,10 +108,14 @@ const StrVector						&Directives::getSNames( void ) const {
 	return (this->server_names);
 }
 
-const Server						*Directives::getServer( unsigned int s_num ) const {
+Server								*Directives::getServer( unsigned int s_num ) const {
 	if (s_num >= this->servers.size())
 		return (NULL);
 	return (new Server(*this->servers[s_num]));
+}
+
+const Server						*Directives::getCServer( unsigned int s_num ) const {
+	return (getServer(s_num));
 }
 
 const Location						*Directives::getLocation( unsigned int s_num ) const {

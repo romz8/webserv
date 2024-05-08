@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 21:09:42 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/08 18:20:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,7 @@ class Directives {
 		void			addServer( Server * );
 		void			addLocation( Location * );
 		void			dupLocations( const LocVector & );
+		void			setServersToListen( void );
 	
 	public :
 		const string					&getIp( void ) const ;
@@ -86,7 +87,8 @@ class Directives {
 		const string					&getRoot( void ) const ;
 		const StrVector					&getSNames( void ) const ;
 		const ServersVector				&getServers( void ) const ;
-		const Server					*getServer( unsigned int ) const ;
+		Server							*getServer( unsigned int ) const ;
+		const Server					*getCServer( unsigned int ) const ;
 		const Location					*getLocation( unsigned int ) const ;
 		const UintStrMap::mapped_type	&getErrorPage( unsigned int ) const ;
 		const UintStrMap				&getErrorPages( void ) const;

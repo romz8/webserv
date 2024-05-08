@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 10:48:47 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 21:25:35 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/08 19:21:09 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,9 +41,17 @@ Server	&Server::operator=( const Server & src ) {
 
 void	Server::init_sock( void ) {
 	this->_servAddr = this->_sock.createSocket(*this->_d);
-	this->_sock.acceptConnections();
+}
+
+int		Server::setlisten( void ) {
+	return(this->_sock.listenConnections());
 }
 
 void	Server::run( void ) const {
-	this->_sock.listenConnections();
+	try {
+		this->_sock.acceptConnections();
+	}
+	catch (std::runtime_error & e) {
+		std::cout << e.what() << std::endl;
+	}
 }
