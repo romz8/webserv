@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/07 20:10:42 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/08 22:20:19 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 	_env["PATH_INFO"] = req.getPath();
 	_env["PATH_TRANSLATED"] = req.getPath();
 	_env["QUERY_STRING"] = req.getQueryString();
+	_env["HTTP_COOKIE"] = req.getHeaderField("Cookie");
 	std::cout << BG_YELLOW "QUERY STRING : " << req.getQueryString() << RESET << std::endl;
 	std::cout << BG_YELLOW "QUERY STRING in env: " << _env["QUERY_STRING"] << RESET << std::endl;
 	_env["REMOTE_ADDR"] = "0.0.0.0";
@@ -70,7 +71,6 @@ char **CGI::setEnvExecve(void)
 		env[i] = new char[envEntry.size() + 1];
 		env[i] = std::strcpy(env[i], envEntry.c_str());
 		i++;
-		//delete envEntry;`
 	}
 	env[i] = NULL;
 	return (env);
@@ -80,11 +80,11 @@ void	CGI::executeCGI()
 	char **env = setEnvExecve();
 	for (int i = 0; env[i]; i++)
 		std::cerr << BG_GREEN "env is : " << env[i] << RESET << std::endl;
-	char cwd[1024];
-	if (getcwd(cwd, sizeof(cwd)) != NULL)
-    	std::cout << "Current working dir: " << cwd << std::endl;
-	else
-    	std::cerr << "getcwd() error" << std::endl;
+	if (!isExecutable(_execPath))
+	{
+		this->_status = 500;
+		return ;
+	}
 	if (pipe(_fdin) == -1 || pipe(_fdout) == -1)
 	{
 		this->_status = 500;
@@ -98,6 +98,7 @@ void	CGI::executeCGI()
 	}
 	if (pid == 0)	
 	{
+		std::cout << BG_YELLOW "ARRIVE HERE 1" << RESET << std::endl;
 		dup2(_fdin[0], STDIN_FILENO);
 		dup2(_fdout[1], STDOUT_FILENO);
 		close(_fdin[1]);
@@ -105,7 +106,7 @@ void	CGI::executeCGI()
 		
 		const char* args[3] = {_execPath.c_str(), _path.c_str(), NULL};
 		execve(_execPath.c_str(),  const_cast<char* const*>(args), env);
-		this->_status = 500;
+		this->_status = 502;
 		exit(1);
 	}
 	close(_fdin[0]);
@@ -116,20 +117,27 @@ void	CGI::executeCGI()
 	char buffer[1024];
 	std::string newbody;
 	int byteRead;
+	std::cout << BG_YELLOW "ARRIVE HERE 2" << RESET << std::endl;
 	while ((byteRead = read(_fdout[0], buffer, sizeof(buffer) - 1)) > 0)
 	{
 		buffer[byteRead] = '\0';
 		newbody += std::string(buffer, byteRead);
 	}
+	std::cout << BG_YELLOW "ARRIVE HERE 3" << RESET << std::endl;
 	close(_fdout[0]);
-	waitpid(pid, NULL, 0);
-	_respbody = newbody;
+	int status;
+	waitpid(pid, &status, 0);
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+	{
+		_respbody = newbody;
+		this->_status = 200;
+	}
+	else
+		this->_status = 502;
 	
 	for (int i = 0; env[i]; i++)
 		delete env[i];
-	delete env;	
-	
-	this->_status = 200;
+	delete env;
 }
 	
 
@@ -141,4 +149,49 @@ int CGI::getStatus(void)
 std::string CGI::getBody(void)
 {
 	return (_respbody);
+}
+
+void CGI::checkCGI()
+{
+	if (_respbody.empty() || _respbody.find("Content-Type:") == std::string::npos)
+	{	
+		_status = 502;
+		std::cerr << BG_RED "CGI response is empty -> 502 direct" RESET << std::endl;
+		return;
+	}
+	size_t headerEnd = _respbody.find("\r\n\r\n");
+	int delimSize = 4;
+	if (headerEnd == std::string::npos)
+	{
+		headerEnd = _respbody.find("\n\n");
+		std::cout << BG_YELLOW "HEADER END IS : " << headerEnd << RESET << std::endl;
+		delimSize = 2;
+	}
+	if( headerEnd == std::string::npos)
+	{
+		std::cerr << BG_RED "CGI response is not well formatted" RESET << std::endl;
+		_status = 502;
+		return;
+	}
+	std::string header = _respbody.substr(0, headerEnd);
+	std::string body = _respbody.substr(headerEnd + delimSize);
+	std::cout << BG_YELLOW "HEADER IS : " << header << " and delim is " << delimSize << RESET << std::endl;
+	std::cout << BG_YELLOW "BODY IS : " << body << RESET << std::endl;
+	if (header.find("Content-Length:") == std::string::npos)
+	{
+		std::cerr << BG_RED "Content-Length is not present" RESET << std::endl;
+		int	len = body.length();
+		std::ostringstream oss;
+		oss << "Content-Length: " << len << "\r\n";
+		_respbody = oss.str() + _respbody;
+		//_respbody = header + "\r\n" + cl + "\r\n" + body;
+		return;
+	}
+}
+
+bool isExecutable(const std::string& path) 
+{
+	std::cout << BG_YELLOW "PATH IS : " << path << RESET << std::endl;
+	struct stat info;
+    return (stat(path.c_str(), &info) == 0) && (info.st_mode & S_IXUSR);
 }

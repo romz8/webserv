@@ -20,7 +20,7 @@ HTML = """
 """
 
 ERROR_HTML = """
-<p style="color:red;"> please enter firstame, lastname and address</p>
+<p style="color:red;"> please enter firstname, lastname and address</p>
 """
 
 form = cgi.FieldStorage()

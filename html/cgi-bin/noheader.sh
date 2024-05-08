@@ -1,8 +1,6 @@
 #!/bin/bash
+#there should be echo with a header here but left empty for testing
 
-echo 'Content-Type: text/html'
-echo 'Content-Length: 148'
-echo
 echo '<!DOCTYPE html>'
 echo '<html>'
 echo '   <head>'

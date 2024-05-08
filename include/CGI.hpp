@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/29 18:40:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/08 22:05:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,10 @@ public:
 	char **setEnvExecve(void);
 	int getStatus(void);
 	std::string getBody(void);
+	void	checkCGI();
 
 };
+
+bool isExecutable(const std::string& path);
 
 #endif

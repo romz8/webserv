@@ -2,7 +2,6 @@
 
 echo 'Content-Type: text/html'
 echo 'Content-Length: 148'
-echo
 echo '<!DOCTYPE html>'
 echo '<html>'
 echo '   <head>'

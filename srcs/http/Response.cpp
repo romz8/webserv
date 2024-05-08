@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/07 20:39:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/08 19:27:23 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,8 +141,9 @@ std::string Response::assembHeaders()
 
 void Response::finalizeResponse()
 {
-	if (_fromCgi)
+	if (_fromCgi && !(this->_status >= 400))
 	{
+		std::cerr << BG_CYAN "ARRIED IN Response from CGI" << std::endl;
 		this->_response = this->_statusLine + this->_body;
 		return;
 	}
@@ -162,6 +163,8 @@ void	Response::setBody()
 {
 	try
 	{
+		if (_fromCgi && !(this->_status >= 400))
+			return;
 		if (!(this->_body.empty()))
 		{
 			this->_extension = ".html";

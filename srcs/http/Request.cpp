@@ -477,17 +477,14 @@ void		Request::handleGetRequest()
 	}
 	if (_location.hasCgi(parseExtension(this->_path, "")))
 	{
-		if (!hasExecAccess())
-		{
-			this->_status = 403;
-			return ;
-		}
+
 		this->_path = _location.getPath() + this->_path.substr(_location.getPath().size());
 		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
 		std::cout << BG_RED "CGI EXEC PATH IS : " << execpath << std::endl;
 		CGI cgi(*this, execpath);
 		cgi.executeCGI();
 		std::cout << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
+		cgi.checkCGI();
 		this->_status = cgi.getStatus();
 		if (this->_status == 200)
 			this->_respbody = cgi.getBody();
@@ -548,11 +545,7 @@ void	Request::handlePostRequest()
 	}
 	if (_location.hasCgi(parseExtension(this->_path, "")))
 	{
-		if (!hasExecAccess())
-		{
-			this->_status = 403;
-			return ;
-		}
+
 		this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
 		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
 		_query = _body;
@@ -560,6 +553,7 @@ void	Request::handlePostRequest()
 		cgi.executeCGI();
 		std::cerr << BG_RED "CGI status :" << cgi.getStatus() << std::endl;
 		std::cerr << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
+		cgi.checkCGI();
 		this->_status = cgi.getStatus();
 		if (this->_status == 200)
 			this->_respbody = cgi.getBody();
