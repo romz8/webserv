@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 19:18:59 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 20:10:40 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,9 +82,10 @@ Directives	*Directives::parseDirectives( const string & content ) {
 		return (d);
 	}
 	catch ( exception &e ) {
-		d->logs.Error("In server " + to_string(n_server) + ": " + e.what());
+		string error = "In server " + to_string(n_server) + ": " + e.what();
+		d->logs.Error(error);
 		delete d;
-		return (NULL);
+		throw logic_error(error);
 	}
 	return (NULL);
 }

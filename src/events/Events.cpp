@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:36 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 12:38:15 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 20:20:18 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,4 +27,10 @@ Events::~Events( void ) {
 
 bool	Events::isCreated( void ) {
 	return (this->kq != -1);
-}                                                                                              
+}
+
+// void	Events::setWriteEvent( int fd ) {
+// 	event	ev;
+	
+// 	EV_SET(&ev, fd, EVFILT_WRITE, );
+// }
