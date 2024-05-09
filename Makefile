@@ -6,7 +6,7 @@
 #    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/17 07:41:15 by jsebasti          #+#    #+#              #
-#    Updated: 2024/05/09 14:08:58 by jsebasti         ###   ########.fr        #
+#    Updated: 2024/05/09 20:26:57 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,7 @@ INC = -I $(INC_DIR)defines -I $(INC_DIR)directives -I $(INC_DIR)parser -I $(INC_
 RM = rm -rf
 MP = mkdir -p
 CC = c++
-CFLAGS = -Werror -Wextra -Wall -O3 -g -std=c++98 -fsanitize=address
+CFLAGS = -Werror -Wextra -Wall -O3 -g -std=c++98 #-fsanitize=address
 # =============
 
 FILES = main Parser ParseContent ParseDirectives Signals Utils Server Directives Location serverParse serverGetters Socket Logs Events
