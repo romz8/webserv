@@ -6,13 +6,14 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/08 18:21:20 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:18:59 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Directives.hpp>
 
 Directives::Directives( void ) : root("/"), client_max_body_size(10240), allow_upload(false), autoindex(false) {
+	this->logs = Logs("directives_logs");
 	this->port = 443;
 	this->ip = "0.0.0.0";
 	this->def_err_page = "./def_err.html";
@@ -28,11 +29,11 @@ Directives::~Directives( void ) {
 	return ;
 }
 
-Directives::Directives( const Directives & src ) {
+Directives::Directives( Directives & src ) {
 	*this = src;
 }
 
-Directives::Directives( const Directives & src, int ) {
+Directives::Directives( Directives & src, int ) {
 	*this = src;
 	this->port = src.getPort();
 	this->client_max_body_size = src.client_max_body_size;
@@ -41,9 +42,10 @@ Directives::Directives( const Directives & src, int ) {
 	this->dupLocations(src.locations);
 }
 
-Directives	&Directives::operator=( const Directives & src ) {
+Directives	&Directives::operator=( Directives & src ) {
 	if (this != &src)
 	{
+		this->logs = src.logs;
 		this->root = src.getRoot();
 		this->error_page = src.getErrorPages();
 		this->upload_store = src.getUploadStore();
@@ -80,10 +82,11 @@ Directives	*Directives::parseDirectives( const string & content ) {
 		return (d);
 	}
 	catch ( exception &e ) {
+		d->logs.Error("In server " + to_string(n_server) + ": " + e.what());
 		delete d;
-		cerr << "In server " << n_server << ": ";
-		throw logic_error(e.what());
+		return (NULL);
 	}
+	return (NULL);
 }
 
 void								Directives::setServersToListen( void ) {
@@ -114,11 +117,7 @@ Server								*Directives::getServer( unsigned int s_num ) const {
 	return (new Server(*this->servers[s_num]));
 }
 
-const Server						*Directives::getCServer( unsigned int s_num ) const {
-	return (getServer(s_num));
-}
-
-const Location						*Directives::getLocation( unsigned int s_num ) const {
+Location							*Directives::getLocation( unsigned int s_num ) const {
 	if (s_num >= this->locations.size())
 		return (NULL);
 	return (new Location(*this->locations[s_num]));
@@ -136,14 +135,14 @@ const string						&Directives::getUploadStore( void ) const {
 	return (this->upload_store);
 }
 
-const UintStrMap::mapped_type		&Directives::getErrorPage( unsigned int key ) const {
+UintStrMap::mapped_type		&Directives::getErrorPage( unsigned int key ) {
 	UintStrMap::const_iterator  It = this->error_page.find(key);
 	if (It == this->error_page.end())
 		return (this->def_err_page);
 	return (this->error_page.at(key));
 }
 
-const UintStrMap					&Directives::getErrorPages( void ) const {
+UintStrMap					&Directives::getErrorPages( void ) {
 	return (this->error_page);
 }
 
@@ -206,7 +205,9 @@ void			Directives::cleanLocations( void ) {
 }
 
 void			Directives::cleanServers( void ) {
-	for (ServersVector::const_iterator it = this->servers.begin(); it != this->servers.end(); it++)
+	ServersVector::const_iterator it;
+	it = this->servers.begin();
+	for (; it != this->servers.end(); it++)
 	{
 		if (*it != NULL)
 			delete *it;

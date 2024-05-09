@@ -6,11 +6,13 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/03 18:42:24 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 20:00:44 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 13:51:30 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Server.hpp>
+#include <ParseContent.hpp>
+#include <ParseDirectives.hpp>
 
 void	Server::parse_server_line( std::string &s_line ) {
 	std::string line = SUtils::treat_comments(s_line);

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/17 21:33:38 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 20:08:22 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:36:30 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,11 @@ Location::~Location( void ) {
     return ;
 }
 
-Location::Location( const Location & src ) {
+Location::Location( Location & src ) {
 	*this = src;
 }
 
-Location	&Location::operator=( const Location & src ) {
+Location	&Location::operator=( Location & src ) {
 	if (this != &src)
 	{
 		this->_d = new Directives(*src._d);
@@ -45,9 +45,11 @@ void                Location::setUri( const std::string & uri ) {
     this->_uri = uri;
 }
 
-void				Location::parse_location_line( const std::string &line ) {
+void				Location::parse_location_line( Directives *d, const std::string &line ) {
 	StrVector sline;
+	this->_d = new Directives(*d);
 
+	this->_d->addServer(NULL);
 	sline = SUtils::split(sline, line, " \t\n");
 	size_t len = sline.size();
 	if (len != 3)
@@ -59,10 +61,9 @@ void				Location::parse_location_line( const std::string &line ) {
 		this->_isDir = false;
 }
 
-void    Location::parse( Directives *d, const std::string & content ) {
+void    Location::parse( const std::string & content ) {
     StrVector line;
 	StrVector lines;
-    this->_d = new Directives(*d);
 
 	lines = SUtils::split(lines, content, "\n");
 	int len = lines.size();
@@ -77,10 +78,12 @@ void    Location::parse( Directives *d, const std::string & content ) {
 		line.clear();
         treated_line.clear();
 	}
-	if (!this->_d->alias.empty())
+	if (this->_d->dirSet["alias"] == true || !this->_d->alias.empty())
 		this->_uri = this->_d->alias;
+	else if (this->_d->dirSet["root"] == true || !this->_d->root.empty())
+		this->_uri = this->_d->root + this->_uri;
 }
 
-const UintStrMap::mapped_type			&Location::getErrorPage( unsigned int error_code ) const {
+UintStrMap::mapped_type			&Location::getErrorPage( unsigned int error_code ) const {
 	return (this->_d->getErrorPage(error_code));
 }

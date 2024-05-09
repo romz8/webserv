@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/08 17:29:59 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 09:26:23 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,13 @@ Parser::Parser( void ) {
 }
 
 Parser::Parser( int ac, char **av ) {
-	this->check_command(ac, av);
+	try {
+		this->check_command(ac, av);
+	}
+	catch (std::invalid_argument &e) {
+		
+		std::cerr << e.what() << std::endl;
+	}
 }
 
 Parser::~Parser( void ) {

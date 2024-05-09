@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/17 21:26:21 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 20:05:35 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:35:08 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,16 +27,16 @@ class Location
     public:
         Location( void );
         ~Location( void );
-		Location( const Location & );
-		Location	&operator=( const Location & );
+		Location( Location & );
+		Location	&operator=( Location & );
         
         const std::string   &getUri( void ) const;
 
         void    setUri( const std::string & );
-        void    parse( Directives *, const std::string & );
-        void    parse_location_line( const std::string & );
+        void    parse( const std::string & );
+        void    parse_location_line( Directives *, const std::string & );
         
-		const UintStrMap::mapped_type			&getErrorPage( unsigned int ) const ;
+		UintStrMap::mapped_type			&getErrorPage( unsigned int ) const ;
 };
 
 #endif

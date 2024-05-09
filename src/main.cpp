@@ -6,38 +6,37 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 03:04:10 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/08 20:02:29 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:38:28 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Parser.hpp>
 #include <Signals.hpp>
 #include <Defines.hpp>
+#include <Logs.hpp>
+#include <Events.hpp>
 #include <iostream>
+
+using namespace std;
 
 int		main(int ac, char **av)
 {
+	Logs	mainlog("main_logs");
 	Directives *d; 
 	try
 	{
 		Parser parser(ac, av);
 		d = parser.getDirectives();
-		const Server *s = d->getServer(0);
-		std::cout << " ------- Deleting server -------- " << std::endl;
-		delete s;
+		mainlog.Info("Directives created");
 	}
-	catch(const std::exception& e)
+	catch(const exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		mainlog.Error(e.what());
 		return (FAILURE);
 	}
 	Signals::setSignalHandler();
-	while (Signals::isRunning)
-	{
-		d->setServersToListen();
-		kqueue()
-		d->run()
-	}
+	Events	evs;
+	cout << "si" << endl;
 	delete d;
 	return (SUCCESS);
 }

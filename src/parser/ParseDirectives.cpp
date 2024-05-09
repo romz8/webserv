@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/06 17:41:55 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:34:55 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 	Location *loc = new Location;
 
 	try {
-		loc->parse_location_line(content[n_line]);
+		loc->parse_location_line(d, content[n_line]);
 		for (int i = n_line; i < last; i++)
 		{
 			string treated_line = treat_comments((content[i]));
@@ -74,7 +74,7 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 			treated_line.clear();
 			content_parsed += "\n";
 		}
-		loc->parse(d, content_parsed);
+		loc->parse(content_parsed);
 		d->addLocation(loc);
 	}
 	catch (exception &e)
@@ -92,6 +92,8 @@ void	ParseDirectives::save_root( Directives *d, const StrVector &line ) {
 		throw logic_error("Alias already setted before");
 	d->root.clear();
 	d->root = line[1].substr(0, line[1].find_first_of(";"));
+	if (d->root[d->root.length() - 1] != '/')
+		d->root = d->root + "/";
 }
 
 void	ParseDirectives::save_listen( Directives *d, const StrVector & line ) {

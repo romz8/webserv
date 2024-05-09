@@ -1,34 +1,40 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Events.hpp                                         :+:      :+:    :+:   */
+/*   Logs.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/08 19:59:50 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 12:24:26 by jsebasti         ###   ########.fr       */
+/*   Created: 2024/05/09 09:26:47 by jsebasti          #+#    #+#             */
+/*   Updated: 2024/05/09 12:25:29 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __EVENTS_HPP__
-# define __EVENTS_HPP__
+#ifndef __LOGS_HPP__
+# define __LOGS_HPP__
 
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
-#include <Logs.hpp>
+#include <fstream>
+#include <iostream>
 
-typedef struct kevent event;
+using namespace std;
 
-class Events {
+class Logs {
 	private:
-		Logs	_logs;
-		int		kq;
-	
+		string		_fileName;
+		string		_logDirectory;
+		ofstream	_logFile;
+
 	public:
-		Events( void );
-		~Events( void );
-		bool	isCreated( void );
+		Logs( void );
+		Logs( string logFileN );
+		~Logs( void );
+
+		Logs	&operator=( const Logs & );
+		
+		void	Info( string );
+		void	Warning( string );
+		void	Error( string );
+		void	Debug( string );
 };
 
 #endif
