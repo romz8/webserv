@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/08 22:20:19 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/09 20:10:40 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 //HARDCODED A LOT OF ENV VARIABLES, NEED TO BE CHANGED -> with Merger on Config Parsing
 CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(req.getBody()), _execPath(execpath)
 {
+	_status = 0;
 	_env["AUTH_TYPE"] = "";
 	this->_env["SCRIPT_NAME"] = _path;
 	this->_env["SCRIPT_FILENAME"] = _path;
@@ -25,8 +26,6 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 	_env["PATH_TRANSLATED"] = req.getPath();
 	_env["QUERY_STRING"] = req.getQueryString();
 	_env["HTTP_COOKIE"] = req.getHeaderField("Cookie");
-	std::cout << BG_YELLOW "QUERY STRING : " << req.getQueryString() << RESET << std::endl;
-	std::cout << BG_YELLOW "QUERY STRING in env: " << _env["QUERY_STRING"] << RESET << std::endl;
 	_env["REMOTE_ADDR"] = "0.0.0.0";
 	_env["SERVER_NAME"] = "webserv"; // from config
 	_env["SERVER_PROTOCOL"] = "HTTP/1.1";
@@ -38,11 +37,6 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 
 	std::cerr << BG_RED << "CGI ENV PATH " << this->_env["SCRIPT_NAME"] << RESET << std::endl;
 	//_path = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/cgi-bin/hellocgi.sh";
-}
-
-CGI::CGI(CGI const &rhs)
-{
-	*this = rhs;
 }
 
 CGI::~CGI(void)
@@ -75,6 +69,23 @@ char **CGI::setEnvExecve(void)
 	env[i] = NULL;
 	return (env);
 }
+
+/**
+ * executeCGI
+ * This function handles the execution of the CGI script in a child process.
+ * Steps involved:
+ * 1. Sets up environment variables for `execve`.
+ * 2. Creates two pipes for communication between the parent and child processes:
+ * 3. Forks a new process:
+ *     - **Child Process:**
+ *         c. Executes the CGI script using `execve`.
+ *         d. Exits with status 502 if `execve` fails.
+ *     - **Parent Process:**
+ *         b. Writes the request body to the write end of `_fdin`.
+ *         d. Calls `readSafeTimeout` to read the CGI output from the read end of `_fdout`.
+ *         e. Waits for the CGI process to complete using `waitpid`.
+ * 4. Handles the exit status of the CGI process and sets the HTTP response status accordingly.
+ */
 void	CGI::executeCGI()
 {
 	char **env = setEnvExecve();
@@ -98,7 +109,6 @@ void	CGI::executeCGI()
 	}
 	if (pid == 0)	
 	{
-		std::cout << BG_YELLOW "ARRIVE HERE 1" << RESET << std::endl;
 		dup2(_fdin[0], STDIN_FILENO);
 		dup2(_fdout[1], STDOUT_FILENO);
 		close(_fdin[1]);
@@ -113,18 +123,18 @@ void	CGI::executeCGI()
 	close(_fdout[1]);
 	write(_fdin[1], _body.c_str(), _body.size());
 	close(_fdin[1]);
-	
-	char buffer[1024];
-	std::string newbody;
-	int byteRead;
-	std::cout << BG_YELLOW "ARRIVE HERE 2" << RESET << std::endl;
-	while ((byteRead = read(_fdout[0], buffer, sizeof(buffer) - 1)) > 0)
-	{
-		buffer[byteRead] = '\0';
-		newbody += std::string(buffer, byteRead);
-	}
-	std::cout << BG_YELLOW "ARRIVE HERE 3" << RESET << std::endl;
+
+	_pid = pid;
+	_start = std::time(NULL);
+
+	std::string newbody = readSafeTimeout();
 	close(_fdout[0]);
+	for (int i = 0; env[i]; i++)
+		delete env[i];
+	delete env;
+	
+	if (_status == 508)
+		return;
 	int status;
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
@@ -134,10 +144,6 @@ void	CGI::executeCGI()
 	}
 	else
 		this->_status = 502;
-	
-	for (int i = 0; env[i]; i++)
-		delete env[i];
-	delete env;
 }
 	
 
@@ -151,8 +157,22 @@ std::string CGI::getBody(void)
 	return (_respbody);
 }
 
+/**
+ * checkCGI
+ * This function validates the CGI response to ensure it is correctly formatted.
+ * 
+ * Steps involved:
+ * 1. Checks if the status is not 200 (OK) and returns early if not.
+ * 2. Checks if the response body is empty or lacks a `Content-Type` header.
+ * 3. Searches for the end of the HTTP headers using double newlines.
+ * 4. Extracts and separates the headers and body:
+ * 5. Checks if the `Content-Length` header is present and add-it if not
+ * 6. Returns a correctly formatted CGI response.
+ */
 void CGI::checkCGI()
 {
+	if (_status != 200)
+		return; 
 	if (_respbody.empty() || _respbody.find("Content-Type:") == std::string::npos)
 	{	
 		_status = 502;
@@ -164,7 +184,6 @@ void CGI::checkCGI()
 	if (headerEnd == std::string::npos)
 	{
 		headerEnd = _respbody.find("\n\n");
-		std::cout << BG_YELLOW "HEADER END IS : " << headerEnd << RESET << std::endl;
 		delimSize = 2;
 	}
 	if( headerEnd == std::string::npos)
@@ -175,8 +194,6 @@ void CGI::checkCGI()
 	}
 	std::string header = _respbody.substr(0, headerEnd);
 	std::string body = _respbody.substr(headerEnd + delimSize);
-	std::cout << BG_YELLOW "HEADER IS : " << header << " and delim is " << delimSize << RESET << std::endl;
-	std::cout << BG_YELLOW "BODY IS : " << body << RESET << std::endl;
 	if (header.find("Content-Length:") == std::string::npos)
 	{
 		std::cerr << BG_RED "Content-Length is not present" RESET << std::endl;
@@ -184,14 +201,59 @@ void CGI::checkCGI()
 		std::ostringstream oss;
 		oss << "Content-Length: " << len << "\r\n";
 		_respbody = oss.str() + _respbody;
-		//_respbody = header + "\r\n" + cl + "\r\n" + body;
 		return;
 	}
+}
+/**
+ * readSafeTimeout
+ * This function reads data from the CGI process output pipe within a specified timeout period.
+ * 
+ * Steps involved:
+ * 1. Initializes a buffer to read data from the CGI output.
+ * 2. Enters a loop that continues until the timeout is exceeded or all data is read:
+ * 3. If the timeout is exceeded before all data is read, kill CGI process and set 508 status
+ * 4. Returns the collected CGI output as a string.
+ *
+ * @return String containing the CGI output
+ */
+std::string	CGI::readSafeTimeout(void)
+{
+	bool readComplete = false;
+	std::string buffBody;
+	char buffer[1024];
+
+	buffBody.clear();
+	
+	while (std::time(NULL) - _start < _TimeoutSec)
+	{
+		int byteRead;
+		byteRead = read(_fdout[0], buffer, sizeof(buffer) - 1);
+		if (byteRead > 0)
+		{
+			buffer[byteRead] = '\0';
+			buffBody += std::string(buffer, byteRead);
+		}
+		else
+		{
+			readComplete = true;
+			break;
+		}
+	}
+	if (!readComplete)
+	{
+		kill(_pid, SIGKILL);
+		_status = 508;
+	}
+	return (buffBody);
+}
+
+const pid_t CGI::getPid(void) const
+{
+	return (_pid);
 }
 
 bool isExecutable(const std::string& path) 
 {
-	std::cout << BG_YELLOW "PATH IS : " << path << RESET << std::endl;
 	struct stat info;
     return (stat(path.c_str(), &info) == 0) && (info.st_mode & S_IXUSR);
 }

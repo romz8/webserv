@@ -1,4 +1,6 @@
 #!/bin/bash
+# This script is a simple CGI script that sends a response without a Content-Length header.
+# CGI system should pick this up and us EOF as body Content-Lenght.
 
 echo 'Content-Type: text/html'
 echo 

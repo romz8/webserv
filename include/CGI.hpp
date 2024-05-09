@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/08 22:05:08 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/09 19:55:22 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "Request.hpp"
 # include <sys/wait.h>
+# include <signal.h>
 
 class Request;
 
@@ -29,21 +30,28 @@ private:
 	int		_fdin[2];
 	int		_fdout[2];
 	int		_status;
+	static const int _TimeoutSec = 3;
+	pid_t _pid;
+	time_t _start;
 
+	CGI(CGI const &rhs);
+	CGI& operator=(CGI const &rhs);
+	
 public:
 	CGI(Request &req, std::string execpath);
-	CGI(CGI const &rhs);
 	~CGI(void);
 
-	CGI		&operator=(CGI const &rhs);
 	void	executeCGI(void);
 	char **setEnvExecve(void);
 	int getStatus(void);
 	std::string getBody(void);
 	void	checkCGI();
+	const pid_t getPid(void) const;
+	std::string	readSafeTimeout(void);
 
 };
 
 bool isExecutable(const std::string& path);
+
 
 #endif
