@@ -475,24 +475,8 @@ void		Request::handleGetRequest()
 		this->_status = 403;
 		return ;
 	}
-	if (_location.hasCgi(parseExtension(this->_path, "")))
-	{
-
-		this->_path = _location.getPath() + this->_path.substr(_location.getPath().size());
-		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
-		std::cout << BG_RED "CGI EXEC PATH IS : " << execpath << std::endl;
-		CGI cgi(*this, execpath);
-		cgi.executeCGI();
-		std::cout << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
-		cgi.checkCGI();
-		this->_status = cgi.getStatus();
-		if (this->_status == 200)
-			this->_respbody = cgi.getBody();
-		this->_execCgi = true;
-		std::cout << BG_GREEN << "CGI EXECUTED" << RESET << std::endl;
-		std::cout <<"body is :" << _respbody << std::endl;
+	if (handleCgi())
 		return ;
-	}
 	if (this->_isDirectory)
 	{
 		std::string index = this->_location.getIndex();
@@ -543,23 +527,8 @@ void	Request::handlePostRequest()
 		this->_status = 400;
 		return ;
 	}
-	if (_location.hasCgi(parseExtension(this->_path, "")))
-	{
-
-		this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
-		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
-		_query = _body;
-		CGI cgi(*this, execpath);
-		cgi.executeCGI();
-		std::cerr << BG_RED "CGI status :" << cgi.getStatus() << std::endl;
-		std::cerr << BG_RED "CGI body is :" << cgi.getBody() << std::endl;
-		cgi.checkCGI();
-		this->_status = cgi.getStatus();
-		if (this->_status == 200)
-			this->_respbody = cgi.getBody();
-		this->_execCgi = true;
-		return ;
-	}
+	if (handleCgi())
+		return ;	
 	if (it->second.find("multipart/form-data") != std::string::npos)
 	{
 		std::string boundary = extractBoundary(this->_headers["Content-Type"]);
@@ -745,7 +714,31 @@ void Request::DeleteDirectory()
 		this->_status = 204;
 }
 
+/*
+*********************************************************************
+*************************** CGI Logic ***************************
+*********************************************************************
+*/
 
+bool	Request::handleCgi()
+{
+	if (_location.hasCgi(parseExtension(this->_path, "")))
+	{
+		this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
+		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
+		if (_method == "POST")
+			_query = _body;		
+		CGI cgi(*this, execpath);
+		cgi.executeCGI();
+		cgi.checkCGI();
+		this->_status = cgi.getStatus();
+		if (this->_status == 200)
+			this->_respbody = cgi.getBody();
+		this->_execCgi = true;
+		return (true);
+	}
+	return (false);
+}
 /*
 *********************************************************************
 *************************** PATH VALIDATION ***************************

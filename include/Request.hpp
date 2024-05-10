@@ -78,6 +78,7 @@ public:
 	void		handlePostRequest();
 	void		handleDeleteRequest();
 	void		handleGetRequest();
+	bool		handleCgi();
 	void		DeleteDirectory();
 	void		StatusCode();
 	void		buildRequest();
