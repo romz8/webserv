@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 13:31:30 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 12:13:28 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/13 21:50:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,8 @@ sockaddr_in		Socket::makeConnections( const Directives &d, int sock_fd ) {
 }
 
 void			Socket::acceptConnections( void ) const {
-	int accepted_fd = accept(this->_sock_fd, (struct sockaddr *)&this->_client_addr, (socklen_t *)&this->_addr_size);
+	socklen_t	addr_size = sizeof(sockaddr);
+	int accepted_fd = accept(this->_sock_fd, (struct sockaddr *)&this->_client_addr, &addr_size);
 	if (accepted_fd < 0)
 	{
 		close(this->_sock_fd);

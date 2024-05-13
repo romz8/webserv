@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:36 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/11 18:27:47 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/13 20:12:23 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,4 +36,13 @@ void	Events::setReadFd( int fd ) {
 	if (!FD_ISSET(fd, this->_readfds))
 		throw std::runtime_error("Cannot put a fd in read mode");
 	this->_logs.Info("The fd " + std::to_string(fd) + " is ready to read.");
+}
+
+void	Events::setWriteFd( int fd ) {
+	if (fd < 0 || fd >= 1024)
+		throw std::runtime_error("Invalid fd");
+	FD_SET(fd, this->_writefds);
+	if (!FD_ISSET(fd, this->_writefds))
+		throw std::runtime_error("Cannot put a fd in write mode");
+	this->_logs.Info("The fd " + std::to_string(fd) + " is readey to write.");
 }
