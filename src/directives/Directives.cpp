@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:14 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 20:10:40 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/11 16:02:41 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,7 @@ Location							*Directives::getLocation( unsigned int s_num ) const {
 	return (new Location(*this->locations[s_num]));
 }
 
-const ServersVector					&Directives::getServers( void ) const {
+ServersVector						&Directives::getServers( void ) {
 	return (this->servers);
 }
 

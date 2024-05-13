@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:11:20 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 14:04:27 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/11 16:02:33 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ class Directives {
 		const unsigned int				&getPort( void ) const ;
 		const string					&getRoot( void ) const ;
 		const StrVector					&getSNames( void ) const ;
-		const ServersVector				&getServers( void ) const ;
+		ServersVector					&getServers( void ) ;
 		Server							*getServer( unsigned int ) const ;
 		Location						*getLocation( unsigned int ) const ;
 		UintStrMap::mapped_type			&getErrorPage( unsigned int ) ;

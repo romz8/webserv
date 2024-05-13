@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/09 12:14:08 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 13:43:06 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/11 16:00:17 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 # define __RECEPTION_HPP__
 
 #include <TypeDefines.hpp>
+#include <Logs.hpp>
 
-class Logs;
 class Server;
 class Events;
 
@@ -24,14 +24,14 @@ class Reception {
 		Logs				logs;
 		ServersVector		_servers;
 		Events				*_evs;
-		int					timeout;
+		// int					timeout;
 		Reception( void );
 
 	public:
 		~Reception( void );
 		Reception( ServersVector & , Events *evs);
 
-		setupServers();
+		void	setupServers();
 };
 
 #endif
