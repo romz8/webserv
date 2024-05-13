@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/25 23:23:38 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/13 19:47:17 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@
 # include <vector>
 # include <map>
 # include <errno.h>
-
+# include <fcntl.h>
 
 # define MAX_Q 10
 # define BUFSIZE 8194
@@ -44,16 +44,18 @@ public:
 	
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
 	const std::string readData(const int io_socket);
-	const std::string readHeader(const int io_socket);
-	const std::string readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead);
+	bool	readHeader(const int io_socket, std::string& rawhead);
+	bool	readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
 	const int		acceptConnection();
-	std::string		readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
+	bool	readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
 	std::string		readChunkEncodingBody(int clientSocket, std::string& body);
+	int				getSocketFd() const;
 
 	// keep some space for I/O Multiplexing lateron
 };
 
 
 void printSockAddrIn(const sockaddr_in& addr);
+void	setNonBlocking(int fd);
 
 #endif

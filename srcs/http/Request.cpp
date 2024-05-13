@@ -141,7 +141,7 @@ void Request::parseHeader(const std::string& head)
  */
 void Request::parseStartLine(const std::string& line)
 {
-	std::cout << BG_RED "REQUEST LINE is : " << line << RESET <<std::endl;
+	//std::cout << BG_RED "REQUEST LINE is : " << line << RESET <<std::endl;
 	std::istringstream lineStream(line);
 	
 	if (!isValidRL(line))
@@ -232,7 +232,6 @@ bool	Request::hasCorrectHost() const
 
 bool	Request::parseContentLenBody()
 {
-	std::cout << BG_GREEN "WE ARRIVE IN BODY PARSING" << std::endl;
 	bool bodyok = false;
 	if (_headers["Content-Length"].empty())
 	{
@@ -338,15 +337,15 @@ bool	loneCR(const std::string& header)
 void	Request::buildRequest()
 {
 	
-	std::cout << "init path path is ; " << this->_path << std::endl;
+	//std::cout << "init path path is ; " << this->_path << std::endl;
 	sanitizeUrl();
 	getQueryParams();
 	hexDecoding(_path); //CAREFULL SF (tested with /cgi-bin/hello.py?firstname=lljfamf&lastname=%3Bl%3Blf&address=%3B%3Blkfkdkf)
 	// std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
 	// std::cout << BG_CYAN << "method is " << this->_method << std::endl;
 	// std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
-	std::cout << "path is ; " << this->_path << std::endl;
-	std::cout << "query string is : " << this->_query << std::endl;
+	//std::cout << "path is ; " << this->_path << std::endl;
+	//std::cout << "query string is : " << this->_query << std::endl;
 
 	StatusCode();
 	if (this->_status >= 400)
@@ -364,8 +363,8 @@ void	Request::buildRequest()
 	else
 		this->_extension = parseExtension(this->_parsePath, ".html");
 	
-	std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
-	std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
+	//std::cout << RED "EXT IS : " << this->_extension << RESET << std::endl;
+	//std::cout << YELLOW "Request status-Line is : " << this->_method << " " << this->_path << " " << this->_version << RESET << std::endl;
 }
 
 /**
@@ -483,6 +482,7 @@ void		Request::handleGetRequest()
 		this->normalizeDirPath();
 		if (this->_isDirNorm)
 		{
+			//std::cout << BG_YELLOW " rebuilt and REDIRECT TO : " RESET << this->_path << std::endl;
 			this->_status = 301;
 			return;
 		}
@@ -549,9 +549,9 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		std::string ftime = formattedTime();
 
 		std::string filePath = _location.getRootDir() + _location.getUploadFile() + ftime + ".txt";
-		std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
-		std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
-		std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
+		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
+		//std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
+		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
 		std::ofstream file(filePath, std::ios::app);
 		if (!file.is_open())
 		{
@@ -562,7 +562,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		file.close();
 		this->_status = 201;
 		this->_parsePath = loc.getRootDir() + loc.getPath();
-		std::cout << BG_GREEN << "path is : " << this->_parsePath << RESET << std::endl;
+		//std::cout << BG_GREEN << "path is : " << this->_parsePath << RESET << std::endl;
 }
 
 
@@ -592,7 +592,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 		}
 	}
 	std::string filePath = _location.getRootDir() + _location.getUploadFile() + fname;
-	std::cout << "POST UPLOAD file Ressource is : " << filePath << std::endl;
+	//std::cout << "POST UPLOAD file Ressource is : " << filePath << std::endl;
 	std::ofstream file(filePath); //very testy ..update with Location and actual logic
 	if (!file.is_open())
 	{
@@ -656,7 +656,7 @@ void	Request::handleDeleteRequest()
 {
 	
 	this->_parsePath = _location.getPath() + this->_path.substr(_location.getPath().size());
-    std::cout << "DELETE METHOD PATH IS : " << this->_parsePath << std::endl;
+    //std::cout << "DELETE METHOD PATH IS : " << this->_parsePath << std::endl;
     if (!isValidPath())
 	{
         _status = 404;  
@@ -757,8 +757,8 @@ bool Request::isValidPath()
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
 	this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
-	std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
-	std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+	//std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
+	//std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
 	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
@@ -822,7 +822,7 @@ Block access to hidden files and directories (any /. (like /.env) -> redirect to
 void	Request::sanitizeUrl()
 {
 	std::string url = this->_path;
-	std::cout << BLUE "init url : " << url << std::endl;
+	//std::cout << BLUE "init url : " << url << std::endl;
 	
 	size_t pos;
 	pos = 0;
@@ -836,13 +836,13 @@ void	Request::sanitizeUrl()
 		pos += 1;
 	}
 
-	std::cout << BLUE "url post before /. check : " << url << std::endl;
+	//std::cout << BLUE "url post before /. check : " << url << std::endl;
 	
 	if (isHiddenAccess(url))
 		url = "/";
 	
 	this->_path = url;
-	std::cout << BLUE "url post ALL check : " << this->_path << std::endl;
+	//std::cout << BLUE "url post ALL check : " << this->_path << std::endl;
 }
 
 /*
@@ -955,7 +955,7 @@ void	Request::setStatus(int status)
 void	Request::setLocation(const Location& loc)
 {
 	this->_location = loc;
-	std::cout << BG_GREEN "Location in REQUEST is : " << _location.getPath() << RESET << std::endl;
+	//std::cout << BG_GREEN "Location in REQUEST is : " << _location.getPath() << RESET << std::endl;
 
 }
 
@@ -1049,7 +1049,6 @@ bool	endsWithCRLF(const std::string& str)
 {
     if (str.size() < 3) 
 		return false;
-	std::cout << "last of line is " << str[str.size() - 1] << " and " << str[str.size() - 2] << std::endl;
     return (str[str.size() - 1] == '\r');
 }
 
@@ -1114,7 +1113,7 @@ std::string formattedTime() {
 */
 void	Request::getQueryParams()
 {
-	std::cout << "before entering the Query Parmas we have : " << _path << std::endl;
+	//std::cout << "before entering the Query Parmas we have : " << _path << std::endl;
 	size_t pos = _path.find("?");
 	if (pos == std::string::npos)
 		return ;
@@ -1122,8 +1121,8 @@ void	Request::getQueryParams()
 	std::istringstream stream(query);
 	this->_query = query;
 	this->_path = _path.substr(0, pos);
-	std::cout << BG_GREEN "After Query Parmas we have : " << _path << std::endl;
-	std::cout << "and query : " << _query << RESET << std::endl;
+	//std::cout << BG_GREEN "After Query Parmas we have : " << _path << std::endl;
+	//std::cout << "and query : " << _query << RESET << std::endl;
 }
 
 /**
@@ -1143,7 +1142,7 @@ void	Request::getQueryParams()
  */
 void hexDecoding(std::string& url)
 {
-	std::cout << "Pre hexDecoding url is : " << url << std::endl;
+	//std::cout << "Pre hexDecoding url is : " << url << std::endl;
 	size_t hexpos = 0, pos = 0;
 
 	while (( hexpos = url.find("%", hexpos)) != std::string::npos)
@@ -1161,5 +1160,5 @@ void hexDecoding(std::string& url)
 	while ((pos = url.find("+", pos)) != std::string::npos)
 		url.replace(pos, 1, " ");
 
-	std::cout << "After hexDecoding url is : " << url << std::endl;
+	//std::cout << "After hexDecoding url is : " << url << std::endl;
 }

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/08 19:27:23 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/13 20:21:35 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 	else
 		this->_assetPath = head.getParsePath();
 	// std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
-	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
+	//std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
 	// std::cout << "extension is " << this->_extension << std::endl;
 }
 
@@ -73,8 +73,8 @@ Response& Response::operator=(const Response& src)
 void Response::buildResponse()
 {
 	setStatusLine(this->_status);
-	std::cout << "Status-Line is : " << this->_statusLine << std::endl;
-	std::cout << "file path is : " << this->_assetPath << std::endl;
+	//std::cout << BLUE "Status-Line is : " RESET << this->_statusLine << std::endl;
+	//std::cout << "file path is : " << this->_assetPath << std::endl;
 	if (!(this->_status == 301 || this->_status == 201 || this->_status == 204))
 		this->setBody();
 	addHeaders();
@@ -143,7 +143,6 @@ void Response::finalizeResponse()
 {
 	if (_fromCgi && !(this->_status >= 400))
 	{
-		std::cerr << BG_CYAN "ARRIED IN Response from CGI" << std::endl;
 		this->_response = this->_statusLine + this->_body;
 		return;
 	}
@@ -151,7 +150,6 @@ void Response::finalizeResponse()
 	this->_response = this->_statusLine + headContent;
 	this->_response.append(_body);
 	
-	std::cout << "Header is  : " << headContent << std::endl;
 }
 
 /* setBody
