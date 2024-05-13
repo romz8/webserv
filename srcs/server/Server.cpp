@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/07 20:40:07 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/13 22:02:03 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,15 +98,28 @@ TO CHANGE AS SUBJECT REQUIRES TO MAINTAIN OPEN -> close when recv reutnr 0 ?
 */
 void	Server::handleConnection()
 {
+	std::string rawhead;
 	int io_fd = this->_sock.acceptConnection();
-	std::string rawhead = this->_sock.readHeader(io_fd);
-	std::cout << "rawHead: " << rawhead << std::endl;
+	rawhead.clear();
+	if (!this->_sock.readHeader(io_fd, rawhead))
+	{
+		close(io_fd);
+		return ;
+	}
+	//std::cout << "rawHead: " << rawhead << std::endl;
 	Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
-	//request.printHeader();
+	request.printHeader();
 	if (request.hasBody())
 	{
-		std::string body = this->_sock.readBody(io_fd, request.getHeader(), rawhead);
-		request.setBody(body);
+		std::string body;
+		body.clear();
+		if (!this->_sock.readBody(io_fd, request.getHeader(), rawhead, body))
+		{
+			close(io_fd);
+			return ;
+		}
+		else
+			request.setBody(body);
 	}
 	const Location* matchLoc = findLocationForRequest(request.getPath());
 	if (matchLoc == NULL)

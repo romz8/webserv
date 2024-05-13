@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/29 16:16:18 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/13 22:56:01 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 # include "Response.hpp"
 # include "colors.h"
 
-# define MAX_BODY_SIZE 1000000
+# define MAX_BODY_SIZE 1000000 //1MB
 
 typedef struct Config
 {
