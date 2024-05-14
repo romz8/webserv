@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 13:31:30 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 17:31:14 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 23:44:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +27,10 @@ sockaddr_in		Socket::createSocket( const Directives &d ) {
 	this->_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_sock_fd < 0)
 		throw std::runtime_error("Error creating the socket");
-	return (this->makeConnections(d, this->_sock_fd));
+	return (this->makeConnections(d));
 }
 
-sockaddr_in		Socket::makeConnections( const Directives &d, int sock_fd ) {
+sockaddr_in		Socket::makeConnections( const Directives &d ) {
 	sockaddr_in addr;
 	std::string ip = d.getIp();
 	addr.sin_family = AF_INET;
@@ -41,7 +41,15 @@ sockaddr_in		Socket::makeConnections( const Directives &d, int sock_fd ) {
 		addr.sin_addr.s_addr = INADDR_ANY;
 	else
 		inet_pton(addr.sin_family, ip.c_str(), &addr.sin_addr);
-	if (bind(sock_fd, (const struct sockaddr *)&addr, this->_addr_size) < 0)
+
+	int enable = 1;
+	if (setsockopt(this->_sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		std::string catchsys = strerror(errno);
+		throw std::runtime_error("Error setsockopt() on the socket" + catchsys);
+	}
+
+	if (bind(this->_sock_fd, (const struct sockaddr *)&addr, this->_addr_size) < 0)
 	{
 		std::string error = strerror(errno);
 		throw runtime_error("Socket binding the socket: " + error);
@@ -63,7 +71,7 @@ void			Socket::acceptConnections( void ) const {
 }
 
 void		Socket::listenConnections( void ) {
-	if (listen(this->_sock_fd, 0) < 0)
+	if (listen(this->_sock_fd, 420) < 0)
 		throw std::runtime_error(strerror(errno));
 }
 

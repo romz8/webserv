@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:36 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 17:28:27 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 23:52:25 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,4 +66,10 @@ fd_set	*Events::getWfds( void ) {
 
 fd_set	*Events::getEfds( void ) {
 	return (&this->_efds);
+}
+
+int		Events::checkRead( int fd ) {
+	if (!FD_ISSET(fd, &this->_rfds))
+		return (0);
+	return (1);
 }

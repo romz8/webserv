@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:50 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 17:27:06 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 23:51:41 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ class Events {
 		fd_set		*getRfds( void );
 		fd_set		*getWfds( void );
 		fd_set		*getEfds( void );
+
+		int			checkRead( int fd );
 };
 
 #endif

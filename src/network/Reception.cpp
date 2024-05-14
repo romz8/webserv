@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/09 12:13:54 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 17:32:10 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 23:56:17 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,8 @@ void	Reception::setupServers( void ) {
 void	Reception::main_loop( void ) {
 	while (Signals::isRunning)
 	{
-		
+		fd_set	*evs = this->_evs->getRfds();
+		std::cout << evs << endl;
 		int ret = select(_servers[_servers.size() - 1]->getFd() + 1 , this->_evs->getRfds(), this->_evs->getWfds(), this->_evs->getEfds(), &this->_timeout);
 		switch (ret)
 		{
@@ -56,6 +57,13 @@ void	Reception::main_loop( void ) {
 				break ;
 			case -1:
 				this->logs.Error("Something went wrong");
+			default:
+				for (size_t i = 0; i < _servers.size(); i++)
+				{
+					if (this->_evs->checkRead(_servers[i]->getFd()))
+						_servers[i]->run();
+				}
+				break ;
 		}
 	}
 }
