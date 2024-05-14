@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:36 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/13 20:12:23 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 00:55:07 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ Events::Events( void ) {
 	FD_ZERO(this->_readfds);
 	FD_ZERO(this->_writefds);
 	FD_ZERO(this->_exceptfds);
-	this->_timeout.tv_sec = 0;
+	this->_timeout.tv_sec = 1;
 	this->_timeout.tv_usec = 0;
 }
 

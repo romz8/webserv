@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/09 12:13:54 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/13 22:03:39 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 17:03:04 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,9 @@ void	Reception::setupServers( void ) {
 		std::cout << e.what() << std::endl;
 		return ;
 	}
-	while (Signals::isRunning == true)
-	{
-		
-	}
+}
+
+void	Reception::main_loop( void ) {
+	while (Signals::isRunning)
+	{}
 }
