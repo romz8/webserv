@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/13 20:01:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/14 22:26:55 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ Socket::Socket(const sockaddr_in& servAddr)
 	this->_addr_size = sizeof(struct sockaddr_in);
 	
 	printSockAddrIn(servAddr);
-	
+	setNonBlocking(this->_socket_fd);
 	int enable = 1;
 	if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 	{
@@ -34,9 +34,10 @@ Socket::Socket(const sockaddr_in& servAddr)
 	{
 		std::string catchsys = strerror(errno);
 		throw std::runtime_error("Error binding the socket" + catchsys);
+		std::cout << "Error binding the socket" << std::endl;
 	}
-	setNonBlocking(this->_socket_fd);
-	if (listen(this->_socket_fd, MAX_Q) < 0)
+	
+	if (listen(this->_socket_fd, 420) < 0)
 		throw std::runtime_error("Error listening socket stage");
 }
 
@@ -155,7 +156,7 @@ bool Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::st
         else if (bytesRead == 0)
             return (false);
         else
-            throw std::runtime_error("Error reading from socket");
+            throw std::runtime_error("Error reading from socket"); //maybe return false as well ?
 		buffer[bytesRead] = '\0';
 		body.append(buffer, bytesRead);
 		std::cout << "total read after first time : " << totalRead << std::endl;
@@ -168,7 +169,7 @@ bool Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::st
     return (true);
 }
 
-std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body) 
+std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body)  //change to return bool
 {
 	std::string data;
 	char buffer[BUFSIZE];
@@ -183,7 +184,7 @@ std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body)
 			throw std::runtime_error("Error reading from socket");
 		if (bytesRead == 0)
 		{
-			throw std::runtime_error("readChunk : Connection closed by client ");
+			throw std::runtime_error("readChunk : Connection closed by client ");  //maybe return false as well ?
 			break; // Connection closed
 		}
 		buffer[bytesRead] = '\0';

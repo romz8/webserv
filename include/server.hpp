@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/13 20:09:04 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/14 21:10:01 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,8 @@ private:
 	Socket _sock;
 	std::vector<struct  pollfd> _fdSet;
 	static const int	_timeout = 3;
-	std::map<int , std::string> _clientResp;
+	std::map<int , std::string> _clientRequest;
+	std::map<int , std::string> _clientResponse;
 	
 	Server(const Server& src);
 	Server& operator=(const Server& src);
@@ -81,6 +82,7 @@ public:
 	void	setPoll(int fd, short events);
 	void	readClient(int fd);
 	void	sendClient(int fd); 
+	void	closeClient(int io_fd);
 };
 
 #endif

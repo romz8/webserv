@@ -36,7 +36,7 @@ bad_headers = OrderedDict([
 	("Double CR Before LF", "emptynoSF:\r\nCache-Control: no-cache\r\r\n"), # Double CR before LF, testing specific improper CR usage but no sf in key-val
 	("Header Value Too Large", "Content-Length: 9999999999999999999999999999999999\r\n"),
 	("Header Content-Lenght non-numeric", "Content-type: text/plain\r\nContent-Length: hello\r\n"),  # Excessively large value, correctly terminated
-	#("Header Value Too Large by 1byes", "Content-Length: 10001\r\n"),  # Excessively large value, correctly terminated
+	("Header Value Too Large by 1byes", "Content-Length: 100000001\r\n"),  # Excessively large value, correctly terminated
 ])
 
 
