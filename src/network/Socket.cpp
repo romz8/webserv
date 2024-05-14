@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 13:31:30 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/13 21:50:37 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 17:31:14 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,8 +62,11 @@ void			Socket::acceptConnections( void ) const {
 	std::clog << "Accepted connection with: " << inet_ntoa(this->_client_addr.sin_addr) << ":" << this->_client_addr.sin_port << std::endl;
 }
 
-int			Socket::listenConnections( void ) const {
+void		Socket::listenConnections( void ) {
 	if (listen(this->_sock_fd, 0) < 0)
 		throw std::runtime_error(strerror(errno));
+}
+
+int			Socket::getFd( void ) const {
 	return (this->_sock_fd);
 }

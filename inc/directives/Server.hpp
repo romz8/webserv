@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 13:58:34 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/14 17:30:38 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,9 @@ class Server
 
 		
 		void					init_sock( void );
-		int						setlisten( void );
+		void					setlisten( void );
 		void					run( void ) const ;
+		int						getFd( void ) const;
 		
 		//return the index of the coincidence to save it in a tmp map var to see which server
 		//has the stronger coincidence. (Maybe I move it to the directives to check with all the servers).
