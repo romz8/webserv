@@ -44,12 +44,12 @@ public:
 	
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
 	const std::string readData(const int io_socket);
-	bool	readHeader(const int io_socket, std::string& rawhead);
-	bool	readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
+	bool readHeader(const int io_socket, std::string& content);
+	bool readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
 	const int		acceptConnection();
-	bool	readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
-	std::string		readChunkEncodingBody(int clientSocket, std::string& body);
-	int				getSocketFd() const;
+	bool		readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
+	bool		readChunkEncodingBody(int clientSocket, std::string& body);
+	int	getSocketFd() const;
 
 	// keep some space for I/O Multiplexing lateron
 };

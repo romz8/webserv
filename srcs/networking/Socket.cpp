@@ -119,9 +119,13 @@ bool	Socket::readBody(const int io_socket, const std::map<std::string, std::stri
 {
 	bool connectKeep = true;
 	body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
-	std::cout << "BODY from Header is : " << body << std::endl;
+
+	//std::cout << "BODY from Header is : " << body << std::endl;
 	if (header.find("Transfer-Encoding") != header.end() && header.find("Transfer-Encoding")->second == "chunked")
-		readChunkEncodingBody(io_socket, body);
+	{
+		if (!readChunkEncodingBody(io_socket, body))
+			connectKeep = false;
+	}
 	else if (header.find("Content-Length") != header.end())
 	{
 		size_t contentLength = std::stol((header.find("Content-Length")->second).c_str());
@@ -169,7 +173,7 @@ bool Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::st
     return (true);
 }
 
-std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body)  //change to return bool
+bool Socket::readChunkEncodingBody(int clientSocket, std::string& body) 
 {
 	std::string data;
 	char buffer[BUFSIZE];
@@ -183,10 +187,7 @@ std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body)  
 		if (bytesRead < 0)
 			throw std::runtime_error("Error reading from socket");
 		if (bytesRead == 0)
-		{
-			throw std::runtime_error("readChunk : Connection closed by client ");  //maybe return false as well ?
-			break; // Connection closed
-		}
+			return (false);
 		buffer[bytesRead] = '\0';
 		data.append(buffer, bytesRead);
 		if (data.find("0\r\n\r\n") != std::string::npos)
@@ -194,9 +195,9 @@ std::string Socket::readChunkEncodingBody(int clientSocket, std::string& body)  
 	}
 	body.append(data);
 	std::cout << "Bytes read : " << bytesRead << std::endl;
-	std::cout << "Data is : " << data << std::endl;
-	std::cout << "Body is : " << body << std::endl;
-	return (body);
+	//std::cout << "Data is : " << data << std::endl;
+	//std::cout << "Body is : " << body << std::endl;
+	return (true);
 }
 
 void	Socket::_initSock()

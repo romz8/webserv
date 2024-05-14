@@ -408,9 +408,10 @@ void	Request::StatusCode() //later on add the location check and GET / POST / DE
 		this->_status = 403;
 		return ;
 	}
-	if (this->_method=="POST" && safeStrToSizeT(this->_headers["Content-Length"]) > _maxBodySize)
+	if (this->_method=="POST")
 	{
-		this->_status = 413;
+		if (this->_headers.find("Content-Length") !=  this->_headers.end() && safeStrToSizeT(this->_headers["Content-Length"]) > _maxBodySize)
+			this->_status = 413;
 		return ;
 	}
 }
@@ -608,8 +609,9 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 void	Request::processChunkBody(std::string input)
 {
 	std::string data;
-
+	size_t totalSize = 0;
 	size_t pos = 0;
+	
 	data.clear();
 	while (true)
 	{
@@ -617,6 +619,12 @@ void	Request::processChunkBody(std::string input)
 		size_t chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
 		if (chunkSize == 0)
 			break;
+		totalSize += chunkSize;
+		if (totalSize > _maxBodySize)
+		{
+			this->_status = 413;
+			return;
+		}
 		std::string unchunked = input.substr(endBlock + 2, chunkSize);
 		data.append(unchunked);
 		pos = endBlock + chunkSize + 2 + 2;
