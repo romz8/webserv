@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/13 22:02:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/14 22:10:40 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(set
 	_rootloc.setCgi(conf.cgiConf[1]);
 	_rootloc.setCgi(conf.cgiConf[2]);
 	_rootloc.addErrPage(_errPageGlobal);
+
 	
 	printSockAddrIn(_servAddr);
 }
@@ -71,73 +72,126 @@ const sockaddr_in Server::setServAddr(const Config& conf)
 	std::cout << "CONF is host : " << conf.host << " | port : " << conf.port << std::endl;
 	return (servAddr);
 }
-
+/**
+ * @brief Executes the main server loop, monitoring and responding to socket events.
+ * 
+ * continuously polls the set of file descriptors (_fdSet) to detect and handle
+ * events. It manages the server's listening socket for new connections and other sockets for
+ * read/write operations. 
+ * The function uses a blocking poll call with a timeout.
+ * In case of errors in poll, it throws a runtime exception, and on timeout, 
+ * it logs a waiting message. 
+ * Actual socket handling is delegated to other functions based 
+ * on the type of event (POLLIN or POLLOUT).
+ * 
+ * @throws std::runtime_error if poll fails.
+ */
 void	Server::run()
 {
+	addPollFd(_sock.getSocketFd(), POLLIN);
 	while(42)
 	{
-		this->handleConnection();
+		int ret = poll(_fdSet.data(), _fdSet.size(), _timeout * 1000);
+		if (ret < 0)
+			throw (std::runtime_error("Poll failed"));
+		else if (ret == 0)
+			std::cout << "Waiting Connection ..." << std::endl;
+		else
+		{
+			for (size_t i = 0; i < _fdSet.size(); ++i)
+			{
+				if (_fdSet[i].revents & POLLIN)
+				{
+					if (_fdSet[i].fd == _sock.getSocketFd())
+						this->handleConnection();
+					else
+						readClient(_fdSet[i].fd);
+				}
+				else if (_fdSet[i].revents & POLLOUT)
+					sendClient(_fdSet[i].fd);
+			}
+		}
+		usleep(1000);
 	}
-	// {
-	// 	int io_fd = this->_sock.acceptConnection();
-	// 	std::string head = this->_sock.readData(io_fd);
-	// 	Request Request(head);
-	// 	Request.buildRequest();
-	// 	// if (Request.getMethod() == "POST")
-	// 	// {
-	// 	// 		std::string body = this->_sock.readData(io_fd);
-	// 	// 		std::cout << "Bodyreceived : " << body << std::endl;
-	// 	// }
-	// 	// std::string response = this->getResponse();
-	// 	close(io_fd);
-	// }
 }
 
-/*
-TO CHANGE AS SUBJECT REQUIRES TO MAINTAIN OPEN -> close when recv reutnr 0 ?
-*/
-void	Server::handleConnection()
+/**
+ * @brief Handles read operations for a specified client socket.
+ * 
+ * Attempts to read data from the specified socket. If the header read is successful,
+ * it processes the data depending on whether the request has additional body content.
+ * If reading fails at any point, the client is disconnected and the socket is closed.
+ * Upon successful reading, it determines the appropriate response based on the request
+ * and prepares the socket for a write operation by setting its event to POLLOUT.
+ * 
+ * @param io_fd The file descriptor of the client socket.
+ * @exception Catches and logs exceptions related to socket operations.
+ */
+void	Server::readClient(int io_fd)
 {
-	std::string rawhead;
-	int io_fd = this->_sock.acceptConnection();
-	rawhead.clear();
-	if (!this->_sock.readHeader(io_fd, rawhead))
+	try
 	{
-		close(io_fd);
-		return ;
-	}
-	//std::cout << "rawHead: " << rawhead << std::endl;
-	Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
-	request.printHeader();
-	if (request.hasBody())
-	{
-		std::string body;
-		body.clear();
-		if (!this->_sock.readBody(io_fd, request.getHeader(), rawhead, body))
-		{
-			close(io_fd);
-			return ;
+		std::string rawhead; 
+		rawhead.clear();
+		if (!this->_sock.readHeader(io_fd, rawhead))
+		{	
+			closeClient(io_fd);
+			return;
 		}
-		else
+		Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
+		if (request.hasBody())
+		{
+			std::string body;
+			body.clear();
+			if(!this->_sock.readBody(io_fd, request.getHeader(), rawhead, body))
+			{
+				closeClient(io_fd);
+				return;
+			}
 			request.setBody(body);
+		}
+		const Location* matchLoc = findLocationForRequest(request.getPath());
+		if (matchLoc == NULL)
+			request.setLocation(_rootloc);
+		else
+			request.setLocation(*matchLoc);
+		request.buildRequest();
+		Response resp(request);
+		resp.buildResponse();
+		std::string response = resp.getResponse();
+		//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
+		_clientRequest[io_fd] = request.getHeaderField("Connection");
+		_clientResponse[io_fd] = resp.getResponse();
+		setPoll(io_fd, POLLOUT);
 	}
-	const Location* matchLoc = findLocationForRequest(request.getPath());
-	if (matchLoc == NULL)
-		request.setLocation(_rootloc);
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		removePollFd(io_fd);
+		close(io_fd);
+	}
+}
+
+/**
+ * @brief Handles sending responses to a client's socket.
+ * 
+ * Sends the prepared response to the specified client socket. After sending,
+ * it checks the 'Connection' header to decide whether to close the socket or
+ * keep it open for further communications. If 'close' is indicated, it disconnects the client;
+ * otherwise, it resets the socket to listen for more data (POLLIN).
+ * 
+ * @param io_fd The file descriptor of the client socket to send data to.
+ */
+void Server::sendClient(int io_fd)
+{
+	std::string response = _clientResponse[io_fd];
+	send(io_fd, response.c_str(), response.length(), 0);
+	if ( _clientRequest[io_fd].find("close") != std::string::npos)
+		closeClient(io_fd);
 	else
-		request.setLocation(*matchLoc);
-	std::cout << BG_GREEN "********* DONE READING : NOW Build Request ********* " RESET << std::endl;
-	request.buildRequest();
-	//request.printRequest();
-	Response resp(request); // later on build with location routing Response response(Request, _locs);
-	resp.buildResponse();
-	std::string response = resp.getResponse();
-	//std::cout << BG_MAGENTA "Response is : " RESET << response << std::endl;
-	int byteSend = send(io_fd, response.c_str(), response.size(), 0);
-	if (byteSend < 0)
-		throw std::runtime_error("IMpossible send message to client");
-	close(io_fd);
-	std::cout << BG_GREEN	<< "Response sent : ALL OK" RESET << std::endl;
+		setPoll(io_fd, POLLIN);
+	_clientRequest.erase(io_fd);
+	_clientResponse.erase(io_fd);
 }
 
 Socket Server::socketFactory(const sockaddr_in& addr) 
@@ -171,7 +225,6 @@ const Location* Server::findLocationForRequest(const std::string& requestPath) c
        
         if (requestPath.compare(0, locationPath.length(), locationPath) == 0) 
 		{
-            std::cout << BG_RED "select Location is : " RESET<< locationPath << std::endl;
 			if (locationPath.length() > longestMatchLength) 
 			{
                 bestMatch = &_locations[i];
@@ -182,3 +235,78 @@ const Location* Server::findLocationForRequest(const std::string& requestPath) c
 	return bestMatch; 
 }
 
+/**
+ * @brief Adds a new file descriptor and its interested events to the polling set.
+ * 
+ * Registers a new file descriptor with specified events (POLLIN, POLLOUT) into the _fdSet,
+ * enabling the main loop to monitor this new descriptor for the given events.
+ * 
+ * @param fd The file descriptor to add.
+ * @param events The polling events to watch for (POLLIN, POLLOUT).
+ */
+void	Server::addPollFd(int fd, short events)
+{
+	struct pollfd pfd;
+	pfd.fd = fd;
+	pfd.events = events;
+	_fdSet.push_back(pfd);
+}
+
+void Server::removePollFd(int fd)
+{
+	for (size_t i = 0; i < _fdSet.size(); ++i)
+	{
+		if (_fdSet[i].fd == fd)
+		{
+			_fdSet.erase(_fdSet.begin() + i);
+			break;
+		}
+	}
+}
+/**
+ * @brief Accepts a new connection and adds it to the polling set.
+ * 
+ * This function is called when there is an incoming connection request on the server's listening socket.
+ * It accepts the connection, sets the new socket to non-blocking mode, and adds it to the set of polled
+ * file descriptors, listening for incoming data (POLLIN).
+ */
+void	Server::handleConnection()
+{
+	try 
+	{
+		int io_fd = this->_sock.acceptConnection();
+		setNonBlocking(io_fd);
+		this->addPollFd(io_fd, POLLIN);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+}
+
+/**
+ * @brief Removes a file descriptor from the polling set.
+ * 
+ * Searches for and removes the specified file descriptor from the _fdSet, effectively
+ * stopping any further monitoring of this descriptor in the server loop.
+ * 
+ * @param fd The file descriptor to remove.
+ */
+void	Server::setPoll(int fd, short events)
+{
+	for (size_t i = 0; i < _fdSet.size(); ++i)
+	{
+		if (_fdSet[i].fd == fd)
+		{
+			_fdSet[i].events = events;
+			break;
+		}
+	}
+}
+
+void Server::closeClient(int io_fd)
+{
+	removePollFd(io_fd);
+	close(io_fd);
+	//usleep(1000); //because to fast to retrun to fd to kernel when using siege
+}

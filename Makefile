@@ -6,12 +6,12 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/04/29 14:59:09 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/14 20:37:18 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = c++
-FLAGS = -MMD # -Wall -Wextra -Werror -std=c++98
+FLAGS = -MMD -std=c++98 #-Wall -Wextra -Werror -Wpedantic -fsanitize=address,undefined -g
 NAME = testserv
 RM = rm -rf
 

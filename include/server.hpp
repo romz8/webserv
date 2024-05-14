@@ -6,18 +6,20 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/13 22:56:01 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/14 21:10:01 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
+# include <poll.h>
 # include "Socket.hpp"
 # include "Location.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
 # include "colors.h"
 
-# define MAX_BODY_SIZE 1000000 //1MB
+# define MAX_BODY_SIZE 100000000 //100MB
+
 
 typedef struct Config
 {
@@ -29,9 +31,17 @@ typedef struct Config
 	std::string	hostName;
 	std::map<int, std::string> errPageGlobal;
 	std::vector<CgiConfig> cgiConf;
+	
 	// Location	loc; 	//later on std::vector<Location> locs;
 } Config;
 
+// struct client
+// {
+// 	int fd;
+// 	std::string request;
+// 	std::string response;
+// 	bool httpDone;
+// };
 
 class Server
 {
@@ -47,6 +57,10 @@ private:
 	std::map<int, std::string> _errPageGlobal;
 	Location _rootloc; //if no url match a location, use root location
 	Socket _sock;
+	std::vector<struct  pollfd> _fdSet;
+	static const int	_timeout = 3;
+	std::map<int , std::string> _clientRequest;
+	std::map<int , std::string> _clientResponse;
 	
 	Server(const Server& src);
 	Server& operator=(const Server& src);
@@ -64,6 +78,12 @@ public:
 	void	handleConnection();
 	const Location* findLocationForRequest(const std::string& requestPath) const;
 	static const sockaddr_in setServAddr(const Config& conf);
+	void	addPollFd(int fd, short events);
+	void	removePollFd(int fd);
+	void	setPoll(int fd, short events);
+	void	readClient(int fd);
+	void	sendClient(int fd); 
+	void	closeClient(int io_fd);
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:28:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/13 22:06:24 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/14 20:57:47 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
 # include <vector>
 # include <map>
 # include <errno.h>
-# include "colors.h"
 # include <fcntl.h>
 
 # define MAX_Q 10

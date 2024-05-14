@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 21:09:16 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/06 16:49:46 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/13 19:15:00 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,8 @@ Location::Location(const std::string& path, const std::vector<std::string>& meth
  _allowUpload(allowup), _uploadDirectory(upload)
 {
 	_cgiConfigs.clear();
-	std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
-	std::cout << " and upload path is " << this->_uploadDirectory << std::endl;
+	//std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
+	//std::cout << " and upload path is " << this->_uploadDirectory << std::endl;
 }
 Location::~Location(){}
 
@@ -99,7 +99,6 @@ bool Location::hasCgi(const std::string& extension) const
 {
     for (std::vector<CgiConfig>::const_iterator it = _cgiConfigs.begin(); it != _cgiConfigs.end(); ++it) 
 	{
-        std::cout << "Checking extension : " << it->extension << std::endl;
 		if (it->extension == extension)
             return true;
     }
