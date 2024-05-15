@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 16:57:08 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/14 22:26:55 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/15 19:32:55 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ Socket::Socket(const sockaddr_in& servAddr)
 		std::cout << "Error binding the socket" << std::endl;
 	}
 	
-	if (listen(this->_socket_fd, 420) < 0)
+	if (listen(this->_socket_fd, MAX_Q) < 0)
 		throw std::runtime_error("Error listening socket stage");
 }
 
@@ -79,62 +79,54 @@ const int Socket::acceptConnection()
 }
 
 //read raw Browser request
-const std::string Socket::readData(const int io_socket)
-{
-	int byteRead = 1;
-	std::string rawRequest;
-	while(byteRead > 0)
-	{
-		char buffer[BUFSIZE];
-		byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
-		if (byteRead < 0)
-			throw std::runtime_error("Impossible read message from client");
-		buffer[byteRead] = '\0';
-		rawRequest.append(buffer, byteRead);
-		if (rawRequest.find("\r\n\r\n") != std::string::npos)
-			break ;
-	}
-	//std::cout << "********* DONE TRANSMITTING DATA *********" << std::endl;
-	return (rawRequest);
-}
+// const std::string Socket::readData(const int io_socket)
+// {
+// 	int byteRead = 1;
+// 	std::string rawRequest;
+// 	while(byteRead > 0)
+// 	{
+// 		char buffer[BUFSIZE];
+// 		byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
+// 		if (byteRead < 0)
+// 			throw std::runtime_error("Impossible read message from client");
+// 		buffer[byteRead] = '\0';
+// 		rawRequest.append(buffer, byteRead);
+// 		if (rawRequest.find("\r\n\r\n") != std::string::npos)
+// 			break ;
+// 	}
+// 	//std::cout << "********* DONE TRANSMITTING DATA *********" << std::endl;
+// 	return (rawRequest);
+// }
 
-bool	Socket::readHeader(const int io_socket, std::string &rawRequest)
+int	Socket::readHeader(const int io_socket, std::string &rawRequest)
 {
 	int byteRead = 1;
-	//std::cout << "ARRIVED IN HEADER READING" << std::endl;
 	char buffer[BUFSIZE];
 	byteRead = recv(io_socket, buffer, BUFSIZE - 1, 0);
 	if (byteRead < 0)
-		throw std::runtime_error("Impossible read message from client");
+		return (-1);
 	if (byteRead == 0)
-		return false;
+		return (0);
 	buffer[byteRead] = '\0';
 	rawRequest.append(buffer, byteRead);
-	//std::cout << "********* DONE RECEIVING HEADER DATA *********" << std::endl;
-	return true;
+	return (1);
 }
 
 
-bool	Socket::readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body)
+int	Socket::readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body)
 {
-	bool connectKeep = true;
 	body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
 
-	//std::cout << "BODY from Header is : " << body << std::endl;
 	if (header.find("Transfer-Encoding") != header.end() && header.find("Transfer-Encoding")->second == "chunked")
-	{
-		if (!readChunkEncodingBody(io_socket, body))
-			connectKeep = false;
-	}
+		return (readChunkEncodingBody(io_socket, body));
 	else if (header.find("Content-Length") != header.end())
 	{
 		size_t contentLength = std::stol((header.find("Content-Length")->second).c_str());
-		if (!readFixedLengthBody(io_socket, contentLength, body))
-			connectKeep = false;
-	}	
+		std::cout << "content length is : " << contentLength << std::endl;
+		return (readFixedLengthBody(io_socket, contentLength, body));
+	}
 	else
-		throw std::runtime_error("Error: No content length or chunked encoding");
-	return (connectKeep);
+		return (-1);
 }
 /*
 initially a loop on recv with a purpose to have the content added to initilay partial
@@ -142,38 +134,40 @@ body to be reconstructed in the end, but issue is that with a test made in a scr
 you can actually send a content-length of 10000 and empty body -> infinte loop so currenlty set up 
 for a fixed length body to be read
 */
-bool Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body) 
+int Socket::readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body) 
 {
     
     int bytesRead = 0;
     size_t totalRead = 0;
-	//std::cout << "Content length : " << contentLength << std::endl;
-	//std::cout << "Body size : " << body.size() << std::endl;
 	
-	char buffer[contentLength + 1];
+	std::vector<char> buffer(contentLength + 1); 
+	time_t startTime = std::time(NULL);
     while (body.size() < contentLength) 
 	{
-		std::cout << "total read : " << totalRead << std::endl;
-		bytesRead = recv(clientSocket, buffer, contentLength  - body.size(), 0);
+		if (difftime(std::time(NULL), startTime) > _readTimeout)
+			return (-2);
+		bytesRead = recv(clientSocket, buffer.data(), contentLength  - body.size(), 0);
 		if (bytesRead > 0)
             totalRead += bytesRead;
         else if (bytesRead == 0)
-            return (false);
+            return (0);
+		else if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) 
+			continue;
         else
-            throw std::runtime_error("Error reading from socket"); //maybe return false as well ?
+		{
+            std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+			return (-1);
+		}
 		buffer[bytesRead] = '\0';
-		body.append(buffer, bytesRead);
-		std::cout << "total read after first time : " << totalRead << std::endl;
+		body.append(buffer.data(), bytesRead);
     }
-	std::cout << "Bytes read : " << bytesRead << std::endl;
-	std::cout << "Total read : " << totalRead << std::endl;
     buffer[totalRead] = '\0';
-    std::string result(buffer, totalRead);
+    std::string result(buffer.data(), totalRead);
 	body.append(result);
-    return (true);
+    return (1);
 }
 
-bool Socket::readChunkEncodingBody(int clientSocket, std::string& body) 
+int Socket::readChunkEncodingBody(int clientSocket, std::string& body) 
 {
 	std::string data;
 	char buffer[BUFSIZE];
@@ -185,9 +179,12 @@ bool Socket::readChunkEncodingBody(int clientSocket, std::string& body)
 	{
 		bytesRead = recv(clientSocket, buffer, BUFSIZE - 1, 0);
 		if (bytesRead < 0)
-			throw std::runtime_error("Error reading from socket");
+		{
+			std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+			return (-1);
+		}
 		if (bytesRead == 0)
-			return (false);
+			return (0);
 		buffer[bytesRead] = '\0';
 		data.append(buffer, bytesRead);
 		if (data.find("0\r\n\r\n") != std::string::npos)
@@ -195,9 +192,7 @@ bool Socket::readChunkEncodingBody(int clientSocket, std::string& body)
 	}
 	body.append(data);
 	std::cout << "Bytes read : " << bytesRead << std::endl;
-	//std::cout << "Data is : " << data << std::endl;
-	//std::cout << "Body is : " << body << std::endl;
-	return (true);
+	return (1);
 }
 
 void	Socket::_initSock()

@@ -243,10 +243,12 @@ bool	Request::parseContentLenBody()
 		size_t len = safeStrToSizeT(_headers["Content-Length"]);
 		if (len <= 0)
 			this->_status = 400;
+		std::cout << "Content-Length is : " << len << std::endl;
+		std::cout << "maxBodySize is : " << this->_maxBodySize << std::endl;
 		if (len > this->_maxBodySize)
 		{ 
 			this->_status = 413;
-			return(true);
+			return(false);
 		}
 	}
 	catch(const std::exception& e)
@@ -484,10 +486,10 @@ void		Request::handleGetRequest()
 		if (this->_isDirNorm)
 		{
 			//std::cout << BG_YELLOW " rebuilt and REDIRECT TO : " RESET << this->_path << std::endl;
-			this->_status = 301;
+			this->_status = 200;
 			return;
 		}
-		else if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
+		if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
 			this->_parsePath = _location.getRootDir() + this->_path + index;
 		else if(_location.getAutoIndex() == true)
 		{
@@ -597,6 +599,8 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	std::ofstream file(filePath); //very testy ..update with Location and actual logic
 	if (!file.is_open())
 	{
+		std::cerr << "Error opening file" << std::endl;
+		std::cerr << "File path is : " << filePath << std::endl;
 		this->_status = 500;
 		return;
 	}
@@ -963,8 +967,6 @@ void	Request::setStatus(int status)
 void	Request::setLocation(const Location& loc)
 {
 	this->_location = loc;
-	//std::cout << BG_GREEN "Location in REQUEST is : " << _location.getPath() << RESET << std::endl;
-
 }
 
 Location Request::getLocation() const

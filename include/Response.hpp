@@ -28,6 +28,7 @@ private:
 
 public:
 	Response(Request& head);
+	//Response(const int status, Location& loc);
 	~Response();
 	Response(const Response& src);
 	Response& operator=(const Response& src);   

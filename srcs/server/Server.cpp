@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/14 22:10:40 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/15 20:40:48 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,36 @@ void	Server::run()
 	}
 }
 
+void	Server::processRequest(const std::string& rawhead, const int io_fd)
+{
+	Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
+	if (request.hasBody())
+	{
+		std::string body;
+		body.clear();
+		int retBody = this->_sock.readBody(io_fd, request.getHeader(), rawhead, body);
+		if(retBody == -2)
+			request.setStatus(408);
+		else if (retBody == -1)
+			request.setStatus(400);
+		else
+			request.setBody(body);
+	}
+	const Location* matchLoc = findLocationForRequest(request.getPath());
+	if (matchLoc == NULL)
+		request.setLocation(_rootloc);
+	else
+		request.setLocation(*matchLoc);
+	request.buildRequest();
+	Response resp(request);
+	resp.buildResponse();
+	std::string response = resp.getResponse();
+	//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
+	_clientRequest[io_fd] = request.getHeaderField("Connection");
+	_clientResponse[io_fd] = resp.getResponse();
+	setPoll(io_fd, POLLOUT);
+}
+
 /**
  * @brief Handles read operations for a specified client socket.
  * 
@@ -133,36 +163,12 @@ void	Server::readClient(int io_fd)
 	{
 		std::string rawhead; 
 		rawhead.clear();
-		if (!this->_sock.readHeader(io_fd, rawhead))
-		{	
-			closeClient(io_fd);
-			return;
-		}
-		Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
-		if (request.hasBody())
-		{
-			std::string body;
-			body.clear();
-			if(!this->_sock.readBody(io_fd, request.getHeader(), rawhead, body))
-			{
-				closeClient(io_fd);
-				return;
-			}
-			request.setBody(body);
-		}
-		const Location* matchLoc = findLocationForRequest(request.getPath());
-		if (matchLoc == NULL)
-			request.setLocation(_rootloc);
+		int retHead = this->_sock.readHeader(io_fd, rawhead);
+		if (retHead == 1)
+			processRequest(rawhead, io_fd);
 		else
-			request.setLocation(*matchLoc);
-		request.buildRequest();
-		Response resp(request);
-		resp.buildResponse();
-		std::string response = resp.getResponse();
-		//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
-		_clientRequest[io_fd] = request.getHeaderField("Connection");
-		_clientResponse[io_fd] = resp.getResponse();
-		setPoll(io_fd, POLLOUT);
+			closeClient(io_fd);
+			//handleError(io_fd, retHead);
 	}
 	catch(const std::exception& e)
 	{
@@ -184,12 +190,32 @@ void	Server::readClient(int io_fd)
  */
 void Server::sendClient(int io_fd)
 {
+	if (_clientResponse.find(io_fd) == _clientResponse.end())
+	{
+		closeClient(io_fd);
+		return;
+	}
 	std::string response = _clientResponse[io_fd];
-	send(io_fd, response.c_str(), response.length(), 0);
+	//std::cout << YELLOW "Response : " << response << RESET << std::endl;
+	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
+	if (byteSent < 0)
+	{
+		std::cerr << "send socket Error :" << strerror(errno) << std::endl;
+		closeClient(io_fd);
+		return;
+	}
+	else if (byteSent < response.length())
+	{
+		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
+		_clientResponse[io_fd] = response.substr(byteSent);
+		setPoll(io_fd, POLLOUT);
+		return;
+	}
 	if ( _clientRequest[io_fd].find("close") != std::string::npos)
 		closeClient(io_fd);
 	else
 		setPoll(io_fd, POLLIN);
+	std::cout << " bytesent : " << byteSent << std::endl;
 	_clientRequest.erase(io_fd);
 	_clientResponse.erase(io_fd);
 }
@@ -310,3 +336,21 @@ void Server::closeClient(int io_fd)
 	close(io_fd);
 	//usleep(1000); //because to fast to retrun to fd to kernel when using siege
 }
+// void Server::handleError(const int io_socket))
+// {
+// 	std::string response;
+	
+// 	if (error == 0)
+// 	{
+// 		closeClient(io_socket);
+// 		return;
+// 	}
+// 	if (error == -2)
+// 		response = "HTTP/1.1 408 Request Timeout\r\nContent-Length: 0\r\n\r\n";
+// 	else 
+// 		response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
+// 	_clientRequest[io_socket] = "close";
+// 	_clientResponse[io_socket] = response;
+// 	setPoll(io_socket, POLLOUT);
+// }
+

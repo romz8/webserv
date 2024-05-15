@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/14 21:10:01 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/15 19:12:34 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,8 @@ public:
 	void	readClient(int fd);
 	void	sendClient(int fd); 
 	void	closeClient(int io_fd);
+	void	handleError(const int io_socket, const int error);
+	void	processRequest(const std::string& headeer, const int io_socket);
 };
 
 #endif

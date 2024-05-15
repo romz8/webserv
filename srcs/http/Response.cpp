@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/13 20:21:35 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/15 20:18:30 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,30 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 	else
 		this->_assetPath = head.getParsePath();
 	// std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
-	//std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
+	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
 	// std::cout << "extension is " << this->_extension << std::endl;
 }
+
+/*
+build a response object with a status code : only for error handling
+*/
+// Response::Response(const int status, Location location) : _status(status), _location(location), _version("HTTP/1.1")
+// {
+// 	_statusMsgs = initStatusMaps();
+// 	_mimeTypes = initMimeMaps();
+// 	_content_len = "0";
+// 	_headerResponse = "";
+// 	_body = "";
+// 	_response = "";
+// 	_assetPath = "";
+// 	_extension = ".html";
+// 	_fromCgi = false;
+
+// 	if (this->_status >= 400)
+// 		this->_assetPath = _location.getRootDir() + getErrorPage(this->_status);
+// 	else
+// 		this->_assetPath = _location.getRootDir() + getErrorPage(404);
+// }
 
 Response::~Response(){}
 
@@ -254,6 +275,7 @@ std::map<int, std::string>	Response::initStatusMaps()
     s[400] = "Bad Request";
 	s[403] = "Forbidden";
     s[404] = "Not Found";
+	s[408] = "Request Timeout";
 	s[409] = "Conflict";
 	s[413] = "Content Too Large";
     s[405] = "Method Not Allowed";
