@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:36 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 23:52:25 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/15 14:48:49 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,13 @@
 #include <unistd.h>
 
 Events::Events( void ) {
+	this->_logs = Logs("events_logs");
 	FD_ZERO(&this->_rfds);
 	FD_ZERO(&this->_wfds);
 	FD_ZERO(&this->_efds);
 	this->_timeout.tv_sec = 1;
 	this->_timeout.tv_usec = 0;
+	this->_logs.Info("Evs generateds");
 }
 
 Events::~Events( void ) {
@@ -44,7 +46,7 @@ void	Events::setWfds( int fd ) {
 	FD_SET(fd, &this->_wfds);
 	if (!FD_ISSET(fd, &this->_wfds))
 		throw std::runtime_error("Cannot put a fd in write mode");
-	this->_logs.Info("The fd " + std::to_string(fd) + " is readey to write.");
+	this->_logs.Info("The fd " + std::to_string(fd) + " is ready to write.");
 }
 
 void	Events::setEfds( int fd ) {
@@ -53,7 +55,7 @@ void	Events::setEfds( int fd ) {
 	FD_SET(fd, &this->_efds);
 	if (!FD_ISSET(fd, &this->_efds))
 		throw std::runtime_error("Cannot put a fd in write mode");
-	this->_logs.Info("The fd " + std::to_string(fd) + " is readey to write.");
+	this->_logs.Info("The fd " + std::to_string(fd) + " is ready to write.");
 }
 
 fd_set	*Events::getRfds( void ) {
