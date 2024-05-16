@@ -6,7 +6,7 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/14 20:37:18 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/16 20:40:06 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,18 +16,21 @@ NAME = testserv
 RM = rm -rf
 
 SRC_DIR = ./srcs/
-INC_DIR = ./include/
+INC_DIR = ./include/ ./include/Config/
 OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
-	server/LocationTemplate.cpp http/DirectoryListing.cpp CGI/CGI.cpp
+	server/LocationTemplate.cpp http/DirectoryListing.cpp CGI/CGI.cpp Config/Directives.cpp \
+	Config/LocationConfig.cpp Config/ParseContent.cpp Config/ParseDirectives.cpp \
+	Config/ParseContent.cpp Config/Parser.cpp Config/Utils.cpp Config/Logs.cpp \
+	config/ServerConfig.cpp Config/ServerParse.cpp
 INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
-	Location.hpp DirectoryListing.hpp CGI.hpp
+	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp
 
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))
 INCS = $(addprefix $(INC_DIR), $(INC_NAME))
-ALL_INC = -I $(INC_DIR)
+ALL_INC = $(addprefix -I, $(INC_DIR))
 
 OBJS = $(SRC:$(SRC_DIR)%.cpp=$(OBJS_PATH)%.o)
 DEPS	= $(addprefix $(OBJS_PATH), $(OBJ:.o=.d))

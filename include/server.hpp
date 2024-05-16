@@ -6,16 +6,19 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/15 19:12:34 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/16 19:41:29 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
+# define SERVER_HPP
+
 # include <poll.h>
 # include "Socket.hpp"
 # include "Location.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
+# include "Directives.hpp"
 # include "colors.h"
 
 # define MAX_BODY_SIZE 100000000 //100MB
@@ -46,6 +49,7 @@ typedef struct Config
 class Server
 {
 private:
+	Directives *_d;
 	std::string	_host;
 	std::string	_port;
 	std::string	_root;
