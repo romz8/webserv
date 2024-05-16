@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/15 20:40:48 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/16 16:59:43 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ void	Server::run()
 		if (ret < 0)
 			throw (std::runtime_error("Poll failed"));
 		else if (ret == 0)
-			std::cout << "Waiting Connection ..." << std::endl;
+			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
 		else
 		{
 			for (size_t i = 0; i < _fdSet.size(); ++i)
@@ -215,7 +215,8 @@ void Server::sendClient(int io_fd)
 		closeClient(io_fd);
 	else
 		setPoll(io_fd, POLLIN);
-	std::cout << " bytesent : " << byteSent << std::endl;
+	//std::cout << " bytesent : " << byteSent << std::endl;
+	//std::cout << " response sent : " << response << std::endl;
 	_clientRequest.erase(io_fd);
 	_clientResponse.erase(io_fd);
 }

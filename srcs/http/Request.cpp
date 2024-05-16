@@ -147,6 +147,9 @@ void Request::parseStartLine(const std::string& line)
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
+	std::cout << "Parsed Request-Line: Method: " << this->_method
+          << ", Path: " << this->_path
+          << ", Version: " << this->_version << std::endl;
 }
 
 /**
@@ -156,11 +159,15 @@ void Request::parseStartLine(const std::string& line)
  */
 bool Request::isValidRL(const std::string& line)
 {
+	std::cout << BLUE "line is : " RESET  << line << std::endl;
 	const std::string SP  = " ";
 	size_t firstspace, secondspace;
 	
-	if (line.empty())
+	if (line.empty() || line == "\r\n" || line == "\n" || line == "\r" || line == "\n\r" || line == "\r\n\r\n")
+	{
 		return (false);
+		std::cout << BG_YELLOW "WTFFFF empty line" RESET << std::endl;
+	}
 	if (!endsWithCRLF(line))
         throw std::runtime_error("Request line does not end with CRLF");
 	if (line[0] == SP[0] || line[line.size() - 1] == SP[0])
@@ -486,7 +493,7 @@ void		Request::handleGetRequest()
 		if (this->_isDirNorm)
 		{
 			//std::cout << BG_YELLOW " rebuilt and REDIRECT TO : " RESET << this->_path << std::endl;
-			this->_status = 200;
+			this->_status = 301;
 			return;
 		}
 		if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/15 20:18:30 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/16 16:58:24 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,27 +34,6 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
 	// std::cout << "extension is " << this->_extension << std::endl;
 }
-
-/*
-build a response object with a status code : only for error handling
-*/
-// Response::Response(const int status, Location location) : _status(status), _location(location), _version("HTTP/1.1")
-// {
-// 	_statusMsgs = initStatusMaps();
-// 	_mimeTypes = initMimeMaps();
-// 	_content_len = "0";
-// 	_headerResponse = "";
-// 	_body = "";
-// 	_response = "";
-// 	_assetPath = "";
-// 	_extension = ".html";
-// 	_fromCgi = false;
-
-// 	if (this->_status >= 400)
-// 		this->_assetPath = _location.getRootDir() + getErrorPage(this->_status);
-// 	else
-// 		this->_assetPath = _location.getRootDir() + getErrorPage(404);
-// }
 
 Response::~Response(){}
 
@@ -130,7 +109,11 @@ void	Response::addHeaders()
 	if (_fromCgi)
 		return;
 	if (this->_status == 301)
+	{
 		_headers["Location"] = this->_assetPath;
+		_headers["content-length"] = "0";
+		//_headers["Connection"] = "close";
+	}
 	else if (this->_status == 204)
 		_headers.clear();
 	else if (this->_status == 201)
@@ -191,6 +174,7 @@ void	Response::setBody()
 		}
 		else
 		{
+			std::cout << "this case with asset path : " << this->_assetPath << std::endl;
 			this->_body = readWebFile(this->_assetPath);
 			this->_extension = parseExtension(this->_assetPath, this->_extension);
 		}
