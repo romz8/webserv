@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/09 12:13:54 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/15 15:28:54 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/15 19:25:10 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,27 +47,51 @@ void	Reception::setupServers( void ) {
 
 void	Reception::main_loop( void ) {
 	this->logs.Info("Started main loop");
+	size_t	size = _servers.size();
 	while (Signals::isRunning)
 	{
-		int ret = select(this->_nfds + 1 , this->_evs->getRfds(), NULL, NULL, &this->_timeout);
-		switch (ret)
+		fd_set	*rfds = this->_evs->getRfds();
+		fd_set	orfds = *rfds;
+		fd_set	*wfds = this->_evs->getWfds();
+		fd_set	owfds = *wfds;
+
+		int ret = select(this->_nfds + 1 , rfds, wfds, NULL, &this->_timeout);
+		if (ret < 0)
+			this->logs.Error("Select failed");
+		else if (ret == 0)
 		{
-			case -1:
-				this->logs.Error("Select failed");
-				break ;
-			case 0:
-				this->logs.Error("Timeout");
-				break ;
-			default:
-				for (size_t i = 0; i < _servers.size(); i++)
+			FD_COPY(&orfds, rfds);
+			FD_COPY(&owfds, wfds);
+			this->logs.Error("Timeout");
+		}
+		else
+		{
+			for (size_t i = 0; i < size; i++)
+			{
+				Server	*server = _servers[i];
+				int		fd = server->getFd();
+				if (this->_evs->checkRead(fd))
 				{
-					if (this->_evs->checkRead(_servers[i]->getFd()))
-					{
-						this->logs.Info("Reading");
-						_servers[i]->run();
+					this->logs.Info("Reading");
+					try {
+						server->run();
+					} catch (std::exception &e) {
+						_evs->setRfds(fd);
+						this->logs.Error(e.what());
 					}
 				}
-				break ;
+				else if (this->_evs->checkWrite(fd))
+				{
+					this->logs.Info("Writting");
+					try {
+						server->sendInfo();
+					} catch (std::exception &e) {
+						this->logs.Error(e.what());
+					}
+				}
+				else
+					this->_evs->setRfds(fd);
+			}
 		}
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/08 19:59:36 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/15 14:48:49 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/15 18:52:07 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void	Events::setWfds( int fd ) {
 }
 
 void	Events::setEfds( int fd ) {
-		if (fd < 0 || fd >= 1024)
+	if (fd < 0 || fd >= 1024)
 		throw std::runtime_error("Invalid fd");
 	FD_SET(fd, &this->_efds);
 	if (!FD_ISSET(fd, &this->_efds))
@@ -72,6 +72,12 @@ fd_set	*Events::getEfds( void ) {
 
 int		Events::checkRead( int fd ) {
 	if (!FD_ISSET(fd, &this->_rfds))
+		return (0);
+	return (1);
+}
+
+int		Events::checkWrite( int fd ) {
+	if (!FD_ISSET(fd, &this->_wfds))
 		return (0);
 	return (1);
 }

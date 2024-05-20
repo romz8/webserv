@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 02:19:16 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 17:30:38 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/15 18:51:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,10 +41,11 @@ class Server
 		void					init_sock( void );
 		void					setlisten( void );
 		void					run( void ) const ;
-		int						getFd( void ) const;
+		void					sendInfo( void );
 		
 		//return the index of the coincidence to save it in a tmp map var to see which server
 		//has the stronger coincidence. (Maybe I move it to the directives to check with all the servers).
+		int						getFd( void ) const;
 		int						getStrongCoincidence( string ) const;
 		Directives				*getDirectives( void ) const;
 		Location				*getLocation( unsigned int ) const ;

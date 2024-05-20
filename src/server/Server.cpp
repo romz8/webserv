@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 10:48:47 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/14 23:48:50 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/15 19:22:34 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ Server	&Server::operator=( Server & src ) {
 	if (this != &src)
 	{
 		this->_logs = src._logs;
-		this->_d = new Directives(*src._d, 1);
+		this->_d = src._d;
 		this->_sock = src._sock;
 		this->_servAddr = src._servAddr;
 	}
@@ -59,8 +59,12 @@ void	Server::run( void ) const {
 		this->_sock.acceptConnections();
 	}
 	catch (std::runtime_error & e) {
-		std::cout << e.what() << std::endl;
+		throw e;
 	}
+}
+
+void	Server::sendInfo( void ) {
+	std::cout << "Sending..." << std::endl;
 }
 
 int		Server::getFd( void ) const {
