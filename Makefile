@@ -6,7 +6,7 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/16 20:40:06 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/21 19:08:45 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,10 +20,8 @@ INC_DIR = ./include/ ./include/Config/
 OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
-	server/LocationTemplate.cpp http/DirectoryListing.cpp CGI/CGI.cpp Config/Directives.cpp \
-	Config/LocationConfig.cpp Config/ParseContent.cpp Config/ParseDirectives.cpp \
-	Config/ParseContent.cpp Config/Parser.cpp Config/Utils.cpp Config/Logs.cpp \
-	config/ServerConfig.cpp Config/ServerParse.cpp
+	server/Location.cpp http/DirectoryListing.cpp CGI/CGI.cpp config/LocationConfig.cpp \
+	config/ServerConfig.cpp 
 INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
 	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp
 

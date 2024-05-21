@@ -1,40 +1,40 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Logs.hpp                                           :+:      :+:    :+:   */
+/*   Cluster.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/09 09:26:47 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/16 19:34:51 by rjobert          ###   ########.fr       */
+/*   Created: 2024/05/21 16:18:22 by rjobert           #+#    #+#             */
+/*   Updated: 2024/05/21 16:24:38 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __LOGS_HPP__
-# define __LOGS_HPP__
+#ifndef CLUSTER_HPP
+# define CLUSTER_HPP
 
-# include <fstream>
+# include <string>
 # include <iostream>
+# include <vector>
+# include <map>
+# include "ServerConfig.hpp"
+# include "LocationConfig.hpp"
 
-using namespace std;
+class Cluster
+{
+private:
+	std::vector<ServerConfig> _servers;
 
-class Logs {
-	private:
-		string		_fileName;
-		string		_logDirectory;
-		ofstream	_logFile;
+public:
+	Cluster();
+	Cluster(const Cluster& src);
+	Cluster& operator=(const Cluster& src);
+	~Cluster();
 
-	public:
-		Logs( void );
-		Logs( string logFileN );
-		~Logs( void );
-
-		Logs	&operator=( const Logs & );
+	std::vector<ServerConfig> getServers() const;
+	void addServer(const ServerConfig& server);
+	void	run();
 		
-		void	Info( string );
-		void	Warning( string );
-		void	Error( string );
-		void	Debug( string );
 };
 
-#endif
+# endif

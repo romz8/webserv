@@ -6,46 +6,25 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/16 16:59:43 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/21 21:04:15 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(const Config& conf) : _serverName(conf.serverName), _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
+Server::Server(const ServerConfig& conf) : _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
 {
-	this->_host = conf.host;
-	this->_port = conf.port;
-	this->_serverName = conf.serverName;
-	this->_hostName = conf.hostName;
-	this->_root = conf.root;
-	this->_errPageGlobal = conf.errPageGlobal;
-	this->_maxBodySize = MAX_BODY_SIZE; //to replace with config max body size
 	
-	std::vector<std::string> methods1;
-	std::vector<std::string> methods2;
-	methods1.push_back("GET");
-	methods2.push_back("GET");
-	methods2.push_back("POST");
-
-	std::map<int, std::string> custom404;
-	//custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
-	// _locations.push_back(Location("/", methods1, _root, "index.html", true, ""));
-	_locations.push_back(Location("/getorder", methods2, _root, "index.html", false, true,"./upload/formData/"));
-    _locations.push_back(Location("/postfile", methods2, _root, "index.html", false, true, "./upload/files/"));
-	//custom404.insert(std::pair<int, std::string>(404, "error_pages/409.html"));
-	//_locations[0].addErrPage(custom404);
-    //_locations.Location("/delete", {"DELETE"}, serverRoot, "test.html", false);
-	// _locations.push_back(Location("/nimp", methods1, _root, "index.html", true, ""));
-    // _locations.push_back(Location("/nimo2", methods2, _root, "index.html", false, "./upload/"));
-    // _locations.push_back(Location("/blabla", methods2, _root, "index.html", false, "./upload/"));
-	_rootloc = Location("/", methods2, _root, "index.html", true, true, "");
-	_rootloc.setCgi(conf.cgiConf[0]);
-	_rootloc.setCgi(conf.cgiConf[1]);
-	_rootloc.setCgi(conf.cgiConf[2]);
-	_rootloc.addErrPage(_errPageGlobal);
-
+	_initServ();
 	
+	this->_host = conf.getHost();
+	this->_port = conf.getPort();
+	this->_hostName = _host.substr(0, _host.find(':'));
+	this->_serverName = conf.getServerName();
+	this->_root = conf.getRootDir();
+	this->_errPageGlobal = conf.getErrorPages();
+	this->_maxBodySize = conf.getClientMaxBodySize();
+	_initLocations(conf.getLocationConf());
 	printSockAddrIn(_servAddr);
 }
 
@@ -54,23 +33,51 @@ Server::~Server(){}
 void	Server::_initServ()
 {
 	_host.clear();
-	_port.clear();
+	_hostName.clear();
+	_port = 0;
 	_serverName.clear();
+	_root.clear();
+	_maxBodySize = 0;
+	_locations.clear();
+	_errPageGlobal.clear();
+	_host.clear();
+	_fdSet.clear();
+	_clientRequest.clear();
+	_clientResponse.clear();
 }
 
-const sockaddr_in Server::setServAddr(const Config& conf)
+const sockaddr_in Server::setServAddr(const ServerConfig& conf)
 {
+	std::cout << "host : " << conf.getHost() << std::endl;
+	std::cout << "port : " << conf.getPort() << std::endl;
 	sockaddr_in servAddr;
-	servAddr.sin_family = AF_INET; //how for ipv6 ?
-	servAddr.sin_port = htons(atoi(conf.port.c_str())); // later replace on by server config
+	servAddr.sin_family = AF_INET; 
+	servAddr.sin_port = htons(conf.getPort()); 
 	
 	//handling IP (either from 0 / nothing or "127.25.24") -> Will need to include getaddress()
-	if (conf.host.empty() || conf.host == "0")
+	if (conf.getHost().empty() || conf.getHost() == "0.0.0.0")
 		servAddr.sin_addr.s_addr = INADDR_ANY;
 	else
-		inet_pton(servAddr.sin_family, conf.host.c_str(), &servAddr.sin_addr);
-	std::cout << "CONF is host : " << conf.host << " | port : " << conf.port << std::endl;
+		inet_pton(servAddr.sin_family, conf.getHostName().c_str(), &servAddr.sin_addr);
 	return (servAddr);
+}
+
+void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
+{
+	std::cout << " Loca conf size is : " << locationConf.size() << std::endl;
+	for (size_t i = 0; i < locationConf.size(); ++i)
+	{
+		Location loc(locationConf[i]);
+		std::cout << "Location : " << loc << std::endl;
+		this->_locations.push_back(loc);
+		if (loc.getPath() == "/")
+			_rootloc = loc;
+	}
+	std::cout << "Locations size : " << _locations.size() << std::endl;
+	for (size_t i = 0; i < _locations.size(); ++i) 
+	{
+        std::cout << "Location " << i << ": " << _locations[i] << std::endl;
+    }
 }
 /**
  * @brief Executes the main server loop, monitoring and responding to socket events.
@@ -117,7 +124,7 @@ void	Server::run()
 
 void	Server::processRequest(const std::string& rawhead, const int io_fd)
 {
-	Request request(rawhead, _hostName, _maxBodySize); //to replace with config max body size
+	Request request(rawhead, _host, _maxBodySize); //to replace with config max body size
 	if (request.hasBody())
 	{
 		std::string body;
@@ -130,12 +137,16 @@ void	Server::processRequest(const std::string& rawhead, const int io_fd)
 		else
 			request.setBody(body);
 	}
-	const Location* matchLoc = findLocationForRequest(request.getPath());
+	const Location* matchLoc = findLocationForRequest(request.getPath()); //TO VERIFY AND EDIT WITH CONFIG NEW LOCATION
 	if (matchLoc == NULL)
-		request.setLocation(_rootloc);
+		request.setLocation(_rootloc); // to replace with root location in config logic
 	else
+	{
 		request.setLocation(*matchLoc);
+		std::cout << BG_GREEN "Location found : " << matchLoc->getPath() << RESET << std::endl; //TO REMOVE AFTER TEST
+	}
 	request.buildRequest();
+	request.printRequest(); //TO REMOVE AFTER TEST
 	Response resp(request);
 	resp.buildResponse();
 	std::string response = resp.getResponse();
@@ -336,6 +347,22 @@ void Server::closeClient(int io_fd)
 	removePollFd(io_fd);
 	close(io_fd);
 	//usleep(1000); //because to fast to retrun to fd to kernel when using siege
+}
+
+std::ostream& operator<<(std::ostream& os, const Server& serv)
+{
+	os << "Server : " << serv._serverName << std::endl;
+	os << "Host : " << serv._host << std::endl;
+	os << "Port : " << serv._port << std::endl;
+	os << "Root : " << serv._root << std::endl;
+	os << "Max Body Size : " << serv._maxBodySize << std::endl;
+	os << "Error Pages : " << std::endl;
+	for (std::map<int, std::string>::const_iterator it = serv._errPageGlobal.begin(); it != serv._errPageGlobal.end(); ++it)
+		os << it->first << " : " << it->second << std::endl;
+	os << "Locations : " << std::endl;
+	for (size_t i = 0; i < serv._locations.size(); ++i)
+		os << serv._locations[i] << std::endl;
+	return os;
 }
 // void Server::handleError(const int io_socket))
 // {

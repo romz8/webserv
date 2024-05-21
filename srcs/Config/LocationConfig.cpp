@@ -1,89 +1,62 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   LocationConfigConfig.cpp                                       :+:      :+:    :+:   */
+/*   LocationConfig.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/04/17 21:33:38 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/16 18:59:00 by rjobert          ###   ########.fr       */
+/*   Created: 2024/05/21 17:24:39 by rjobert           #+#    #+#             */
+/*   Updated: 2024/05/21 18:41:49 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "LocationConfig.hpp"
 
-// LocationConfig::LocationConfig( void ) : _uri("/") {
-//     return ;
-// }
+LocationConfig::LocationConfig(){}
+LocationConfig::~LocationConfig(){}
 
-// LocationConfig::~LocationConfig( void ) {
-//     if (this->_d != NULL)
-// 		delete this->_d;
-// 	this->_d = NULL;
-//     return ;
-// }
+LocationConfig::LocationConfig(const LocationConfig& src)
+{
+	*this = src;
+}
 
-// LocationConfig::LocationConfig( LocationConfig & src ) {
-// 	*this = src;
-// }
+LocationConfig& LocationConfig::operator=(const LocationConfig& src)
+{
+	if (this == &src)
+		return (*this);
+	_uri = src._uri;
+	_root = src._root;
+	_alias = src._alias;
+	_error_pages = src._error_pages;
+	_allowed_methods = src._allowed_methods;
+	_cgiConfigs = src._cgiConfigs;
+	_index = src._index;
+	_autoIndex = src._autoIndex;
+	_allowUpload = src._allowUpload;
+	_uploadDir = src._uploadDir;
+	return (*this);
+}
 
-// LocationConfig	&LocationConfig::operator=( LocationConfig & src ) {
-// 	if (this != &src)
-// 	{
-// 		this->_d = new Directives(*src._d);
-// 		this->_uri = src.getUri();
-// 		this->_isDir = src._isDir;
-// 	}
-// 	return (*this);
-// }
+void LocationConfig::setUri(const std::string& uri) { this->_uri = uri; }
+void LocationConfig::setRoot(const std::string& root) { this->_root = root; }
+void LocationConfig::setAlias(const std::string& alias) { this->_alias = alias; }
+void LocationConfig::setErrorPages(const std::map<int, std::string>& error_pages) { this->_error_pages = error_pages; }
+void LocationConfig::setAllowedMethods(const std::vector<std::string>& allowed_methods) { this->_allowed_methods = allowed_methods; }
+void LocationConfig::addCgiConfig(const CgiConfig& cgiConfig) { _cgiConfigs.push_back(cgiConfig); }
+void LocationConfig::setIndex(const std::string& index) { this->_index = index; }
+void LocationConfig::setAutoIndex(bool autoIndex) { this->_autoIndex = autoIndex; }
+void LocationConfig::setAllowUpload(bool allowUpload) { this->_allowUpload = allowUpload; }
+void LocationConfig::setUploadDir(const std::string& uploadDir) { this->_uploadDir = uploadDir; }
 
-// const std::string   &LocationConfig::getUri( void ) const {
-//     return (this->_uri);
-// }
+const std::string& LocationConfig::getUri() const { return _uri; }
+const std::string& LocationConfig::getRoot() const { return _root; }
+const std::string& LocationConfig::getAlias() const { return _alias; }
+const std::map<int, std::string>& LocationConfig::getErrorPages() const { return _error_pages; }
+const std::vector<std::string>& LocationConfig::getAllowedMethods() const { return _allowed_methods; }
+const std::vector<CgiConfig>& LocationConfig::getCgiConfigs() const { return _cgiConfigs; }
+const std::string& LocationConfig::getIndex() const { return _index; }
+bool LocationConfig::getAutoIndex() const { return _autoIndex; }
+bool LocationConfig::getAllowUpload() const { return _allowUpload; }
+const std::string& LocationConfig::getUploadDir() const { return _uploadDir; }
 
-// void                LocationConfig::setUri( const std::string & uri ) {
-//     this->_uri = uri;
-// }
 
-// void				LocationConfig::parse_LocationConfig_line( Directives *d, const std::string &line ) {
-// 	StrVector sline;
-// 	this->_d = new Directives(*d);
-
-// 	this->_d->addServer(NULL);
-// 	sline = SUtils::split(sline, line, " \t\n");
-// 	size_t len = sline.size();
-// 	if (len != 3)
-// 		throw std::logic_error("Unexpected amount of arguments. Expected \"LocationConfig /uri/ {\"");
-// 	this->_uri = sline[1];
-// 	if (this->_uri[this->_uri.length() - 1] == '/')
-// 		this->_isDir = true;
-// 	else
-// 		this->_isDir = false;
-// }
-
-// void    LocationConfig::parse( const std::string & content ) {
-//     StrVector line;
-// 	StrVector lines;
-
-// 	lines = SUtils::split(lines, content, "\n");
-// 	int len = lines.size();
-// 	for (int i = 1; i < len; i++)
-// 	{
-// 		std::string treated_line = SUtils::treat_comments(lines[i]);
-// 		line = SUtils::split(line, treated_line, " \t");
-// 		if (!line[0].compare("{") || !line[0].compare("}"))
-// 			continue ;
-// 		int type = ParseContent::getLocAllowDirectives(line[0]);
-// 		ParseDirectives::parseLocationConfigDirectives( this->_d, line, type );
-// 		line.clear();
-//         treated_line.clear();
-// 	}
-// 	if (this->_d->dirSet["alias"] == true || !this->_d->alias.empty())
-// 		this->_uri = this->_d->alias;
-// 	else if (this->_d->dirSet["root"] == true || !this->_d->root.empty())
-// 		this->_uri = this->_d->root + this->_uri;
-// }
-
-// UintStrMap::mapped_type			&LocationConfig::getErrorPage( unsigned int error_code ) const {
-// 	return (this->_d->getErrorPage(error_code));
-// }
