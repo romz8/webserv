@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 21:00:22 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/22 14:47:51 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -264,6 +264,7 @@ std::map<int, std::string>	Response::initStatusMaps()
 	s[413] = "Content Too Large";
     s[405] = "Method Not Allowed";
     s[500] = "Internal Server Error";
+	s[502] = "Bad Gateway";
     s[505] = "HTTP Version not supported";
 
 	return s;

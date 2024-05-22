@@ -6,7 +6,7 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/21 19:08:45 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/22 20:11:36 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,9 +21,9 @@ OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
 	server/Location.cpp http/DirectoryListing.cpp CGI/CGI.cpp config/LocationConfig.cpp \
-	config/ServerConfig.cpp 
+	config/ServerConfig.cpp server/Cluster.cpp
 INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
-	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp
+	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp Cluster.hpp
 
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))

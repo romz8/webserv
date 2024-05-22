@@ -21,7 +21,8 @@
  * @param hostName The host name from the HTTP request.
  * @param maxBody The maximum body size allowed for the request.
  */
-Request::Request(const std::string& rawHead, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
+Request::Request(const std::string& rawHead, const ServerConfig& conf) : \
+	_host(conf.getHost()), _maxBodySize(conf.getMaxBodySize()), _serverName(conf.getServerName()), _port(conf.getPort())
 {
 	std::string rawRequest;
 	initRequest();
@@ -147,9 +148,9 @@ void Request::parseStartLine(const std::string& line)
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
-	std::cout << "Parsed Request-Line: Method: " << this->_method
-          << ", Path: " << this->_path
-          << ", Version: " << this->_version << std::endl;
+	// std::cout << "Parsed Request-Line: Method: " << this->_method
+    //       << ", Path: " << this->_path
+    //       << ", Version: " << this->_version << std::endl;
 }
 
 /**
@@ -159,7 +160,7 @@ void Request::parseStartLine(const std::string& line)
  */
 bool Request::isValidRL(const std::string& line)
 {
-	std::cout << BLUE "line is : " RESET  << line << std::endl;
+	//std::cout << BLUE "line is : " RESET  << line << std::endl;
 	const std::string SP  = " ";
 	size_t firstspace, secondspace;
 	
@@ -232,7 +233,7 @@ bool	Request::hasCorrectHost() const
 		throw std::runtime_error("Error parsing Request : no Host header");
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
-	if (it->second != this->_hostName)
+	if (it->second != this->_host)
 		throw std::runtime_error("Error parsing Request : invalid Host header");
 	return(true);
 }
@@ -990,6 +991,38 @@ bool Request::execCgi() const
 {
 	return(this->_execCgi);
 }
+
+void	Request::setHost(const std::string& host)
+{
+	this->_host = host;
+}
+
+std::string Request::getHost() const
+{
+	return(this->_host);
+}
+
+void	Request::setServerName(const std::string& servername)
+{
+	this->_serverName = servername;
+}
+
+std::string Request::getServerName() const
+{
+	return(this->_serverName);
+}
+
+void	Request::setPort(int serverport)
+{
+	this->_port = serverport;
+}
+
+int Request::getPort() const
+{
+	return(this->_port);
+}
+
+
 /************************** UTILS **********************************/
 
 /*

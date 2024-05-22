@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 20:19:13 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/22 20:15:46 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ private:
 	std::string	_host; //is it corrrect to have hostName and host ? how is it done on José side
 	size_t		_maxBodySize;
 	std::vector<Location>	_locations; 
-	const sockaddr_in _servAddr;
+	sockaddr_in _servAddr;
 	std::map<int, std::string> _errPageGlobal;
 	Location _rootloc; //if no url match a location, use root location
 	Socket _sock;
@@ -64,32 +64,38 @@ private:
 	static const int	_timeout = 3;
 	std::map<int , std::string> _clientRequest;
 	std::map<int , std::string> _clientResponse;
+	ServerConfig _conf;
 	
-	Server(const Server& src);
-	Server& operator=(const Server& src);
+	
 
 	Socket socketFactory(const sockaddr_in& addr);
 
 public:
 	Server(const ServerConfig& conf);
+	Server(const Server& src);
+	Server& operator=(const Server& src);
 	~Server();
 	
 	void 	_initServ();
 	void	_initLocations(const std::vector<LocationConfig>& locations);
 	std::string getRequest();
 	std::string getResponse();
-	void	run();
-	void	handleConnection();
+	//void	run();
+	//void	handleConnection();
+	int		acceptConnection(); //added for overwritting
 	const Location* findLocationForRequest(const std::string& requestPath) const;
 	static const sockaddr_in setServAddr(const ServerConfig& conf);
 	void	addPollFd(int fd, short events);
 	void	removePollFd(int fd);
-	void	setPoll(int fd, short events);
-	void	readClient(int fd);
-	void	sendClient(int fd); 
+	void	setPoll(pollfd& pfd, short events);
+	void	readClient(pollfd& pfd);
+	void	sendClient(pollfd& pfd);
+	// void	readClient(int fd);
+	// void	sendClient(int fd); 
 	void	closeClient(int io_fd);
 	void	handleError(const int io_socket, const int error);
-	void	processRequest(const std::string& headeer, const int io_socket);
+	void	processRequest(const std::string& headeer, pollfd& pfd);
+	int		getSocketInit()const;
 	friend std::ostream& operator<<(std::ostream& os, const Server& serv);
 };
 

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 21:04:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/22 20:38:02 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,10 @@ Server::Server(const ServerConfig& conf) : _servAddr(setServAddr(conf)), _sock(s
 	this->_serverName = conf.getServerName();
 	this->_root = conf.getRootDir();
 	this->_errPageGlobal = conf.getErrorPages();
-	this->_maxBodySize = conf.getClientMaxBodySize();
+	this->_maxBodySize = conf.getMaxBodySize();
 	_initLocations(conf.getLocationConf());
+	_conf = conf;
+	
 	printSockAddrIn(_servAddr);
 }
 
@@ -45,6 +47,32 @@ void	Server::_initServ()
 	_clientRequest.clear();
 	_clientResponse.clear();
 }
+
+Server::Server(const Server& src) : _servAddr(src._servAddr), _sock(src._sock)
+{
+	*this = src;
+}
+
+Server& Server::operator=(const Server& src)
+{
+	if (this == &src)
+		return (*this);
+	_host = src._host;
+	_port = src._port;
+	_root = src._root;
+	_serverName = src._serverName;
+	_hostName = src._hostName;
+	_maxBodySize = src._maxBodySize;
+	_locations = src._locations;
+	_servAddr = src._servAddr;
+	_errPageGlobal = src._errPageGlobal;
+	_rootloc = src._rootloc;
+	_fdSet = src._fdSet;
+	_clientRequest = src._clientRequest;
+	_clientResponse = src._clientResponse;
+	return (*this);
+}
+
 
 const sockaddr_in Server::setServAddr(const ServerConfig& conf)
 {
@@ -93,38 +121,39 @@ void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
  * 
  * @throws std::runtime_error if poll fails.
  */
-void	Server::run()
-{
-	addPollFd(_sock.getSocketFd(), POLLIN);
-	while(42)
-	{
-		int ret = poll(_fdSet.data(), _fdSet.size(), _timeout * 1000);
-		if (ret < 0)
-			throw (std::runtime_error("Poll failed"));
-		else if (ret == 0)
-			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
-		else
-		{
-			for (size_t i = 0; i < _fdSet.size(); ++i)
-			{
-				if (_fdSet[i].revents & POLLIN)
-				{
-					if (_fdSet[i].fd == _sock.getSocketFd())
-						this->handleConnection();
-					else
-						readClient(_fdSet[i].fd);
-				}
-				else if (_fdSet[i].revents & POLLOUT)
-					sendClient(_fdSet[i].fd);
-			}
-		}
-		usleep(1000);
-	}
-}
+// void	Server::run()
+// {
+// 	addPollFd(_sock.getSocketFd(), POLLIN);
+// 	while(42)
+// 	{
+// 		int ret = poll(_fdSet.data(), _fdSet.size(), _timeout * 1000);
+// 		if (ret < 0)
+// 			throw (std::runtime_error("Poll failed"));
+// 		else if (ret == 0)
+// 			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
+// 		else
+// 		{
+// 			for (size_t i = 0; i < _fdSet.size(); ++i)
+// 			{
+// 				if (_fdSet[i].revents & POLLIN)
+// 				{
+// 					if (_fdSet[i].fd == _sock.getSocketFd())
+// 						this->handleConnection();
+// 					else
+// 						readClient(_fdSet[i].fd);
+// 				}
+// 				else if (_fdSet[i].revents & POLLOUT)
+// 					sendClient(_fdSet[i].fd);
+// 			}
+// 		}
+// 		usleep(1000);
+// 	}
+// }
 
-void	Server::processRequest(const std::string& rawhead, const int io_fd)
+void	Server::processRequest(const std::string& rawhead, pollfd& pfd)
 {
-	Request request(rawhead, _host, _maxBodySize); //to replace with config max body size
+	const int io_fd = pfd.fd;
+	Request request(rawhead, _conf); //to replace with config max body size
 	if (request.hasBody())
 	{
 		std::string body;
@@ -146,14 +175,14 @@ void	Server::processRequest(const std::string& rawhead, const int io_fd)
 		std::cout << BG_GREEN "Location found : " << matchLoc->getPath() << RESET << std::endl; //TO REMOVE AFTER TEST
 	}
 	request.buildRequest();
-	request.printRequest(); //TO REMOVE AFTER TEST
+	//request.printRequest(); //TO REMOVE AFTER TEST
 	Response resp(request);
 	resp.buildResponse();
 	std::string response = resp.getResponse();
 	//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
 	_clientRequest[io_fd] = request.getHeaderField("Connection");
 	_clientResponse[io_fd] = resp.getResponse();
-	setPoll(io_fd, POLLOUT);
+	setPoll(pfd, POLLOUT);
 }
 
 /**
@@ -168,15 +197,17 @@ void	Server::processRequest(const std::string& rawhead, const int io_fd)
  * @param io_fd The file descriptor of the client socket.
  * @exception Catches and logs exceptions related to socket operations.
  */
-void	Server::readClient(int io_fd)
+void	Server::readClient(pollfd& pfd)
 {
+	const int io_fd = pfd.fd;
 	try
 	{
+		
 		std::string rawhead; 
 		rawhead.clear();
 		int retHead = this->_sock.readHeader(io_fd, rawhead);
 		if (retHead == 1)
-			processRequest(rawhead, io_fd);
+			processRequest(rawhead, pfd);
 		else
 			closeClient(io_fd);
 			//handleError(io_fd, retHead);
@@ -199,8 +230,9 @@ void	Server::readClient(int io_fd)
  * 
  * @param io_fd The file descriptor of the client socket to send data to.
  */
-void Server::sendClient(int io_fd)
+void Server::sendClient(pollfd &pfd)
 {
+	int io_fd = pfd.fd;
 	if (_clientResponse.find(io_fd) == _clientResponse.end())
 	{
 		closeClient(io_fd);
@@ -219,13 +251,13 @@ void Server::sendClient(int io_fd)
 	{
 		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
 		_clientResponse[io_fd] = response.substr(byteSent);
-		setPoll(io_fd, POLLOUT);
+		setPoll(pfd, POLLOUT);
 		return;
 	}
 	if ( _clientRequest[io_fd].find("close") != std::string::npos)
 		closeClient(io_fd);
 	else
-		setPoll(io_fd, POLLIN);
+		setPoll(pfd, POLLIN);
 	//std::cout << " bytesent : " << byteSent << std::endl;
 	//std::cout << " response sent : " << response << std::endl;
 	_clientRequest.erase(io_fd);
@@ -289,7 +321,14 @@ void	Server::addPollFd(int fd, short events)
 	pfd.events = events;
 	_fdSet.push_back(pfd);
 }
-
+/**
+ * @brief Removes a file descriptor from the polling set.
+ * 
+ * Searches for and removes the specified file descriptor from the _fdSet, effectively
+ * stopping any further monitoring of this descriptor in the server loop.
+ * 
+ * @param fd The file descriptor to remove.
+ */
 void Server::removePollFd(int fd)
 {
 	for (size_t i = 0; i < _fdSet.size(); ++i)
@@ -308,39 +347,50 @@ void Server::removePollFd(int fd)
  * It accepts the connection, sets the new socket to non-blocking mode, and adds it to the set of polled
  * file descriptors, listening for incoming data (POLLIN).
  */
-void	Server::handleConnection()
+// void	Server::handleConnection()
+// {
+// 	try 
+// 	{
+// 		int io_fd = this->_sock.acceptConnection();
+// 		setNonBlocking(io_fd);
+// 		this->addPollFd(io_fd, POLLIN);
+// 	}
+// 	catch(const std::exception& e)
+// 	{
+// 		std::cerr << e.what() << std::endl;
+// 	}
+// }
+
+int	Server::acceptConnection()
 {
 	try 
 	{
 		int io_fd = this->_sock.acceptConnection();
 		setNonBlocking(io_fd);
-		this->addPollFd(io_fd, POLLIN);
+		return (io_fd);
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
+		return (-1);
 	}
 }
 
-/**
- * @brief Removes a file descriptor from the polling set.
- * 
- * Searches for and removes the specified file descriptor from the _fdSet, effectively
- * stopping any further monitoring of this descriptor in the server loop.
- * 
- * @param fd The file descriptor to remove.
- */
-void	Server::setPoll(int fd, short events)
+
+void	Server::setPoll(pollfd& pfd, short events)
 {
-	for (size_t i = 0; i < _fdSet.size(); ++i)
-	{
-		if (_fdSet[i].fd == fd)
-		{
-			_fdSet[i].events = events;
-			break;
-		}
-	}
+	pfd.events = events;
 }
+// {
+// 	for (size_t i = 0; i < _fdSet.size(); ++i)
+// 	{
+// 		if (_fdSet[i].fd == fd)
+// 		{
+// 			_fdSet[i].events = events;
+// 			break;
+// 		}
+// 	}
+// }
 
 void Server::closeClient(int io_fd)
 {
@@ -364,6 +414,12 @@ std::ostream& operator<<(std::ostream& os, const Server& serv)
 		os << serv._locations[i] << std::endl;
 	return os;
 }
+
+int Server::getSocketInit()const
+{
+	return (_sock.getSocketFd());
+}
+
 // void Server::handleError(const int io_socket))
 // {
 // 	std::string response;

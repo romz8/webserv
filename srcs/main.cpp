@@ -6,24 +6,28 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 21:10:49 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/22 20:20:51 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "Server.hpp"
+#include "Cluster.hpp"
 
 ServerConfig testBuild();
+std::vector<ServerConfig> multipleTest();
 
 int main(int argc, char *argv[])
 {
-	ServerConfig test = testBuild();
+	//ServerConfig test = testBuild();
+    std::vector<ServerConfig> serverConfs = multipleTest();
 	try
 	{
-		Server serv(test);
-		std::cout << "Server created" << std::endl;
-		std::cout << serv << std::endl;
-		serv.run();
+        Cluster cluster(serverConfs);
+        cluster.run();
+        //Server serv(test);
+		// std::cout << "Server created" << std::endl;
+		// std::cout << serv << std::endl;
+		// serv.run();
 	}
 	catch (const std::exception& e)
 	{
@@ -79,7 +83,7 @@ ServerConfig testBuild()
 {
 	ServerConfig serverConfig;
 	serverConfig.setHostName("127.0.0.1"); 
-	serverConfig.setHost("127.0.0.1:4242"); //bad on purpose
+	//serverConfig.setHost("127.0.0.1:4242"); //bad on purpose
     serverConfig.setRootDir("./html/");
     serverConfig.setPort(4242);
     serverConfig.setServerName("testing Server");
@@ -137,3 +141,49 @@ ServerConfig testBuild()
 	return serverConfig;
 }
 
+ServerConfig createServerConfig(std::string hostname, int port, const std::string& serverName) 
+{
+    ServerConfig serverConfig;
+    serverConfig.setHostName(hostname);
+    serverConfig.setPort(port);
+    serverConfig.setServerName(serverName);
+    serverConfig.setRootDir("./html/");
+    serverConfig.addErrorPage(404, "error_pages/404.html");
+    serverConfig.addErrorPage(500, "error_pages/500.html");
+    serverConfig.addErrorPage(400, "error_pages/400.html");
+    serverConfig.addErrorPage(413, "error_pages/413.html");
+
+    // Add CGI configurations
+    serverConfig.addCgiConfig(CgiConfig(".sh", "/bin/bash"));
+    serverConfig.addCgiConfig(CgiConfig(".py", "/usr/bin/python3"));
+    serverConfig.addCgiConfig(CgiConfig(".js", "/usr/local/bin/node"));
+
+    std::vector<std::string> methods;
+    methods.push_back("GET");
+    methods.push_back("POST");
+
+    // Create and configure LocationConfig instances
+    LocationConfig location1;
+    location1.setUri("/test1");
+    location1.setRoot(serverConfig.getRootDir());
+    location1.setAlias("index.html");
+    location1.setAllowedMethods(methods);
+    serverConfig.addLocationConfig(location1);
+
+    LocationConfig location2;
+    location2.setUri("/test2");
+    location2.setRoot(serverConfig.getRootDir());
+    location2.setAlias("index.html");
+    location2.setAllowedMethods(methods);
+    serverConfig.addLocationConfig(location2);
+
+    return serverConfig;
+}
+
+std::vector<ServerConfig> multipleTest()
+{
+    std::vector<ServerConfig> serverConfs;
+    ServerConfig basic = testBuild();
+    serverConfs.push_back(basic);
+    return serverConfs;
+}

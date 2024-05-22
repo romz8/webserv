@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 20:21:36 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/22 14:36:37 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ private:
 	std::string _rootDir;
 	std::vector<LocationConfig> _locations;
 	std::map<int, std::string> error_pages;
-    size_t client_max_body_size;
+    size_t _max_body_size;
 	std::vector<CgiConfig> cgiConf;
     bool autoindex;
 
@@ -49,7 +49,7 @@ public:
 	std::string getRootDir() const;
 	std::vector<LocationConfig> getLocationConf() const;
 	std::map<int, std::string> getErrorPages() const;
-	size_t getClientMaxBodySize() const;
+	size_t getMaxBodySize() const;
 	std::vector<CgiConfig> getCgiConf() const;
 	bool getAutoIndex() const;
 	void setHost(const std::string& host);

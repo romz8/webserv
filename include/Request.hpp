@@ -28,13 +28,14 @@
 # include "colors.h"
 # include "Location.hpp"
 # include "CGI.hpp"
-# include "Socket.hpp" //just for MAX_HEADER_SIZE -> maybe macro it in config.hpp later on
+# include "ServerConfig.hpp"
+# include "Socket.hpp"
 # include "DirectoryListing.hpp"
 
 class Request
 {
 private:
-	std::string		_hostName;
+	std::string		_host;
 	std::string		_method;
 	std::string		_path;
 	std::string		_version;
@@ -51,10 +52,12 @@ private:
 	bool 			_execCgi;
 	std::string		_query;
 	std::map<std::string, std::string> _headers;
+	std::string		_serverName;
+	int				_port;
 	//static const std::string CRLF = "\r\n";
 
 public:
-	Request(const std::string& rawRequest, const std::string& hostName, int maxBody);
+	Request(const std::string& rawRequest, const ServerConfig& servConf);
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
@@ -110,6 +113,12 @@ public:
 	void		setLocation(const Location& loc);
 	Location	getLocation() const;
 	void		getQueryParams();
+	void		setServerName(const std::string& serverName);
+	void		setPort(int port);
+	std::string getServerName() const;
+	int			getPort() const;
+	void		setHost(const std::string& host);
+	std::string getHost() const;
 }; 
 
 /********************* utils ******************************/
