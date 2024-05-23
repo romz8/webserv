@@ -5,65 +5,49 @@
 #                                                     +:+ +:+         +:+      #
 #    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/07/17 07:41:15 by jsebasti          #+#    #+#              #
-#    Updated: 2024/05/11 15:59:33 by jsebasti         ###   ########.fr        #
+#    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
+#    Updated: 2024/05/23 12:24:12 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME		= webserv
-NPD			= --no-print-directory
-OBJ_DIR		= obj/
-
-
-# ----Libraryes----
-INC_DIR = inc/
-
-INC = -I $(INC_DIR)defines -I $(INC_DIR)directives -I $(INC_DIR)parser -I $(INC_DIR)utils -I $(INC_DIR)network \
-	-I $(INC_DIR)events
-
-# =============
-
-# -------------
-RM = rm -rf
-MP = mkdir -p
 CC = c++
-CFLAGS = -Werror -Wextra -Wall -O3 -g -std=c++98 #-fsanitize=address
-# =============
+FLAGS = -MMD -std=c++98 #-Wall -Wextra -Werror -Wpedantic -fsanitize=address,undefined -g
+NAME = testserv
+RM = rm -rf
+NPD = --no-print-directory
 
-FILES = main Parser ParseContent ParseDirectives Signals Utils Server Directives \
-		Location serverParse serverGetters Socket Logs Events Reception
+SRC_DIR = ./srcs/
+INC_DIR = ./include/ ./include/Config/
+OBJS_PATH	= ./OBJS/
 
-SRC = $(addsuffix .cpp, $(FILES))
-
-vpath %.cpp src
-vpath %.cpp src/directives
-vpath %.cpp src/parser
-vpath %.cpp src/utils
-vpath %.cpp src/server
-vpath %.cpp src/network
-vpath %.cpp src/events
-
-
-# -------------
-OBJ = $(addprefix $(OBJ_DIR), $(SRC:.cpp=.o))
-DEP = $(addsuffix .d, $(basename $(OBJ)))
-# =============
-
-all:
-	@$(MAKE) $(NAME) $(NPD)
-
-$(OBJ_DIR)%.o: %.cpp
-	@$(MP) $(dir $@)
-	@$(CC) $(CFLAGS) -MMD $(INC) -c $< -o $@
-	@echo "Object of the file $(basename $<) has been created 🤐"
+SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
+	server/Location.cpp http/DirectoryListing.cpp CGI/CGI.cpp config/LocationConfig.cpp \
+	config/ServerConfig.cpp 
+INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
+	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp
 
 
-$(NAME):: $(OBJ)
-	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
-	@echo "Compiling $(NAME) 😈"
+SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))
+INCS = $(addprefix $(INC_DIR), $(INC_NAME))
+ALL_INC = $(addprefix -I, $(INC_DIR))
 
-$(NAME)::
-	@echo "Hello, $(NAME) already compiled 😇"
+OBJS = $(SRC:$(SRC_DIR)%.cpp=$(OBJS_PATH)%.o)
+DEPS	= $(addprefix $(OBJS_PATH), $(OBJ:.o=.d))
+
+all: $(OBJS_PATH) $(NAME)
+
+-include $(DEPS)
+$(NAME): $(OBJS)
+	$(CC) $(FLAGS) $(OBJS) $(ALL_INC) -o $(NAME)
+
+
+$(OBJS_PATH):
+	mkdir -p $(OBJS_PATH)
+	# mkdir -p $(OBJS_PATH)/networking
+	
+$(OBJS_PATH)%.o: $(SRC_DIR)%.cpp Makefile
+	@mkdir -p $(dir $@) 
+	$(CC) $(FLAGS) $(ALL_INC) -c $< -o $@
 
 clean:
 	@$(RM) $(OBJ_DIR)

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+	<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+	<div>
+    <h1>Welcome new User</h1>
+    <p>Please tell us about yourself</p>
+	<form  action="/cgi-bin/hello.py" method="GET">
+		<div>
+            <label for="firstname">First Name:</label>
+            <input type="text" id="firstname" name="firstname" required>
+        </div>
+		<div>
+            <label for="lastname">First Name:</label>
+            <input type="text" id="lastname" name="lastname" required>
+        </div>
+        <div>
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" >
+        </div>
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+	</div>
+</body>
+</html>
