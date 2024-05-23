@@ -26,10 +26,10 @@
 # include <ctime>
 # include <cstdlib>
 # include "colors.h"
+# include "Server.hpp"
 # include "Location.hpp"
 # include "CGI.hpp"
 # include "ServerConfig.hpp"
-# include "Socket.hpp"
 # include "DirectoryListing.hpp"
 
 class Request
@@ -57,7 +57,7 @@ private:
 	//static const std::string CRLF = "\r\n";
 
 public:
-	Request(const std::string& rawRequest, const ServerConfig& servConf);
+	Request(const std::string& rawHead, const std::string host, const int maxBody, const std::string servName, const int port);
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);

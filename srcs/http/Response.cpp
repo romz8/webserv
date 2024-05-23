@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/22 14:47:51 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/23 20:02:15 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,6 +106,11 @@ std::string Response::getResponse() const
 */
 void	Response::addHeaders()
 {
+	if (_fromCgi && _status >= 500)
+	{
+		_headers["Content-Length"] = "0"; //working but can trunc content
+		return;
+	}	
 	if (_fromCgi)
 		return;
 	if (this->_status == 301)

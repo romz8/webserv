@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/22 20:20:51 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/23 18:10:10 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,13 +79,14 @@ server {
 }
 */
 
-ServerConfig testBuild()
+ServerConfig testBuild(std::string hostname, int port)
 {
 	ServerConfig serverConfig;
-	serverConfig.setHostName("127.0.0.1"); 
-	//serverConfig.setHost("127.0.0.1:4242"); //bad on purpose
+    serverConfig.setHostName(hostname); 
     serverConfig.setRootDir("./html/");
-    serverConfig.setPort(4242);
+    serverConfig.setPort(port);
+    serverConfig.setHost(serverConfig.getHostName() + ":" + std::to_string(serverConfig.getPort()));
+    std::cout << "Host: " << serverConfig.getHost() << std::endl;
     serverConfig.setServerName("testing Server");
     serverConfig.addErrorPage(404, "error_pages/404.html");
     serverConfig.addErrorPage(500, "error_pages/500.html");
@@ -107,8 +108,8 @@ ServerConfig testBuild()
 	
 	// Create and configure LocationConfig instances
     LocationConfig location1;
-    location1.setUri("/getorder");
-    location1.setRoot(serverConfig.getRootDir());
+    location1.setUri("/test1");
+    location1.setRoot("./html/getorder"); 
     location1.setAlias("index.html"); // to implement
 	location1.setAutoIndex(true);
     location1.setAllowedMethods(methodGP);
@@ -116,7 +117,7 @@ ServerConfig testBuild()
 
     LocationConfig location2;
     location2.setUri("/postfile");
-    location2.setRoot(serverConfig.getRootDir());
+    location2.setRoot(serverConfig.getRootDir() + "/postfile");
     location2.setAlias("index.html");
     location2.setAllowedMethods(methodGP);
     //location2.setCgiPath("./upload/files/");
@@ -183,7 +184,11 @@ ServerConfig createServerConfig(std::string hostname, int port, const std::strin
 std::vector<ServerConfig> multipleTest()
 {
     std::vector<ServerConfig> serverConfs;
-    ServerConfig basic = testBuild();
-    serverConfs.push_back(basic);
+    ServerConfig basic4243 = testBuild("localhost", 4243);
+    ServerConfig basic4242 = testBuild("127.0.0.1", 4242);
+    ServerConfig basic4244 = testBuild("0.0.0.0", 4244);
+    serverConfs.push_back(basic4243);
+    serverConfs.push_back(basic4242);
+    serverConfs.push_back(basic4244);
     return serverConfs;
 }

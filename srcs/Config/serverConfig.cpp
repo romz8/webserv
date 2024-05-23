@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/22 14:44:22 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/23 12:44:44 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 		return (*this);
 	_host = src._host;
 	_port = src._port;
+	_hostName = src._hostName;
 	_serverName = src._serverName;
 	_rootDir = src._rootDir;
 	_locations = src._locations;

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:18:22 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/22 20:08:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/23 18:20:56 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,12 @@ public:
 	~Cluster();
 
 	std::vector<Server> getServers() const;
-	void addServer(const ServerConfig& server);
+	void 	addServer(const ServerConfig& server);
+	void	setUpServer();
 	void	addPollFd(int fd, short events, Server* server);
 	void	removePollFd(int fd);
-	void	setPoll(int fd, short events);
+	void	setPoll(int fd, short events, Server* server);
+	void	removeClient(int fd);
 	void	run();
 };
 

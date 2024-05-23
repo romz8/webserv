@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/22 15:43:28 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/23 20:02:36 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,6 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 	_env["REQUEST_METHOD"] = req.getMethod();
 	_env["SERVER_SOFTWARE"] = "Webserv/2.0";
 
-	std::cerr << BG_RED << "CGI ENV PATH " << this->_env["SCRIPT_NAME"] << RESET << std::endl;
-	//_path = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/cgi-bin/hellocgi.sh";
 }
 
 CGI::~CGI(void)
@@ -179,7 +177,6 @@ void CGI::checkCGI()
 	if (_respbody.empty() || _respbody.find("Content-Type:") == std::string::npos)
 	{	
 		_status = 502;
-		std::cerr << BG_RED "CGI response is empty -> 502 direct" RESET << std::endl;
 		return;
 	}
 	size_t headerEnd = _respbody.find("\r\n\r\n");

@@ -21,8 +21,9 @@
  * @param hostName The host name from the HTTP request.
  * @param maxBody The maximum body size allowed for the request.
  */
-Request::Request(const std::string& rawHead, const ServerConfig& conf) : \
-	_host(conf.getHost()), _maxBodySize(conf.getMaxBodySize()), _serverName(conf.getServerName()), _port(conf.getPort())
+Request::Request(const std::string& rawHead, const std::string host, \
+const int maxBody, const std::string servName, const int port) : \
+	_host(host), _maxBodySize(maxBody), _serverName(servName), _port(port)
 {
 	std::string rawRequest;
 	initRequest();
@@ -234,7 +235,11 @@ bool	Request::hasCorrectHost() const
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
 	if (it->second != this->_host)
+	{
+		std::cerr << "Host is : " << it->second << std::endl;
+		std::cerr << "bad host is : " << this->_host << std::endl;
 		throw std::runtime_error("Error parsing Request : invalid Host header");
+	}
 	return(true);
 }
 
@@ -497,11 +502,12 @@ void		Request::handleGetRequest()
 			this->_status = 301;
 			return;
 		}
-		if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
-			this->_parsePath = _location.getRootDir() + this->_path + index;
+		//std::cout << "looking for index file at : " << this->_parsePath + index << std::endl;
+		if (!index.empty() && fileExists(this->_parsePath + index))
+			this->_parsePath.append(index);
 		else if(_location.getAutoIndex() == true)
 		{
-			DirectoryListing dirList(this->_location.getRootDir() + this->_path);
+			DirectoryListing dirList(this->_parsePath);
 			this->_respbody = dirList.getHTMLListing();
 			//return; ->otherwise no 200 status
 		}
@@ -776,9 +782,9 @@ bool Request::isValidPath()
 {
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
-	this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
-	//std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
-	//std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+	this->_parsePath = _location.getRootDir() + this->_path.substr(_location.getPath().size());
+	std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
+	std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
 	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
