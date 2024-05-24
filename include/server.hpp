@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 17:20:41 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 21:07:13 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,10 @@ private:
 	Location _rootloc; //if no url match a location, use root location
 	std::map<int , std::string> _clientRequest;
 	std::map<int , std::string> _clientResponse;
+	std::map<int, Request& > _inputRequest;
+	std::map<int, std::string> _inputHead;
+	std::map<int, std::string> _inputBody;
+	std::map<int, bool> _HeaderRead;
 	
 	int	_socket_fd;
 	sockaddr_in _servAddr;
@@ -92,7 +96,7 @@ public:
 	int		readClient(pollfd& pfd);
 	int		sendClient(pollfd& pfd);
 	void	handleError(const int io_socket, const int error);
-	void	processRequest(const std::string& headeer, pollfd& pfd);
+	void	processRequest(Request& request, int io_socket);
 	int		getSocketInit()const;
 	
 	/***** Socket I/O ********/
@@ -102,6 +106,7 @@ public:
 	const int		acceptConnection();
 	int	readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body);	
 	int	readChunkEncodingBody(pollfd &pfd, std::string& body);
+	bool	_readRequest(char* buffer, int byteSize, int fd);
 	friend std::ostream& operator<<(std::ostream& os, const Server& serv);
 };
 

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 17:23:07 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 21:09:10 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ void	Server::_initServ()
 	_host.clear();
 	_clientRequest.clear();
 	_clientResponse.clear();
+	
 }
 
 Server::Server(const Server& src)
@@ -161,21 +162,19 @@ void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
  * @param rawhead The raw HTTP request header received from the client.
  * @param pfd The pollfd structure associated with the client connection.
  */
-void	Server::processRequest(const std::string& rawhead, pollfd& pfd)
+void	Server::processRequest(Request& request, int io_fd)
 {
-	const int io_fd = pfd.fd;
-	Request request(rawhead, _host, _maxBodySize, _serverName, _port); //to replace with config max body size
 	if (request.hasBody())
 	{
-		std::string body;
-		body.clear();
-		int retBody = readBody(pfd, request.getHeader(), rawhead, body);
-		if(retBody == -2)
-			request.setStatus(408);
-		else if (retBody == -1)
-			request.setStatus(400);
-		else
-			request.setBody(body);
+		// std::string body;
+		// body.clear();
+		// //int retBody = readBody(pfd, request.getHeader(), rawhead, body);
+		// if(retBody == -2)
+		// 	request.setStatus(408);
+		// else if (retBody == -1)
+		// 	request.setStatus(400);
+		// else
+			request.setBody(request.getBody()); // HORRIBLE ! just to test
 	}
 	const Location* matchLoc = findLocationForRequest(request.getPath()); //TO VERIFY AND EDIT WITH CONFIG NEW LOCATION
 	if (matchLoc == NULL)
@@ -217,13 +216,16 @@ int	Server::readClient(pollfd& pfd)
 {
 	try
 	{
-		
-		std::string rawhead; 
-		rawhead.clear();
-		int retHead = readHeader(pfd, rawhead);
-		if (retHead == 1)
-			processRequest(rawhead, pfd);
-		return (retHead);
+		int byteRead;
+		char buffer[BUFSIZE];
+		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
+		if (byteRead < 0 )
+			return (-1);
+		if (byteRead == 0)
+			return (0);
+		if (_inputRequest[pfd.fd]._readRequest(buffer, byteRead, pfd.fd))
+			processRequest(_inputRequest[pfd.fd], pfd.fd);
+		return (1);
 	}
 	catch(const std::exception& e)
 	{
@@ -267,6 +269,7 @@ int	Server::sendClient(pollfd &pfd)
 	}
 	_clientRequest.erase(io_fd);
 	_clientResponse.erase(io_fd);
+	_inputRequest.erase(io_fd);
 	return (1);
 }
 
@@ -338,7 +341,8 @@ void	Server::_initSock()
  * 
  * Accepts a connection on the server socket, sets the new socket to non-blocking mode,
  * and returns the client socket file descriptor.
- * 
+ * we then create the request object that will handle the request and store it in a map
+ * this allow to "stream" the request building as the data is read from the socket
  * @return The file descriptor of the accepted client socket, or -1 on error.
  */
 const int Server::acceptConnection()
@@ -347,6 +351,8 @@ const int Server::acceptConnection()
 	setNonBlocking(io_socket);
 	if (io_socket < 0)
 		throw std::runtime_error("Error accepting client request");
+	Request request(_host, _maxBodySize, _serverName, _port);
+	_inputRequest[io_socket] = request;
 	return (io_socket);
 }
 /**
@@ -359,19 +365,19 @@ const int Server::acceptConnection()
  * @param rawRequest A reference to the string where the raw request will be stored.
  * @return 1 on successful read, 0 on client disconnection, -1 on error.
  */
-int	Server::readHeader(pollfd& pfd, std::string &rawRequest)
-{
-	int byteRead = 1;
-	char buffer[BUFSIZE];
-	byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
-	if (byteRead < 0)
-		return (-1);
-	if (byteRead == 0)
-		return (0);
-	buffer[byteRead] = '\0';
-	rawRequest.append(buffer, byteRead);
-	return (1);
-}
+// int	Server::readHeader(pollfd& pfd, std::string &rawRequest)
+// {
+// 	int byteRead = 1;
+// 	char buffer[BUFSIZE];
+// 	byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
+// 	if (byteRead < 0)
+// 		return (-1);
+// 	if (byteRead == 0)
+// 		return (0);
+// 	buffer[byteRead] = '\0';
+// 	rawRequest.append(buffer, byteRead);
+// 	return (1);
+// }
 
 /**
  * @brief Reads the HTTP body from a client socket.
@@ -384,25 +390,25 @@ int	Server::readHeader(pollfd& pfd, std::string &rawRequest)
  * @param body A reference to the string where the body will be stored.
  * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
  */
-int	Server::readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body)
-{
-	body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
-	std::string sheader= rawhead.substr(0,rawhead.find("\r\n\r\n"));
-	std::cout << "header is : " <<  sheader  << std::endl;
-	std::cout << "header size is : " << sheader.size() << std::endl;
-	//std::cout << "body is : " << body << std::endl;	
+// int	Server::readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body)
+// {
+// 	body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
+// 	std::string sheader= rawhead.substr(0,rawhead.find("\r\n\r\n"));
+// 	std::cout << "header is : " <<  sheader  << std::endl;
+// 	std::cout << "header size is : " << sheader.size() << std::endl;
+// 	//std::cout << "body is : " << body << std::endl;	
 
-	if (header.find("Transfer-Encoding") != header.end() && header.find("Transfer-Encoding")->second == "chunked")
-		return (readChunkEncodingBody(pfd, body));
-	else if (header.find("Content-Length") != header.end())
-	{
-		size_t contentLength = std::stol((header.find("Content-Length")->second).c_str());
-		std::cout << "content length is : " << contentLength << std::endl;
-		return (readFixedLengthBody(pfd, contentLength, body));
-	}
-	else
-		return (-1);
-}
+// 	if (header.find("Transfer-Encoding") != header.end() && header.find("Transfer-Encoding")->second == "chunked")
+// 		return (readChunkEncodingBody(pfd, body));
+// 	else if (header.find("Content-Length") != header.end())
+// 	{
+// 		size_t contentLength = std::stol((header.find("Content-Length")->second).c_str());
+// 		std::cout << "content length is : " << contentLength << std::endl;
+// 		return (readFixedLengthBody(pfd, contentLength, body));
+// 	}
+// 	else
+// 		return (-1);
+// }
 /**
  * @brief Reads a fixed-length body from a client socket.
  * 
@@ -413,43 +419,43 @@ int	Server::readBody(pollfd &pfd, const std::map<std::string, std::string>& head
  * @param body A reference to the string where the body will be stored.
  * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
  */
-int Server::readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body) 
-{
+// int Server::readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body) 
+// {
     
-    int bytesRead = 0;
-    size_t totalRead = 0;
+//     int bytesRead = 0;
+//     size_t totalRead = 0;
 	
-	std::vector<char> buffer(contentLength + 1); 
-	time_t startTime = std::time(NULL);
-	std::cout << BLUE "body start in FL read is : " RESET << body << std::endl;
-    while (body.size() < contentLength) 
-	{
-		if (difftime(std::time(NULL), startTime) > _readTimeout)
-			return (-2);
-		bytesRead = recv(pfd.fd, buffer.data(), BUFSIZE, 0);
-		std::cout << "Bytes read : " << bytesRead << std::endl;
-		if (bytesRead > 0)
-            totalRead += bytesRead;
-        else if (bytesRead == 0)
-            return (0);
-		else if (bytesRead == -1 && pfd.revents == POLLIN) //issue with subjject ?
-			continue;
-        else
-		{
-            std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-			return (-1);
-		}
-		if (bytesRead > 0)
-		{
-			buffer[bytesRead] = '\0';
-			body.append(buffer.data(), bytesRead);
-		}
-    }
-    buffer[totalRead] = '\0';
-    std::string result(buffer.data(), totalRead);
-	body.append(result);
-    return (1);
-}
+// 	std::vector<char> buffer(contentLength + 1); 
+// 	time_t startTime = std::time(NULL);
+// 	std::cout << BLUE "body start in FL read is : " RESET << body << std::endl;
+//     while (body.size() < contentLength) 
+// 	{
+// 		if (difftime(std::time(NULL), startTime) > _readTimeout)
+// 			return (-2);
+// 		bytesRead = recv(pfd.fd, buffer.data(), BUFSIZE, 0);
+// 		std::cout << "Bytes read : " << bytesRead << std::endl;
+// 		if (bytesRead > 0)
+//             totalRead += bytesRead;
+//         else if (bytesRead == 0)
+//             return (0);
+// 		else if (bytesRead == -1 && pfd.revents == POLLIN) //issue with subjject ?
+// 			continue;
+//         else
+// 		{
+//             std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+// 			return (-1);
+// 		}
+// 		if (bytesRead > 0)
+// 		{
+// 			buffer[bytesRead] = '\0';
+// 			body.append(buffer.data(), bytesRead);
+// 		}
+//     }
+//     buffer[totalRead] = '\0';
+//     std::string result(buffer.data(), totalRead);
+// 	body.append(result);
+//     return (1);
+// }
 
 /**
  * @brief Reads a chunked-encoded body from a client socket.
@@ -466,38 +472,41 @@ int Server::readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& 
  * @return 1 on successful read, 0 on client disconnection, -1 on error.
  *
  */
-int Server::readChunkEncodingBody(pollfd &pfd, std::string& body) 
-{
-	std::string data;
-	char buffer[BUFSIZE];
-	int bytesRead = 0;
-	bool endChunk = (body.find("0\r\n\r\n") != std::string::npos);
+// int Server::readChunkEncodingBody(pollfd &pfd, std::string& body) 
+// {
+// 	std::string data;
+// 	char buffer[BUFSIZE];
+// 	int bytesRead = 0;
+// 	bool endChunk = (body.find("0\r\n\r\n") != std::string::npos);
 	
-	data.clear();
-	while(!endChunk)
-	{
-		bytesRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
-		if (bytesRead == -1 && pfd.revents == POLLIN)
-			continue;
-		else if (bytesRead < 0)
-		{
-			std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-			return (-1);
-		}
-		if (bytesRead == 0)
-			return (0);
-		if (bytesRead > 0)
-		{
-			buffer[bytesRead] = '\0';
-			data.append(buffer, bytesRead);
-			if (data.find("0\r\n\r\n") != std::string::npos)
-				endChunk = true;
-		}
-	}
-	body.append(data);
-	std::cout << "Bytes read : " << bytesRead << std::endl;
-	return (1);
-}
+// 	data.clear();
+// 	while(!endChunk)
+// 	{
+// 		bytesRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
+// 		if (bytesRead == -1 && pfd.revents == POLLIN)
+// 			continue;
+// 		else if (bytesRead < 0)
+// 		{
+// 			std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+// 			return (-1);
+// 		}
+// 		if (bytesRead == 0)
+// 			return (0);
+// 		if (bytesRead > 0)
+// 		{
+// 			buffer[bytesRead] = '\0';
+// 			data.append(buffer, bytesRead);
+// 			if (data.find("0\r\n\r\n") != std::string::npos)
+// 				endChunk = true;
+// 		}
+// 	}
+// 	body.append(data);
+// 	std::cout << "Bytes read : " << bytesRead << std::endl;
+// 	return (1);
+// }
+
+
+
 
 void printSockAddrIn(const sockaddr_in& addr) 
 {

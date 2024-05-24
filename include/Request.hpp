@@ -54,15 +54,21 @@ private:
 	std::map<std::string, std::string> _headers;
 	std::string		_serverName;
 	int				_port;
+	bool			_HeaderRead;
+	bool			_HeaderOK;
+	std::string		_rawinput;
+	std::string		_rawBody;
 	//static const std::string CRLF = "\r\n";
 
 public:
-	Request(const std::string& rawHead, const std::string host, const int maxBody, const std::string servName, const int port);
+	Request(const std::string host, const int maxBody, const std::string servName, const int port);
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
 
 	void		initRequest();
+	bool		_readRequest(char* buffer, int byteSize, int fd);
+	bool		processHeader(const std::string& rawHead);
 	void		parseHeader(const std::string& head);
 	void		parseStartLine(const std::string& line);
 	bool		isValidRL(const std::string& line);
@@ -71,13 +77,13 @@ public:
 	bool		hasBody();
 	void		printRequest() const;
 	void		printHeader() const;
-	void		parseBody(const std::string& header);
+	bool		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
 	bool		parseContentLenBody();
 
 	void		processMultipartForm(const std::string& input, const std::string& boundary);
 	void		processFormData(const std::string& body, const Location& Loc);
-	void		processChunkBody(std::string buffer);
+	bool		processChunkBody(std::string buffer);
 	void		handlePostRequest();
 	void		handleDeleteRequest();
 	void		handleGetRequest();

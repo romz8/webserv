@@ -21,29 +21,36 @@
  * @param hostName The host name from the HTTP request.
  * @param maxBody The maximum body size allowed for the request.
  */
-Request::Request(const std::string& rawHead, const std::string host, \
+
+Request::Request(const std::string host, \
 const int maxBody, const std::string servName, const int port) : \
 	_host(host), _maxBodySize(maxBody), _serverName(servName), _port(port)
 {
-	std::string rawRequest;
 	initRequest();
+}
+
+bool	Request::processHeader(const std::string& rawHead)
+{
+	std::string rawRequest;
 	if (rawHead.find("\r\n\r\n") == std::string::npos)
 	{
 		std::cerr << "Error parsing Request : no CRLF terminated at end of header" << std::endl;
 		this->_status = 400;
-		return ;
+		return (false);
 	}
 	else
 		rawRequest = rawHead.substr(0, rawHead.find("\r\n\r\n") + 4);
 	try
 	{
 		parseHeader(rawRequest);
+		return (true);
 	}
 	catch(const std::exception& e)
 	{
+		std::cout << BG_RED << "ERROR IN Header" << RESET << std::endl;
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
-		std::cout << BG_RED << "ERROR IN Header" << RESET << std::endl;
+		return (false);
 	}
 }
 
@@ -58,10 +65,30 @@ Request& Request::operator=(const Request& src)
 {
 	if (this != &src)
 	{
-		this->_method = src._method;
-		this->_path = src._path;
-		this->_version = src._version;
-		this->_headers = src._headers;
+		_host = src._host;
+		_method = src._method;
+		_path = src._path;
+		_version = src._version;
+		_isDirectory = src._isDirectory;
+		_isDirNorm	= src._isDirNorm;
+		_parsePath = src._parsePath;
+		_extension = src._extension;
+		_status = src._status;
+		_maxBodySize = src._maxBodySize;
+		_chunkBody = src._chunkBody;
+		_rawinput = src._rawinput;
+		_body = src._body;
+		_respbody = src._respbody;
+		_location = src._location;
+	 	_execCgi = src._execCgi;
+		_query = src._query;
+		_headers = src._headers;
+		_serverName = src._serverName;
+		_port = src._port;
+		_HeaderRead = src._HeaderRead;
+		_HeaderOK = src._HeaderOK;
+		_rawinput = src._rawinput;
+		_rawBody = src._rawBody;
 	}
 	return (*this);
 }
@@ -625,7 +652,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	this->_parsePath = _location.getRootDir() + _location.getUploadFile(); // TESTING
 }
 
-void	Request::processChunkBody(std::string input)
+void	Request::parseChunkBody(const std::string& input)
 {
 	std::string data;
 	size_t totalSize = 0;
@@ -959,7 +986,7 @@ void Request::setBody(const std::string& body)
 	std::map<std::string, std::string>::const_iterator it;
 	it = this->_headers.find("Transfer-Encoding");
 	if (it != this->_headers.end() && it->second == "chunked")
-		processChunkBody(body);
+		parseChunkBody(body);
 	else
 		this->_body = body;
 }
@@ -1225,4 +1252,68 @@ void hexDecoding(std::string& url)
 		url.replace(pos, 1, " ");
 
 	//std::cout << "After hexDecoding url is : " << url << std::endl;
+}
+
+
+bool	Request::_readRequest(char* buffer, int byteSize, int fd)
+{
+	_rawinput.append(buffer, byteSize);
+	std::string input = _rawinput;
+	if (!_HeaderRead)
+	{
+		if (input.find("\r\n\r\n") != std::string::npos)
+		{
+			_HeaderRead = true;
+			_HeaderOK = processHeader(input);
+			_rawBody = input.substr(input.find("\r\n\r\n") + 4);
+		}
+	}
+	if (_HeaderRead && !_HeaderOK)
+		return (true);
+	else if (_HeaderRead && _HeaderOK)
+		return(parseBody(buffer));
+	return (false);
+}
+
+bool Request::processChunkBody(std::string buffer) 
+{
+	bool endChunk = (buffer.find("0\r\n\r\n") != std::string::npos);
+	_chunkBody.append(buffer);
+	// if (endChunk)
+	// {
+	// 	size_t end = buffer.find("0\r\n\r\n");
+	// 	_chunkBody = buffer.substr(0, end);
+	// }
+	// else
+	// 	_chunkBody.append(buffer);
+	return (endChunk);
+}
+
+/**
+ * @brief Reads the HTTP body from a client socket.
+ * 
+ * Reads the body of the HTTP request based on the content length or transfer encoding.
+ * 
+ * @param io_socket The client socket file descriptor.
+ * @param header A map containing the HTTP headers previously parsed.
+ * @param rawhead The raw HTTP header - used to rebuild the body if header read had partial body.
+ * @param body A reference to the string where the body will be stored.
+ * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
+ */
+bool Request::parseBody(const std::string& rawhead)
+{
+
+	if (_headers.find("Transfer-Encoding") != _headers.end() && _headers.find("Transfer-Encoding")->second == "chunked")
+		return (processChunkBody(rawhead));
+	else if (_headers.find("Content-Length") != _headers.end())
+	{
+		if (_rawBody.size() + rawhead.size() < _maxBodySize)
+			_rawBody.append(rawhead);
+		if (_rawBody.size() == safeStrToSizeT(_headers["Content-Length"]))
+			return (true);
+		else
+			return (false);
+	}
+	else
+		return (true);
 }
