@@ -6,13 +6,25 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:39 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 18:41:49 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 10:33:50 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "LocationConfig.hpp"
 
-LocationConfig::LocationConfig(){}
+LocationConfig::LocationConfig()
+{
+	_uri = "";
+	_root = "";
+	_alias = "";
+	_error_pages.clear();
+	_allowed_methods.clear();
+	_index = "";
+	_autoIndex = false;
+	_allowUpload = false;
+	_uploadDir = "";
+	_cgiConfigs.clear();
+}
 LocationConfig::~LocationConfig(){}
 
 LocationConfig::LocationConfig(const LocationConfig& src)

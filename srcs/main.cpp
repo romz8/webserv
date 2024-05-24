@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/23 18:10:10 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 17:25:35 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 	try
 	{
         Cluster cluster(serverConfs);
+        std::cout << BG_BLUE "BUFERSIZE: " << BUFSIZE << std::endl;
         cluster.run();
         //Server serv(test);
 		// std::cout << "Server created" << std::endl;
@@ -85,6 +86,7 @@ ServerConfig testBuild(std::string hostname, int port)
     serverConfig.setHostName(hostname); 
     serverConfig.setRootDir("./html/");
     serverConfig.setPort(port);
+    serverConfig.setClientMaxBodySize(10000186);
     serverConfig.setHost(serverConfig.getHostName() + ":" + std::to_string(serverConfig.getPort()));
     std::cout << "Host: " << serverConfig.getHost() << std::endl;
     serverConfig.setServerName("testing Server");
@@ -110,31 +112,46 @@ ServerConfig testBuild(std::string hostname, int port)
     LocationConfig location1;
     location1.setUri("/test1");
     location1.setRoot("./html/getorder"); 
-    location1.setAlias("index.html"); // to implement
 	location1.setAutoIndex(true);
     location1.setAllowedMethods(methodGP);
+    location1.setIndex("index.html");
+    location1.setAllowUpload(true);
+    location1.setUploadDir("./upload/");
     serverConfig.addLocationConfig(location1);
 
     LocationConfig location2;
-    location2.setUri("/postfile");
+    location2.setUri("/test2");
     location2.setRoot(serverConfig.getRootDir() + "/postfile");
-    location2.setAlias("index.html");
+    location2.setAlias("https://www.youtube.com/watch?v=qoeCvcE-gKY");
     location2.setAllowedMethods(methodGP);
     //location2.setCgiPath("./upload/files/");
 	location2.setAllowUpload(true);
     serverConfig.addLocationConfig(location2);
+    std::cout << BLUE "Location 2: " << location2.getUri() << RESET << std::endl;
+
+    LocationConfig Video;
+    Video.setUri("/quesadillaVideo");
+    Video.setAlias("https://www.youtube.com/watch?v=qoeCvcE-gKY");
+    serverConfig.addLocationConfig(Video);
+
+    LocationConfig recipe;
+    recipe.setUri("/quesadillaRecipe");
+    recipe.setAlias("https://www.simplyrecipes.com/recipes/quesadilla/");
+    serverConfig.addLocationConfig(recipe);
 
     LocationConfig rootLocation;
     rootLocation.setUri("/");
     rootLocation.setRoot(serverConfig.getRootDir());
 	rootLocation.setIndex("index.html");
-    rootLocation.setAlias("index.html");
+    //rootLocation.setAlias("index.html");
     rootLocation.setAllowedMethods(methodGP);
     //rootLocation.setCgiPath("");
     rootLocation.addCgiConfig(CgiConfig(".sh", "/bin/bash"));
     rootLocation.addCgiConfig(CgiConfig(".py", "/usr/bin/python3"));
     rootLocation.addCgiConfig(CgiConfig(".js", "/usr/local/bin/node"));
     rootLocation.setErrorPages(serverConfig.getErrorPages());
+    rootLocation.setAllowUpload(true);
+    rootLocation.setUploadDir("/upload/");
     serverConfig.addLocationConfig(rootLocation);
 
 	
@@ -184,11 +201,11 @@ ServerConfig createServerConfig(std::string hostname, int port, const std::strin
 std::vector<ServerConfig> multipleTest()
 {
     std::vector<ServerConfig> serverConfs;
-    ServerConfig basic4243 = testBuild("localhost", 4243);
-    ServerConfig basic4242 = testBuild("127.0.0.1", 4242);
-    ServerConfig basic4244 = testBuild("0.0.0.0", 4244);
-    serverConfs.push_back(basic4243);
+    //ServerConfig basic4243 = testBuild("127.0.0.1", 4243);
+    ServerConfig basic4242 = testBuild("localhost", 4242);
+    //ServerConfig basic4244 = testBuild("0.0.0.0", 4244);
+    //serverConfs.push_back(basic4243);
     serverConfs.push_back(basic4242);
-    serverConfs.push_back(basic4244);
+    //serverConfs.push_back(basic4244);
     return serverConfs;
 }

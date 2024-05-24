@@ -29,6 +29,7 @@ const int maxBody, const std::string servName, const int port) : \
 	initRequest();
 	if (rawHead.find("\r\n\r\n") == std::string::npos)
 	{
+		std::cerr << "Error parsing Request : no CRLF terminated at end of header" << std::endl;
 		this->_status = 400;
 		return ;
 	}
@@ -567,7 +568,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 
 		std::string filePath = _location.getRootDir() + _location.getUploadFile() + ftime + ".txt";
 		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
-		//std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
+		std::cout << BLUE "POST url FORM Ressource is : " RESET<< filePath << std::endl;
 		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
 		std::ofstream file(filePath, std::ios::app);
 		if (!file.is_open())
@@ -1028,6 +1029,13 @@ int Request::getPort() const
 	return(this->_port);
 }
 
+/*
+only used in case of alias / redirection with 301 bypassing the buildRequest method
+*/
+void	Request::setPath(const std::string& path)
+{
+	this->_parsePath = path;
+}
 
 /************************** UTILS **********************************/
 

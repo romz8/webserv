@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/23 20:02:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 11:59:58 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,6 @@ void	Response::addHeaders()
 	{
 		_headers["Location"] = this->_assetPath;
 		_headers["content-length"] = "0";
-		//_headers["Connection"] = "close";
 	}
 	else if (this->_status == 204)
 		_headers.clear();
@@ -271,6 +270,7 @@ std::map<int, std::string>	Response::initStatusMaps()
     s[500] = "Internal Server Error";
 	s[502] = "Bad Gateway";
     s[505] = "HTTP Version not supported";
+	s[508] = "Loop Detected";
 
 	return s;
 }

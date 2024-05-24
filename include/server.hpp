@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/23 18:58:35 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 17:20:41 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,11 +97,11 @@ public:
 	
 	/***** Socket I/O ********/
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
-	int readHeader(const int io_socket, std::string& content);
-	int	readBody(const int io_socket, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
+	int readHeader(pollfd& pfd, std::string& content);
+	int	readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
 	const int		acceptConnection();
-	int	readFixedLengthBody(int clientSocket, size_t contentLength, std::string& body);	
-	int	readChunkEncodingBody(int clientSocket, std::string& body);
+	int	readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body);	
+	int	readChunkEncodingBody(pollfd &pfd, std::string& body);
 	friend std::ostream& operator<<(std::ostream& os, const Server& serv);
 };
 

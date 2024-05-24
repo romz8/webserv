@@ -119,6 +119,7 @@ public:
 	int			getPort() const;
 	void		setHost(const std::string& host);
 	std::string getHost() const;
+	void		setPath(const std::string& path);
 }; 
 
 /********************* utils ******************************/

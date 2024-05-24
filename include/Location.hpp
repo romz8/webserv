@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:57:04 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 18:43:21 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 10:31:15 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ private:
 	std::string _index;
 	bool _AutoIndex;
 	bool _allowUpload;
+	std::string _alias;
 	std::map<int, std::string> _errPages;
 	std::vector<CgiConfig> _cgiConfigs;
 	
@@ -63,6 +64,8 @@ public:
 	//void setCgi(const std::map<std::string, const std::string>& cgiMap);
 	bool hasCgi(const std::string& extension) const;
 	std::string	getCgiHandler(const std::string& extension) const;
+	std::string getAlias() const;
+	void setAlias(const std::string& alias);
 	
 	friend std::ostream& operator<<(std::ostream& os, const Location& loc);
 	

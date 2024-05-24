@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 21:09:16 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 20:33:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 11:10:42 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Location::Location(const LocationConfig& locConf) : \
 	_errPages.clear();
 	_cgiConfigs = locConf.getCgiConfigs();
 	_errPages = locConf.getErrorPages();
+	_alias = locConf.getAlias();
 	std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
 	//std::cout << *this << std::endl;
 }
@@ -48,6 +49,7 @@ Location& Location::operator=(const Location& src)
 	if (this == &src)
 		return (*this);
 	_path = src._path;
+	_alias = src._alias;
 	_rootDir = src._rootDir;
 	_allowedMethods = src._allowedMethods;
 	_uploadDirectory = src._uploadDirectory;
@@ -149,6 +151,16 @@ std::string Location::getCgiHandler(const std::string& extension) const
     return "";  // Return an empty string if no handler is found
 }
 
+std::string Location::getAlias() const
+{
+	return (this->_alias);
+}
+
+void Location::setAlias(const std::string& alias)
+{
+	this->_alias = alias;
+}
+
 std::ostream& operator<<(std::ostream& os, const Location& loc)
 {
 	std::cout << "**** Location Info *****" << std::endl;
@@ -162,6 +174,7 @@ std::ostream& operator<<(std::ostream& os, const Location& loc)
 	std::cout << "Index : " << loc._index << std::endl;
 	std::cout << "AutoIndex : " << loc._AutoIndex << std::endl;
 	std::cout << "Allow Upload : " << loc._allowUpload << std::endl;
+	std::cout << "Alias : " << loc._alias << std::endl;
 	std::cout << "Error Pages : " << std::endl;
 	for (std::map<int, std::string>::const_iterator it = loc._errPages.begin(); it != loc._errPages.end(); ++it)
 		std::cout << "Error Code : " << it->first << " Page : " << it->second << std::endl;
