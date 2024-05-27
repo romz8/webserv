@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/27 13:03:03 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/27 17:42:07 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,14 +23,18 @@
 # define N_SIMPLE_DIRECTIVES 13
 # define N_COMPLEX_DIRECTIVES 2
 # define DIRECTIVES_NUM 15
+# define SIMPLE 3
+# define SERVER 0
+# define LOCATION 1
 
 class ServerConfig;
+class LocationConfig;
 
 class Parser {
 	private:
 		std::string _file;
 		std::string	_content;
-		std::vector<std::string> allowed_directives;
+		std::vector<std::string> _allowed_directives;
 		std::vector<std::string> _directives;
 		std::vector<std::string> _simpleDirectives;
 		std::vector<std::string> _complexDirectives;
@@ -42,7 +46,7 @@ class Parser {
 		Parser( int ac, char **av );
 		~Parser( void );
 		const std::string &	getFile( void );
-		std::vector<ServerConfig> &getConfig( std::vector<ServerConfig> &servers, std::vector<std::string> allowed_dirrectives );
+		std::vector<ServerConfig> &getConfig( std::vector<ServerConfig> &servers, std::vector<std::string> allowed_directives );
 		
 		std::vector<std::string>	getAD( void );
 
@@ -51,8 +55,11 @@ class Parser {
 	private:
 		void	getInfo( void );
 		void	check_command( int ac, char **av );
-		void	checkValidDirective( std::string name );
+		int		checkValidDirective( std::string name );
 		void	checkValidSeparator( std::string name, int type );
+		void	parseServer( std::string head, std::string body, std::vector<ServerConfig> &servers );
+		// template <typename Directive>
+		// void	parseDirective( std::string head, std::string body, Directive &dir, int dirtype );
 };
 
 #endif

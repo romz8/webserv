@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 20:21:36 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 17:45:08 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@
 class ServerConfig
 {
 private:
+	std::string _body;
+private:
 	std::string _host;
 	std::string _hostName;
 	int _port;
@@ -37,6 +39,7 @@ private:
 
 public:	
 	ServerConfig();
+	ServerConfig( std::string body );
 	ServerConfig& operator=(const ServerConfig& src);
 	ServerConfig(const ServerConfig& src);
 	ServerConfig(const std::string& host, int port, const std::string& serverName, const std::string& rootDir, const std::vector<LocationConfig>& locations, const std::map<int, std::string>& error_pages, size_t client_max_body_size, const std::vector<CgiConfig>& cgiConf, bool autoindex);

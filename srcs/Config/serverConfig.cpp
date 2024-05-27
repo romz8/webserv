@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerConfig.cpp                                   :+:      :+:    :+:   */
+/*   serverConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 20:21:45 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 17:45:24 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,10 @@
 ServerConfig::ServerConfig()
 {
 	_initConfig();	
+}
+
+ServerConfig::ServerConfig( std::string body ) : _body(body) {
+	return ;
 }
 
 ServerConfig::ServerConfig(const ServerConfig& src)
