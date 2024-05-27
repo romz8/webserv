@@ -3,23 +3,28 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 21:10:49 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/25 18:48:32 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "Server.hpp"
+#include <vector>
+#include "Parser.hpp"
 
 ServerConfig testBuild();
 
 int main(int argc, char *argv[])
 {
+	std::vector<ServerConfig> servs;
 	ServerConfig test = testBuild();
 	try
 	{
+        Parser parse(argc, argv);
+        parse.getConfig(servs);
+        return (1);
 		Server serv(test);
 		std::cout << "Server created" << std::endl;
 		std::cout << serv << std::endl;
