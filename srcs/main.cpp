@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/25 18:48:32 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/27 12:58:34 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	try
 	{
         Parser parse(argc, argv);
-        parse.getConfig(servs);
+        parse.getConfig(servs, parse.getAD());
         return (1);
 		Server serv(test);
 		std::cout << "Server created" << std::endl;
