@@ -29,6 +29,13 @@ const int maxBody, const std::string servName, const int port) : \
 	initRequest();
 }
 
+// Default constructor definition
+Request::Request()
+    : _host(""), _maxBodySize(0), _serverName("bla"), _port(0), _status(0), _HeaderRead(false), _HeaderOK(false) 
+{
+    initRequest();
+}
+
 bool	Request::processHeader(const std::string& rawHead)
 {
 	std::string rawRequest;
@@ -89,6 +96,7 @@ Request& Request::operator=(const Request& src)
 		_HeaderOK = src._HeaderOK;
 		_rawinput = src._rawinput;
 		_rawBody = src._rawBody;
+		_start = src._start;
 	}
 	return (*this);
 }
@@ -177,9 +185,9 @@ void Request::parseStartLine(const std::string& line)
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
-	// std::cout << "Parsed Request-Line: Method: " << this->_method
-    //       << ", Path: " << this->_path
-    //       << ", Version: " << this->_version << std::endl;
+	std::cout << GREEN "Parsed Request-Line: Method: " << this->_method
+          << ", Path: " << this->_path
+          << ", Version: " RESET << this->_version << std::endl;
 }
 
 /**
@@ -341,6 +349,12 @@ void	Request::initRequest()
 	this->_respbody.clear();
 	this->_extension.clear();
 	this->_query.clear();
+	this->_headers.clear();
+	this->_HeaderOK = false;
+	this->_HeaderRead = false;
+	this->_rawinput.clear();
+	this->_rawBody.clear();
+	this->_start = -1;
 }
 
 /**
@@ -380,7 +394,7 @@ bool	loneCR(const std::string& header)
 void	Request::buildRequest()
 {
 	
-	//std::cout << "init path path is ; " << this->_path << std::endl;
+	//std::cout << BG_GREEN << "init path path is ; " << this->_path << RESET << std::endl;
 	sanitizeUrl();
 	getQueryParams();
 	hexDecoding(_path); //CAREFULL SF (tested with /cgi-bin/hello.py?firstname=lljfamf&lastname=%3Bl%3Blf&address=%3B%3Blkfkdkf)
@@ -391,6 +405,7 @@ void	Request::buildRequest()
 	//std::cout << "query string is : " << this->_query << std::endl;
 
 	StatusCode();
+	std::cout << "status CODE OK AND is : " << this->_status << std::endl;
 	if (this->_status >= 400)
 		return; 
 	if (this->_method == "POST") 
@@ -565,6 +580,8 @@ void	Request::handlePostRequest()
 {	
 	std::map<std::string, std::string> data;
 	std::string body = this->_body;
+	std::cout << "POST BODY IS : " << _body << std::endl;
+	std::cout << "RAW BODY IS : " << _rawBody << std::endl;
 	std::map<std::string, std::string>::const_iterator it;
 	it = this->_headers.find("Content-Type");
 	if (it == this->_headers.end() || it->second.empty())
@@ -613,6 +630,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 
 void	Request::processMultipartForm(const std::string& input, const std::string& boundary)
 {
+	std::cout << " IN MULTIPART FORM with boundary :"<< boundary << std::endl;
 	std::string delimiter = "--" + boundary;
 	std::string	endDelimiter = delimiter + "--";
 	std::string fname = "unknown.txt";
@@ -662,7 +680,8 @@ void	Request::parseChunkBody(const std::string& input)
 	while (true)
 	{
 		size_t endBlock = input.find("\r\n", pos);
-		size_t chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
+		long chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
+		std::cout << "CHUNK SIZE IS : " << chunkSize << std::endl;
 		if (chunkSize == 0)
 			break;
 		totalSize += chunkSize;
@@ -1064,6 +1083,10 @@ void	Request::setPath(const std::string& path)
 	this->_parsePath = path;
 }
 
+std::string Request::getrawBody() const
+{
+	return(this->_rawBody);
+}
 /************************** UTILS **********************************/
 
 /*
@@ -1257,7 +1280,15 @@ void hexDecoding(std::string& url)
 
 bool	Request::_readRequest(char* buffer, int byteSize, int fd)
 {
-	_rawinput.append(buffer, byteSize);
+	// if (_start == -1)
+	// 	_start = std::time(NULL);
+	// else if (difftime(std::time(NULL), _start) > _timeout)
+	// {
+	// 	_status = 408;
+	// 	std::cout << "Timeout" << std::endl;
+	// 	return (true);
+	// }
+	byteUpload(buffer, byteSize);
 	std::string input = _rawinput;
 	if (!_HeaderRead)
 	{
@@ -1265,18 +1296,28 @@ bool	Request::_readRequest(char* buffer, int byteSize, int fd)
 		{
 			_HeaderRead = true;
 			_HeaderOK = processHeader(input);
-			_rawBody = input.substr(input.find("\r\n\r\n") + 4);
+			std::string tempBody = input.substr(input.find("\r\n\r\n") + 4);
+			// _rawinput.clear();
+			// _rawinput.append(tempBody);
+			_rawBody.append(tempBody);
 		}
 	}
 	if (_HeaderRead && !_HeaderOK)
+	{
+		std::cout << "Header not ok" << std::endl;
 		return (true);
-	else if (_HeaderRead && _HeaderOK)
-		return(parseBody(buffer));
+	}
+	else if (_HeaderRead && _HeaderOK )
+	{
+		return(parseBody());
+	}
+	std::cout << "Header not read" << std::endl;
 	return (false);
 }
 
 bool Request::processChunkBody(std::string buffer) 
 {
+	std::cout << "arrived in chunk body" << std::endl;
 	bool endChunk = (buffer.find("0\r\n\r\n") != std::string::npos);
 	_chunkBody.append(buffer);
 	// if (endChunk)
@@ -1300,20 +1341,65 @@ bool Request::processChunkBody(std::string buffer)
  * @param body A reference to the string where the body will be stored.
  * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
  */
-bool Request::parseBody(const std::string& rawhead)
+bool Request::parseBody(void)
 {
 
 	if (_headers.find("Transfer-Encoding") != _headers.end() && _headers.find("Transfer-Encoding")->second == "chunked")
-		return (processChunkBody(rawhead));
+		return (processChunkBody(_rawBody));
 	else if (_headers.find("Content-Length") != _headers.end())
 	{
-		if (_rawBody.size() + rawhead.size() < _maxBodySize)
-			_rawBody.append(rawhead);
 		if (_rawBody.size() == safeStrToSizeT(_headers["Content-Length"]))
+		{
+			std::cout << BG_GREEN "all parsed" << RESET << std::endl;
 			return (true);
+		}
 		else
+		{
+			if (_rawBody.size() > _maxBodySize)
+				std::cout << "body too big Max is : " << _maxBodySize << " and current is : " << _rawBody.size() << std::endl;
+			std::cout << BG_RED "not all parsed" << RESET << std::endl;
+			std::cout << "body size is : " << _rawBody.size() << " and content length is : " << safeStrToSizeT(_headers["Content-Length"]) << std::endl;
+			std::cout << " read left is : " << safeStrToSizeT(_headers["Content-Length"]) - _rawBody.size() << std::endl;
 			return (false);
+		}
 	}
 	else
+	{
+		std::cout << "finished reading body" << std::endl;
 		return (true);
+	}
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Request& req)
+{
+	os << BG_YELLOW "Method : " << req.getMethod() << std::endl;
+	os << "Path : " << req.getPath() << std::endl;
+	os << "Version : " << req._version << std::endl;
+	os << "Host : " << req.getHost() << std::endl;
+	os << "PORT : " << req.getPort() << std::endl;
+	os << "ServerName : " << req.getServerName() << std::endl;
+	os << "max body size : " << req._maxBodySize << std::endl;
+	os << "Extension is  : " << req.getExtension() << std::endl;
+	os << "is Dir  : " << req._isDirectory << std::endl;
+	os << "is DirNorm  : " << req._isDirNorm << std::endl;
+	os << "Requests : " << std::endl;
+	std::map<std::string, std::string>::const_iterator it;
+	for(it = req._headers.begin(); it != req._headers.end(); ++it)
+	{
+		os << BG_CYAN << it->first << " : " << it->second << RESET << std::endl;
+	}
+	os << RESET << std::endl;
+	return (os);
+}
+
+void	Request::byteUpload(char *buffer, int byteSize)
+{
+	for (int i = 0; i < byteSize; i++)
+	{
+		if (!_HeaderRead)
+			_rawinput.push_back(buffer[i]);
+		else
+			_rawBody.push_back(buffer[i]);
+	}
 }

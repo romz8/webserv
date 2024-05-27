@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 21:07:13 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 20:10:44 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 # include "colors.h"
 
 # define MAX_Q 420
-# define BUFSIZE 8194
+# define BUFSIZE 8192
 # define MAX_HEADER_SIZE 8193
 
 // typedef struct Config
@@ -52,6 +52,7 @@
 // 	std::string response;
 // 	bool httpDone;
 // };
+class Request;
 
 class Server
 {
@@ -67,7 +68,7 @@ private:
 	Location _rootloc; //if no url match a location, use root location
 	std::map<int , std::string> _clientRequest;
 	std::map<int , std::string> _clientResponse;
-	std::map<int, Request& > _inputRequest;
+
 	std::map<int, std::string> _inputHead;
 	std::map<int, std::string> _inputBody;
 	std::map<int, bool> _HeaderRead;
@@ -77,7 +78,6 @@ private:
 	struct sockaddr_in _client_addr;
 	size_t _addr_size;
 	static const int _readTimeout = 5;
-	static const int	_timeout = 3;
 
 public:
 	Server(const ServerConfig& conf);
@@ -93,7 +93,7 @@ public:
 	//void	handleConnection();
 	const Location* findLocationForRequest(const std::string& requestPath) const;
 	static const sockaddr_in setServAddr(const ServerConfig& conf);
-	int		readClient(pollfd& pfd);
+	int		readClient(pollfd& pfd, Request& request);
 	int		sendClient(pollfd& pfd);
 	void	handleError(const int io_socket, const int error);
 	void	processRequest(Request& request, int io_socket);
@@ -108,6 +108,10 @@ public:
 	int	readChunkEncodingBody(pollfd &pfd, std::string& body);
 	bool	_readRequest(char* buffer, int byteSize, int fd);
 	friend std::ostream& operator<<(std::ostream& os, const Server& serv);
+	std::string getHost() const;
+	int getPort() const;
+	int getMaxBodySize() const;
+	std::string getserverName() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& serv);

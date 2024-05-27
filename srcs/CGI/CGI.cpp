@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 12:00:39 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 13:58:44 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,7 +224,7 @@ std::string	CGI::readSafeTimeout(void)
 
 	buffBody.clear();
 	
-	while (std::time(NULL) - _start < _TimeoutSec * 100)
+	while (std::time(NULL) - _start < _TimeoutSec)
 	{
 		int byteRead;
 		byteRead = read(_fdout[0], buffer, sizeof(buffer) - 1);

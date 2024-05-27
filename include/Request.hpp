@@ -58,10 +58,15 @@ private:
 	bool			_HeaderOK;
 	std::string		_rawinput;
 	std::string		_rawBody;
+	
+
+	time_t			_start;
+	static const int _timeout = 5;
 	//static const std::string CRLF = "\r\n";
 
 public:
 	Request(const std::string host, const int maxBody, const std::string servName, const int port);
+	Request();
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
@@ -77,9 +82,11 @@ public:
 	bool		hasBody();
 	void		printRequest() const;
 	void		printHeader() const;
-	bool		parseBody(const std::string& header);
+	bool		parseBody();
+	//bool		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
 	bool		parseContentLenBody();
+	void		byteUpload(char *buffer, int byteSize);
 
 	void		processMultipartForm(const std::string& input, const std::string& boundary);
 	void		processFormData(const std::string& body, const Location& Loc);
@@ -126,6 +133,8 @@ public:
 	void		setHost(const std::string& host);
 	std::string getHost() const;
 	void		setPath(const std::string& path);
+	std::string getrawBody() const;
+	friend std::ostream& operator<<(std::ostream& os, const Request& req);
 }; 
 
 /********************* utils ******************************/
@@ -140,5 +149,5 @@ size_t safeStrToSizeT(const std::string& str);
 bool	loneCR(const std::string& header);
 std::string	formattedTime();
 void	hexDecoding(std::string& url);
-
+std::ostream& operator<<(std::ostream& os, const Request& req);
 #endif

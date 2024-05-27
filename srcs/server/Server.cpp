@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 21:09:10 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 20:20:02 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,6 +164,8 @@ void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
  */
 void	Server::processRequest(Request& request, int io_fd)
 {
+	//std::cout << BG_BLUE "REQUEST IS : " RESET << std::endl;
+	//std::cout << request << std::endl;
 	if (request.hasBody())
 	{
 		// std::string body;
@@ -174,7 +176,7 @@ void	Server::processRequest(Request& request, int io_fd)
 		// else if (retBody == -1)
 		// 	request.setStatus(400);
 		// else
-			request.setBody(request.getBody()); // HORRIBLE ! just to test
+		request.setBody(request.getrawBody()); // HORRIBLE ! just to test
 	}
 	const Location* matchLoc = findLocationForRequest(request.getPath()); //TO VERIFY AND EDIT WITH CONFIG NEW LOCATION
 	if (matchLoc == NULL)
@@ -199,6 +201,7 @@ void	Server::processRequest(Request& request, int io_fd)
 	//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
 	_clientRequest[io_fd] = request.getHeaderField("Connection");
 	_clientResponse[io_fd] = resp.getResponse();
+	request.initRequest();
 }
 
 /**
@@ -212,7 +215,7 @@ void	Server::processRequest(Request& request, int io_fd)
  * @param pfd The pollfd structure associated with the client connection.
  * @exception Catches and logs exceptions related to socket operations.
  */
-int	Server::readClient(pollfd& pfd)
+int	Server::readClient(pollfd& pfd, Request& request)
 {
 	try
 	{
@@ -220,12 +223,24 @@ int	Server::readClient(pollfd& pfd)
 		char buffer[BUFSIZE];
 		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
 		if (byteRead < 0 )
+		{
+			std::cerr << "recv socket Error :" << strerror(errno) << std::endl;
 			return (-1);
+		}
 		if (byteRead == 0)
+		{
+			std::cout << "Client disconnected for fd"<< pfd.fd << std::endl;
 			return (0);
-		if (_inputRequest[pfd.fd]._readRequest(buffer, byteRead, pfd.fd))
-			processRequest(_inputRequest[pfd.fd], pfd.fd);
-		return (1);
+		}
+		buffer[byteRead] = '\0';
+		std::cout << BLUE << "bytes read : " << byteRead << RESET << std::endl;
+		if (request._readRequest(buffer, byteRead, pfd.fd))
+		{
+			std::cout << BG_GREEN "DONE READ -> REQUEST EXEC" << RESET << std::endl;
+			processRequest(request, pfd.fd);
+			return (1);
+		}
+		return (2);
 	}
 	catch(const std::exception& e)
 	{
@@ -246,6 +261,7 @@ int	Server::readClient(pollfd& pfd)
 int	Server::sendClient(pollfd &pfd)
 {
 	int io_fd = pfd.fd;
+	std::cout << "NO SF in SendClient : " << io_fd << std::endl;
 	if (_clientResponse.find(io_fd) == _clientResponse.end())
 		return (-1);
 	std::string response = _clientResponse[io_fd];
@@ -263,13 +279,13 @@ int	Server::sendClient(pollfd &pfd)
 	}
 	if ( _clientRequest[io_fd].find("close") != std::string::npos)
 	{
+		std::cout << "Closing connection for fd : " << io_fd << std::endl;
 		_clientRequest.erase(io_fd);
 		_clientResponse.erase(io_fd);
 		return (-1);
 	}
 	_clientRequest.erase(io_fd);
 	_clientResponse.erase(io_fd);
-	_inputRequest.erase(io_fd);
 	return (1);
 }
 
@@ -351,8 +367,8 @@ const int Server::acceptConnection()
 	setNonBlocking(io_socket);
 	if (io_socket < 0)
 		throw std::runtime_error("Error accepting client request");
-	Request request(_host, _maxBodySize, _serverName, _port);
-	_inputRequest[io_socket] = request;
+	//Request request(_host, _maxBodySize, _serverName, _port);
+	//_inputRequest[io_socket] = request;
 	return (io_socket);
 }
 /**
@@ -505,7 +521,27 @@ const int Server::acceptConnection()
 // 	return (1);
 // }
 
+/********************** GETTERS****************************/
 
+std::string Server::getHost() const
+{
+	return (_host);
+}
+
+int	Server::getPort() const
+{
+	return (_port);
+}
+
+int Server::getMaxBodySize() const
+{
+	return (_maxBodySize);
+}
+
+std::string Server::getserverName() const
+{
+	return (_serverName);
+}
 
 
 void printSockAddrIn(const sockaddr_in& addr) 
@@ -542,3 +578,4 @@ std::ostream& operator<<(std::ostream& os, const Server& serv)
 		os << serv._locations[i] << std::endl;
 	return os;
 }
+

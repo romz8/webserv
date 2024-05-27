@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:18:22 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/23 18:20:56 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 12:35:33 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ private:
 	std::vector<Server> _servers;
 	std::vector<struct  pollfd> _fdSet;
 	std::map<int, Server*> _fdtoServ;
+	std::map<int, Request> _fdtoReq;
 	static const int	_timeout = 3;
 
 public:

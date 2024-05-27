@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 13:12:32 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/27 17:30:06 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,15 +129,19 @@ void Cluster::run()
 						}
 					else
 					{
-						int ret = serv->readClient(_fdSet[i]);
+						//Request *req = &_fdtoReq[i];
+						int ret = serv->readClient(_fdSet[i], _fdtoReq[_fdSet[i].fd]);
 						if (ret <= 0)
 							removeClient(_fdSet[i].fd);
-						else
+						else if (ret == 1)
 							setPoll(_fdSet[i].fd, POLLOUT, serv);
+						else
+							continue;
 					}
 				}
 				else if (_fdSet[i].revents & POLLOUT)
 				{
+					std::cout <<"ENTER POLLOUT" << std::endl;
 					int ret = serv->sendClient(_fdSet[i]);
 					if (ret < 0)
 						removeClient(_fdSet[i].fd);
@@ -167,6 +171,11 @@ void	Cluster::addPollFd(int fd, short events, Server* server)
 	pfd.events = events;
 	_fdSet.push_back(pfd);
 	_fdtoServ[fd] = server;
+	_fdtoReq.insert(std::make_pair(fd, Request(server->getHost(), server->getMaxBodySize(), server->getserverName(), server->getPort())));
+	std::cout << BG_RED "created new pollfd for fd " RESET << fd << std::endl;
+	std::cout << "server conf is : " << server->getHost() << " " << server->getPort() << std::endl;
+	std::cout << "fdtoServ size is : " << _fdtoServ.size() << std::endl;
+	std::cout << "request set up is : " << _fdtoReq[fd] << std::endl;
 }
 
 /**
@@ -222,4 +231,5 @@ void	Cluster::removeClient(int fd)
 	removePollFd(fd);
 	close(fd);
 	_fdtoServ.erase(fd);
+	_fdtoReq.erase(fd);
 }
