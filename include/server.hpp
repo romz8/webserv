@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 20:10:44 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 14:52:15 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,12 +72,13 @@ private:
 	std::map<int, std::string> _inputHead;
 	std::map<int, std::string> _inputBody;
 	std::map<int, bool> _HeaderRead;
+	std::map<int, time_t > _start;
 	
 	int	_socket_fd;
 	sockaddr_in _servAddr;
 	struct sockaddr_in _client_addr;
 	size_t _addr_size;
-	static const int _readTimeout = 5;
+	static const int _readTimeout = 3;
 
 public:
 	Server(const ServerConfig& conf);
@@ -87,10 +88,8 @@ public:
 	
 	void 	_initServ();
 	void	_initLocations(const std::vector<LocationConfig>& locations);
-	std::string getRequest();
-	std::string getResponse();
-	//void	run();
-	//void	handleConnection();
+	// std::string getRequest();
+	// std::string getResponse();
 	const Location* findLocationForRequest(const std::string& requestPath) const;
 	static const sockaddr_in setServAddr(const ServerConfig& conf);
 	int		readClient(pollfd& pfd, Request& request);
@@ -98,15 +97,16 @@ public:
 	void	handleError(const int io_socket, const int error);
 	void	processRequest(Request& request, int io_socket);
 	int		getSocketInit()const;
+	int		handleTimeout(const int io_socket, Request& request);
 	
 	/***** Socket I/O ********/
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
-	int readHeader(pollfd& pfd, std::string& content);
-	int	readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
+	// int readHeader(pollfd& pfd, std::string& content);
+	// int	readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
 	const int		acceptConnection();
-	int	readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body);	
-	int	readChunkEncodingBody(pollfd &pfd, std::string& body);
-	bool	_readRequest(char* buffer, int byteSize, int fd);
+	// int	readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body);	
+	// int	readChunkEncodingBody(pollfd &pfd, std::string& body);
+	// bool	_readRequest(char* buffer, int byteSize, int fd);
 	friend std::ostream& operator<<(std::ostream& os, const Server& serv);
 	std::string getHost() const;
 	int getPort() const;

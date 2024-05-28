@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 17:30:06 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 15:10:41 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ Cluster::Cluster(std::vector<ServerConfig> serverConfig)
 	_servers.clear();
 	_fdSet.clear();
 	_fdtoServ.clear();
+	_fdtoReq.clear();
 	for (std::vector<ServerConfig>::iterator it = serverConfig.begin(); it != serverConfig.end(); ++it)
 		addServer(*it);
 }
@@ -41,6 +42,7 @@ Cluster::~Cluster()
 	_servers.clear();
 	_fdSet.clear();
 	_fdtoServ.clear();
+	_fdtoReq.clear();
 }
 
 std::vector<Server> Cluster::getServers() const
@@ -58,7 +60,7 @@ void	Cluster::setUpServer() // should we throw or handle any issue here ? how ?
 	for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
 		it->_initSock();
-		addPollFd(it->getSocketInit(), POLLIN, &(*it)); 
+		addPollFd(it->getSocketInit(), POLLIN, &(*it), INIT); 
 	}
 }
 
@@ -98,7 +100,7 @@ void Cluster::run()
 		{
 			_fdSet.clear();
 			for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
-				addPollFd(it->getSocketInit(), POLLIN, &(*it));
+				addPollFd(it->getSocketInit(), POLLIN, &(*it), INIT);
 		}
 		else if (ret == 0)
 			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
@@ -122,10 +124,10 @@ void Cluster::run()
 							if (newFd < 0)
 							{
 								std::cerr << "Accept error "<< strerror(errno) << std::endl;
-								removePollFd(_fdSet[i].fd);
+								removeClient(_fdSet[i].fd);
 							}
 							else
-								addPollFd(newFd, POLLIN, serv);
+								addPollFd(newFd, POLLIN, serv, READY);
 						}
 					else
 					{
@@ -150,6 +152,24 @@ void Cluster::run()
 				}
 				else if (_fdSet[i].revents & (POLLERR | POLLHUP | POLLNVAL))
 					removeClient(_fdSet[i].fd);
+				//POTENTIAL TIMEOUT HERE INSTEAD OF NEW LOOP ?
+				_fdSet[i].revents = 0;
+			}
+		}
+		for (size_t i = 0; i < _fdSet.size(); ++i)
+		{
+			std::map<int, Server*>::iterator it = _fdtoServ.find(_fdSet[i].fd);
+			if (it != _fdtoServ.end())
+			{
+				Server *serv = it->second;
+				if (serv->handleTimeout(_fdSet[i].fd, _fdtoReq[_fdSet[i].fd]) < 0)
+				{
+					int ret = serv->sendClient(_fdSet[i]);
+					if (ret < 0)
+						removeClient(_fdSet[i].fd);
+					else if (ret == 1)
+						setPoll(_fdSet[i].fd, POLLIN, serv);
+				}
 				_fdSet[i].revents = 0;
 			}
 		}
@@ -164,18 +184,19 @@ void Cluster::run()
  * monitored for (e.g., `POLLIN`, `POLLOUT`) into the `_fdSet`, which is used by the `poll()` system call.
  * Then it maps the file descriptor to a `Server` instance to handle the events.
  */
-void	Cluster::addPollFd(int fd, short events, Server* server)
+void	Cluster::addPollFd(int fd, short events, Server* server, servState state)
 {
 	struct pollfd pfd;
 	pfd.fd = fd;
 	pfd.events = events;
 	_fdSet.push_back(pfd);
 	_fdtoServ[fd] = server;
-	_fdtoReq.insert(std::make_pair(fd, Request(server->getHost(), server->getMaxBodySize(), server->getserverName(), server->getPort())));
+	if (state == READY)
+		_fdtoReq.insert(std::make_pair(fd, Request(server->getHost(), server->getMaxBodySize(), server->getserverName(), server->getPort())));
 	std::cout << BG_RED "created new pollfd for fd " RESET << fd << std::endl;
 	std::cout << "server conf is : " << server->getHost() << " " << server->getPort() << std::endl;
 	std::cout << "fdtoServ size is : " << _fdtoServ.size() << std::endl;
-	std::cout << "request set up is : " << _fdtoReq[fd] << std::endl;
+	//std::cout << "request set up is : " << _fdtoReq[fd] << std::endl;
 }
 
 /**
@@ -228,8 +249,10 @@ void	Cluster::setPoll(int fd, short events, Server* server)
 void	Cluster::removeClient(int fd)
 {
 	
-	removePollFd(fd);
 	close(fd);
-	_fdtoServ.erase(fd);
-	_fdtoReq.erase(fd);
+	removePollFd(fd);
+	if (_fdtoServ.find(fd) != _fdtoServ.end())
+		_fdtoServ.erase(fd);
+	if (_fdtoReq.find(fd) != _fdtoReq.end())
+		_fdtoReq.erase(fd);
 }

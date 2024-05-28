@@ -1292,15 +1292,18 @@ bool	Request::_readRequest(char* buffer, int byteSize, int fd)
 	std::string input = _rawinput;
 	if (!_HeaderRead)
 	{
+		_HeaderOK = processHeader(input);
 		if (input.find("\r\n\r\n") != std::string::npos)
 		{
 			_HeaderRead = true;
-			_HeaderOK = processHeader(input);
+			//_HeaderOK = processHeader(input);
 			std::string tempBody = input.substr(input.find("\r\n\r\n") + 4);
 			// _rawinput.clear();
 			// _rawinput.append(tempBody);
 			_rawBody.append(tempBody);
 		}
+		else
+			return (true);
 	}
 	if (_HeaderRead && !_HeaderOK)
 	{
@@ -1344,30 +1347,41 @@ bool Request::processChunkBody(std::string buffer)
 bool Request::parseBody(void)
 {
 
-	if (_headers.find("Transfer-Encoding") != _headers.end() && _headers.find("Transfer-Encoding")->second == "chunked")
-		return (processChunkBody(_rawBody));
-	else if (_headers.find("Content-Length") != _headers.end())
+	try
 	{
-		if (_rawBody.size() == safeStrToSizeT(_headers["Content-Length"]))
+		if (_headers.find("Transfer-Encoding") != _headers.end() && _headers.find("Transfer-Encoding")->second == "chunked")
+			return (processChunkBody(_rawBody));
+		else if (_headers.find("Content-Length") != _headers.end())
 		{
-			std::cout << BG_GREEN "all parsed" << RESET << std::endl;
-			return (true);
+			if (_rawBody.size() == safeStrToSizeT(_headers["Content-Length"]))
+			{
+				std::cout << BG_GREEN "all parsed" << RESET << std::endl;
+				return (true);
+			}
+			else
+			{
+				if (_rawBody.size() > _maxBodySize)
+					std::cout << "body too big Max is : " << _maxBodySize << " and current is : " << _rawBody.size() << std::endl;
+				std::cout << BG_RED "not all parsed" << RESET << std::endl;
+				std::cout << "body size is : " << _rawBody.size() << " and content length is : " << safeStrToSizeT(_headers["Content-Length"]) << std::endl;
+				std::cout << " read left is : " << safeStrToSizeT(_headers["Content-Length"]) - _rawBody.size() << std::endl;
+				return (false);
+			}
 		}
 		else
 		{
-			if (_rawBody.size() > _maxBodySize)
-				std::cout << "body too big Max is : " << _maxBodySize << " and current is : " << _rawBody.size() << std::endl;
-			std::cout << BG_RED "not all parsed" << RESET << std::endl;
-			std::cout << "body size is : " << _rawBody.size() << " and content length is : " << safeStrToSizeT(_headers["Content-Length"]) << std::endl;
-			std::cout << " read left is : " << safeStrToSizeT(_headers["Content-Length"]) - _rawBody.size() << std::endl;
-			return (false);
+			std::cout << "finished reading body" << std::endl;
+			return (true);
 		}
-	}
-	else
+		}
+	catch(const std::exception& e)
 	{
-		std::cout << "finished reading body" << std::endl;
+		std::cerr << e.what() << '\n';
+		this->_status = 400;
 		return (true);
 	}
+	
+	
 }
 
 

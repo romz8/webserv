@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 11:59:58 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 16:35:39 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,7 @@ void	Response::addHeaders()
 	if (_fromCgi && _status >= 500)
 	{
 		_headers["Content-Length"] = "0"; //working but can trunc content
+		_headers["Connection"] = "close";
 		return;
 	}	
 	if (_fromCgi)

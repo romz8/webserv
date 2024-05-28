@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:18:22 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 12:35:33 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 14:09:23 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,13 @@
 # include <map>
 # include "Server.hpp"
 # include "LocationConfig.hpp"
+
+
+enum servState
+{
+	INIT,
+	READY
+};
 
 class Cluster
 {
@@ -39,7 +46,7 @@ public:
 	std::vector<Server> getServers() const;
 	void 	addServer(const ServerConfig& server);
 	void	setUpServer();
-	void	addPollFd(int fd, short events, Server* server);
+	void	addPollFd(int fd, short events, Server* server, servState state);
 	void	removePollFd(int fd);
 	void	setPoll(int fd, short events, Server* server);
 	void	removeClient(int fd);

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 17:44:26 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 15:05:30 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ ServerConfig testBuild(std::string hostname, int port)
     serverConfig.setHostName(hostname); 
     serverConfig.setRootDir("./html/");
     serverConfig.setPort(port);
-    serverConfig.setClientMaxBodySize(10000186);
+    serverConfig.setClientMaxBodySize(100000000);
     serverConfig.setHost(serverConfig.getHostName() + ":" + std::to_string(serverConfig.getPort()));
     std::cout << "Host: " << serverConfig.getHost() << std::endl;
     serverConfig.setServerName("testing Server");

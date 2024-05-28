@@ -33,7 +33,7 @@ bad_headers = OrderedDict([
 
 Error_headers = OrderedDict([
 	
-		("Header Value Too Large by 1byes", "Content-Length: 100000001\r\n"),  # Excessively large value, correctly terminated
+		("Header Value Too Large by 1byes and no Body", "Content-Length: 100000001\r\n"),  # Excessively large value, correctly terminated
 		("Infinite Loop waiting for Body", "Content-type: text/plain\r\nContent-Length: 100\r\n"),  # infinite loop waiting for body bytes
 
 ])
@@ -58,13 +58,14 @@ for test_name, test_header in bad_headers.items():
 		try:
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.connect((ip, port))
-			s.sendall(request.encode())
+			s.sendall(request)
 			response = s.recv(4096)
 			s.close()
 			print("Test: {}".format(test_name))
 			total += print_result(response, "400 Bad Request")
 		except Exception as e:
 			print("\033[31m❌❌❌ FAIL\033[0m: {} - Exception occurred: {}".format(test_name, e))
+			s.close()
 
 print("===========================================================================")
 
@@ -72,7 +73,6 @@ if (total == total_test):
 	print("\033[32m✅✅✅ All tests passed ✅✅✅\033[0m")
 else:
 	print("\033[31m total is {} tests over {}\033[0m".format(total, total_test))
-
 
 
 print("==================================================================================================")
@@ -83,8 +83,8 @@ for test_name, test_header in Error_headers.items():
 		try:
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.connect((ip, port))
-			s.sendall(request.encode())
-			response = s.recv(4096)
+			s.sendall(request.encode('utf-8'))
+			response = s.recv(4096).decode('utf-8')
 			s.close()
 			print("Test: {}".format(test_name))
 			if (test_name == "Header Value Too Large by 1byes"):
@@ -93,6 +93,7 @@ for test_name, test_header in Error_headers.items():
 				total += print_result(response, "408")
 		except Exception as e:
 			print("\033[31m❌❌❌ FAIL\033[0m: {} - Exception occurred: {}".format(test_name, e))
+			s.close()
 
 print("===============================================================================")
 print("======================   TESTING BAD REQUEST LINE =============================")
@@ -124,8 +125,8 @@ for test_name, test_header in bad_request_lines.items():
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((ip, port))
-		s.sendall(request.encode())
-		response = s.recv(4096)
+		s.sendall(request.encode('utf-8'))
+		response = s.recv(4096).decode('utf-8')
 		s.close()
 		print("Test: {}".format(test_name))
 		if ("Invalid Method"  in test_name):
@@ -136,6 +137,7 @@ for test_name, test_header in bad_request_lines.items():
 			total += print_result(response, "400")
 	except Exception as e:
 		print("\033[31m❌❌❌ FAIL\033[0m: {} - Exception occurred: {}".format(test_name, e))
+		s.close()
 
 
 print("=============================================================================================================")
@@ -151,10 +153,11 @@ for test_name, test_header in correct_headers.items():
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((ip, port))
-		s.sendall(request.encode())
-		response = s.recv(4096)
+		s.sendall(request.encode('utf-8'))
+		response = s.recv(4096).decode('utf-8')
 		s.close()
 		print("Test: {}".format(test_name))
 		total += print_result(response, "200 OK")
 	except Exception as e:
 		print("\033[31m❌❌❌ FAIL\033[0m: {} - Exception occurred: {}".format(test_name, e))
+		s.close()
