@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   LocationConfig.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:08:51 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/21 19:17:54 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 13:09:22 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ private:
 	bool _allowUpload;
 	std::string _uploadDir;
 	std::vector<CgiConfig> _cgiConfigs;
+	std::vector<std::string>	_allowed_directives;
 
 public:
 	LocationConfig();
@@ -67,6 +68,6 @@ public:
 	bool getAutoIndex() const;
 	bool getAllowUpload() const;
 	const std::string& getUploadDir() const;
-	
+	std::vector<std::string>	getAD(void);
 };
 #endif

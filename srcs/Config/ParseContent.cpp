@@ -6,12 +6,15 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/27 13:05:02 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:13:00 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Utils.hpp>
 #include <ParseContent.hpp>
+// #include <ParseDirectives.hpp>
+#include <ServerConfig.hpp>
+#include <Parser.hpp>
 
 ParseContent::ParseContent( void ) {
 	return ;
@@ -39,12 +42,11 @@ string	ParseContent::simple_directives[ N_SIMPLE_DIRECTIVES ] = {
 	"root",
 	"error_page",
 	"upload_store",
-	"allow_update",
+	"allow_methods",
 	"index",
 	"alias",
 	"autoindex",
 	"return",
-	"allow_methods",
 	"cgi"
 };
 
@@ -83,6 +85,27 @@ string	ParseContent::total_directives[ DIRECTIVES_NUM ] = {
 	"location",
 	"server"
 };
+
+
+
+// ParseContent::_parseSimple	ParseContent::_parseSimpleDir[ N_SIMPLE_DIRECTIVES ] = {
+// 	&ParseDirectives::save_listen,
+// 	&ParseDirectives::save_server_name,
+// 	&ParseDirectives::save_client_max_body_size,
+// 	&ParseDirectives::save_root,
+// 	&ParseDirectives::save_error_page,
+// 	&ParseDirectives::save_upload_store,
+// 	&ParseDirectives::save_allow_methods,
+// 	&ParseDirectives::save_index,
+// 	&ParseDirectives::save_alias,
+// 	&ParseDirectives::save_autoindex;
+// 	&ParseDirectives::save_cgi;
+// }
+
+// ParseContent::_parseCArray	ParseContent::_parseComplex = {
+// 	&Parser::parseServer,
+// 	&Parser::parseLocation
+// };
 
 // StrBoolPair	ParseContent::_canRepeatDirectiveList[ N_DIRECTIVES ] = {
 // 	make_pair<	const string, bool >( "root", false ),

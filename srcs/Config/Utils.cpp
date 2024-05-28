@@ -6,37 +6,33 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 14:29:06 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/27 12:19:33 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 12:18:10 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Utils.hpp>
 #include <iostream>
 
+#include <ParseContent.hpp>
+
 using namespace std;
 
 namespace SUtils {
 
-	// int	compareNumbersAsStrings( const string _num1, const string _num2 ) {
-	// 	string num1( deleteExtraZeros( _num1 ) );
-	// 	string num2( deleteExtraZeros( _num2 ) );
-	// 	if (_num1.length() > _num2.length())
-	// 		return (1);
-	// 	if (_num1.length() < _num2.length())
-	// 		return (-1);
-	// 	return (_num1.compare(_num2));
-	// }
-
-	// string	deleteExtraZeros( const string number ) {
-	// 	string res(number);
-
-	// 	size_t idx = res.find_first_not_of("0");
-	// 	if (idx != string::npos)
-	// 		res.erase(0, idx);
-	// 	else
-	// 		res = "0";
-	// 	return (res);
-	// }
+	void		set_allowed_directives( StrVector &allowed_methods, int flag ) {
+		if (flag == SERVER)
+		{
+			for (int i = 0; i < N_SERVER_DIRECTIVES; i++) {
+				allowed_methods.push_back(ParseContent::server_directives[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < N_LOCATION_DIRECTIVES; i++) {
+				allowed_methods.push_back(ParseContent::location_directives[i]);
+			}
+		}
+	}
 
 	string		&treat_comments( string & str ) {
 		size_t pos = str.find_first_of("#");

@@ -6,12 +6,14 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/27 17:44:30 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:33:01 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Parser.hpp>
 #include <ServerConfig.hpp>
+#include <ParseContent.hpp>
+#include <LocationConfig.hpp>
 
 Parser::Parser( void ) {
 }
@@ -58,63 +60,26 @@ void	Parser::getInfo( void ) {
 	confFile.close();
 }
 
-std::vector<ServerConfig> &Parser::getConfig( std::vector<ServerConfig> &servers, std::vector<std::string> allowed_directives ) {
-	this->_allowed_directives = allowed_directives;
-	while (_content.length() > 0)
-	{
-		try
-		{
-			parseLine(servers);
-		} catch ( std::exception &e ) {
-			throw std::logic_error(e.what());
-		}
-	}
-	return (servers);
-}
-
-std::vector<std::string>	Parser::getAD( void ) {
+StrVector	Parser::getAD( void ) {
 	return (this->_allowed_directives);
 }
 
-void	Parser::parseLine(std::vector<ServerConfig> &servers ) {
-	std::string	head;
-	std::string	body;
-	std::string	name;
-	int			type;
-	int			dirtype;
-
-	if ( (type = SUtils::get_pair(this->_content, head, body) ) != NOT_SEPARATOR )
-	{
-		name = head.substr(0, head.find_first_of(ISSPACE));
-		dirtype = checkValidDirective(name);
-		checkValidSeparator(name, type);
-		if (dirtype == SERVER)
-			parseServer(head, body, servers);
-		// else if (dirtype == LOCATION)
-		// 	parseLocation(head, body, servers, dirtype);
-		// else
-		// 	parseDirective(head, body, servers, dirtype);
-	}
-	else
-		throw std::logic_error( "Unxpected \"}\" or end of file" );
-}
-
-int	Parser::checkValidDirective( std::string name ) {
-	if (SUtils::easyfind< std::vector<std::string> >(_directives.begin(), _directives.end(), name) == -1)
+int	Parser::checkValidDirective( std::string name, StrVector allowed_directives ) {
+	if (SUtils::easyfind< StrVector >(_directives.begin(), _directives.end(), name) == -1)
 		throw std::logic_error(name + " is not a valid directive");
-	else if (SUtils::easyfind< std::vector<std::string> >(_allowed_directives.begin(), _allowed_directives.end(), name) == -1)
+	else if (SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name) == -1)
 		throw std::logic_error(name + " is not valid for this block");
 	
-	if (SUtils::easyfind< std::vector<std::string> >(_simpleDirectives.begin(), _simpleDirectives.end(), name) >= 0)
+	if (SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name) >= 0)
 		return (SIMPLE);
-	return (SUtils::easyfind< std::vector<std::string> >(_complexDirectives.begin(), _complexDirectives.end(), name));
+	return (SUtils::easyfind< StrVector >(_complexDirectives.begin(), _complexDirectives.end(), name));
 }
 
 void	Parser::checkValidSeparator( std::string name, int type ) {
 	static std::string	separators[ 2 ] = { ";", "{" };
 	int					expectedSeparator;
 
-	if ( SUtils::easyfind< std::vector<std::string> >( \
+	if ( SUtils::easyfind< StrVector >( \
 				_simpleDirectives.begin(), \
 				_simpleDirectives.end(), name ) >= 0 )
 		expectedSeparator = SEMICOLON;
@@ -126,14 +91,6 @@ void	Parser::checkValidSeparator( std::string name, int type ) {
 				+ separators[ expectedSeparator - 1 ] + "\"" );
 }
 
-void	Parser::parseServer( std::string head, std::string body, std::vector<ServerConfig> &servers ) {
-	ServerConfig server(body);
+std::string	Parser::getContent(void) {
+	return (this->_content);
 }
-
-// void	Parser::parseDirective( std::string head, std::string body, ServerConfig &, int dirtype ) {
-// 	int idx;
-// 	std::string name;
-
-// 	name = head.substr(0, head.find_first_of(ISSPACE));
-// 	if (dirtype ==)
-// }

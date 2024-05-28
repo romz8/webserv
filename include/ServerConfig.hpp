@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 17:45:08 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:30:04 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,6 @@
 class ServerConfig
 {
 private:
-	std::string _body;
-private:
 	std::string _host;
 	std::string _hostName;
 	int _port;
@@ -36,6 +34,7 @@ private:
     size_t client_max_body_size;
 	std::vector<CgiConfig> cgiConf;
     bool autoindex;
+	std::vector<std::string>	_allowed_directives;
 
 public:	
 	ServerConfig();
@@ -68,6 +67,9 @@ public:
 	void setAutoIndex(bool autoindex);
 	void setHostName(const std::string& hostName);
 	std::string getHostName() const;
+	std::vector<std::string>	getAD( void ) const;
+	std::vector<LocationConfig> &getLocationConfEdit();
+	
 };
 
 #endif

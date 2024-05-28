@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/27 17:42:07 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:33:43 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,10 +34,10 @@ class Parser {
 	private:
 		std::string _file;
 		std::string	_content;
-		std::vector<std::string> _allowed_directives;
-		std::vector<std::string> _directives;
-		std::vector<std::string> _simpleDirectives;
-		std::vector<std::string> _complexDirectives;
+		StrVector _allowed_directives;
+		StrVector _directives;
+		StrVector _simpleDirectives;
+		StrVector _complexDirectives;
 
 		Parser( void );
 		void	init( void );
@@ -46,20 +46,34 @@ class Parser {
 		Parser( int ac, char **av );
 		~Parser( void );
 		const std::string &	getFile( void );
-		std::vector<ServerConfig> &getConfig( std::vector<ServerConfig> &servers, std::vector<std::string> allowed_directives );
 		
-		std::vector<std::string>	getAD( void );
+		StrVector	getAD( void );
+		std::string	getContent( void );
+		
+		template <typename T>
+		void	parseLine( std::vector<T> &vector, StrVector allowed_directives, std::string &content);
+		template <typename T>
+		void	parseDirective( std::string head, std::string body, std::vector<T> &vector );
+		template <typename T>
+		void	getConfig( std::vector<T> &vector, StrVector allowed_directives, std::string &content );
 
-		void	parseLine( std::vector<ServerConfig> &servers );
 
 	private:
+		template <typename T>
+		void	parseServer( std::string head, std::string body, std::vector<T> &servers );
+		template <typename T>
+		void	parseLocation( std::string head, std::string body, std::vector<T> &servers );
 		void	getInfo( void );
 		void	check_command( int ac, char **av );
-		int		checkValidDirective( std::string name );
+		int		checkValidDirective( std::string name, StrVector allowed_directives );
 		void	checkValidSeparator( std::string name, int type );
-		void	parseServer( std::string head, std::string body, std::vector<ServerConfig> &servers );
-		// template <typename Directive>
-		// void	parseDirective( std::string head, std::string body, Directive &dir, int dirtype );
+		
+		template <typename T>
+		void	parseSimple( std::string, T &);
+		template <typename T>
+		void	parseComplex( std::string, std::string, std::vector<T> &);
 };
+
+#include <Parser.ipp>
 
 #endif

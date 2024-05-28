@@ -6,19 +6,18 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 17:45:24 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 13:30:40 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerConfig.hpp"
+#include <ParseContent.hpp>
+#include <Utils.hpp>
 
 ServerConfig::ServerConfig()
 {
-	_initConfig();	
-}
-
-ServerConfig::ServerConfig( std::string body ) : _body(body) {
-	return ;
+	SUtils::set_allowed_directives(this->_allowed_directives, SERVER);
+	_initConfig();
 }
 
 ServerConfig::ServerConfig(const ServerConfig& src)
@@ -28,17 +27,19 @@ ServerConfig::ServerConfig(const ServerConfig& src)
 
 ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 {
-	if (this == &src)
-		return (*this);
-	_host = src._host;
-	_port = src._port;
-	_serverName = src._serverName;
-	_rootDir = src._rootDir;
-	_locations = src._locations;
-	error_pages = src.error_pages;
-	client_max_body_size = src.client_max_body_size;
-	cgiConf = src.cgiConf;
-	autoindex = src.autoindex;
+	if (this != &src)
+	{
+		_allowed_directives = src._allowed_directives;
+		_host = src._host;
+		_port = src._port;
+		_serverName = src._serverName;
+		_rootDir = src._rootDir;
+		_locations = src._locations;
+		error_pages = src.error_pages;
+		client_max_body_size = src.client_max_body_size;
+		cgiConf = src.cgiConf;
+		autoindex = src.autoindex;
+	}
 	return (*this);
 }
 
@@ -136,9 +137,8 @@ std::string ServerConfig::getHostName() const
 }
 
 
+std::vector<std::string>	ServerConfig::getAD( void ) const {
+	return (this->_allowed_directives);
+}
 
-
-
-
-
-
+std::vector<LocationConfig> &ServerConfig::getLocationConfEdit() {return (_locations); }
