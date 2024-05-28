@@ -21,12 +21,15 @@
  * @param hostName The host name from the HTTP request.
  * @param maxBody The maximum body size allowed for the request.
  */
-Request::Request(const std::string& rawHead, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
+Request::Request(const std::string& rawHead, const std::string host, \
+const int maxBody, const std::string servName, const int port) : \
+	_host(host), _maxBodySize(maxBody), _serverName(servName), _port(port)
 {
 	std::string rawRequest;
 	initRequest();
 	if (rawHead.find("\r\n\r\n") == std::string::npos)
 	{
+		std::cerr << "Error parsing Request : no CRLF terminated at end of header" << std::endl;
 		this->_status = 400;
 		return ;
 	}
@@ -147,9 +150,9 @@ void Request::parseStartLine(const std::string& line)
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
-	std::cout << "Parsed Request-Line: Method: " << this->_method
-          << ", Path: " << this->_path
-          << ", Version: " << this->_version << std::endl;
+	// std::cout << "Parsed Request-Line: Method: " << this->_method
+    //       << ", Path: " << this->_path
+    //       << ", Version: " << this->_version << std::endl;
 }
 
 /**
@@ -159,7 +162,7 @@ void Request::parseStartLine(const std::string& line)
  */
 bool Request::isValidRL(const std::string& line)
 {
-	std::cout << BLUE "line is : " RESET  << line << std::endl;
+	//std::cout << BLUE "line is : " RESET  << line << std::endl;
 	const std::string SP  = " ";
 	size_t firstspace, secondspace;
 	
@@ -232,8 +235,12 @@ bool	Request::hasCorrectHost() const
 		throw std::runtime_error("Error parsing Request : no Host header");
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
-	if (it->second != this->_hostName)
+	if (it->second != this->_host)
+	{
+		std::cerr << "Host is : " << it->second << std::endl;
+		std::cerr << "bad host is : " << this->_host << std::endl;
 		throw std::runtime_error("Error parsing Request : invalid Host header");
+	}
 	return(true);
 }
 
@@ -496,11 +503,12 @@ void		Request::handleGetRequest()
 			this->_status = 301;
 			return;
 		}
-		if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
-			this->_parsePath = _location.getRootDir() + this->_path + index;
+		//std::cout << "looking for index file at : " << this->_parsePath + index << std::endl;
+		if (!index.empty() && fileExists(this->_parsePath + index))
+			this->_parsePath.append(index);
 		else if(_location.getAutoIndex() == true)
 		{
-			DirectoryListing dirList(this->_location.getRootDir() + this->_path);
+			DirectoryListing dirList(this->_parsePath);
 			this->_respbody = dirList.getHTMLListing();
 			//return; ->otherwise no 200 status
 		}
@@ -560,7 +568,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 
 		std::string filePath = _location.getRootDir() + _location.getUploadFile() + ftime + ".txt";
 		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
-		//std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
+		std::cout << BLUE "POST url FORM Ressource is : " RESET<< filePath << std::endl;
 		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
 		std::ofstream file(filePath, std::ios::app);
 		if (!file.is_open())
@@ -775,9 +783,9 @@ bool Request::isValidPath()
 {
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
-	this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
-	//std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
-	//std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+	this->_parsePath = _location.getRootDir() + this->_path.substr(_location.getPath().size());
+	std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
+	std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
 	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
@@ -990,6 +998,45 @@ bool Request::execCgi() const
 {
 	return(this->_execCgi);
 }
+
+void	Request::setHost(const std::string& host)
+{
+	this->_host = host;
+}
+
+std::string Request::getHost() const
+{
+	return(this->_host);
+}
+
+void	Request::setServerName(const std::string& servername)
+{
+	this->_serverName = servername;
+}
+
+std::string Request::getServerName() const
+{
+	return(this->_serverName);
+}
+
+void	Request::setPort(int serverport)
+{
+	this->_port = serverport;
+}
+
+int Request::getPort() const
+{
+	return(this->_port);
+}
+
+/*
+only used in case of alias / redirection with 301 bypassing the buildRequest method
+*/
+void	Request::setPath(const std::string& path)
+{
+	this->_parsePath = path;
+}
+
 /************************** UTILS **********************************/
 
 /*

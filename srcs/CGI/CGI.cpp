@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:34 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/09 20:10:40 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 12:00:39 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,17 +26,15 @@ CGI::CGI(Request &req, std::string execpath) : _path(req.getParsePath()), _body(
 	_env["PATH_TRANSLATED"] = req.getPath();
 	_env["QUERY_STRING"] = req.getQueryString();
 	_env["HTTP_COOKIE"] = req.getHeaderField("Cookie");
-	_env["REMOTE_ADDR"] = "0.0.0.0";
-	_env["SERVER_NAME"] = "webserv"; // from config
+	_env["REMOTE_ADDR"] = req.getHost().substr(0, req.getHost().find(":"));
+	_env["SERVER_NAME"] = req.getServerName();
 	_env["SERVER_PROTOCOL"] = "HTTP/1.1";
-	_env["SERVER_PORT"] = "4242"; //FROM CONFIG
+	_env["SERVER_PORT"] = std::to_string(req.getPort());
 	_env["HTTP_USER_AGENT"] = req.getHeaderField("USER_AGENT");
 	_env["REDIRECT_STATUS"] = "200";
 	_env["REQUEST_METHOD"] = req.getMethod();
 	_env["SERVER_SOFTWARE"] = "Webserv/2.0";
 
-	std::cerr << BG_RED << "CGI ENV PATH " << this->_env["SCRIPT_NAME"] << RESET << std::endl;
-	//_path = "/Users/rjobert/Desktop/42_cursus/webserv/proto/html/cgi-bin/hellocgi.sh";
 }
 
 CGI::~CGI(void)
@@ -143,7 +141,10 @@ void	CGI::executeCGI()
 		this->_status = 200;
 	}
 	else
+	{
 		this->_status = 502;
+		std::cout << BG_RED "CGI script failed" RESET << std::endl;
+	}
 }
 	
 
@@ -176,7 +177,6 @@ void CGI::checkCGI()
 	if (_respbody.empty() || _respbody.find("Content-Type:") == std::string::npos)
 	{	
 		_status = 502;
-		std::cerr << BG_RED "CGI response is empty -> 502 direct" RESET << std::endl;
 		return;
 	}
 	size_t headerEnd = _respbody.find("\r\n\r\n");
@@ -224,7 +224,7 @@ std::string	CGI::readSafeTimeout(void)
 
 	buffBody.clear();
 	
-	while (std::time(NULL) - _start < _TimeoutSec)
+	while (std::time(NULL) - _start < _TimeoutSec * 100)
 	{
 		int byteRead;
 		byteRead = read(_fdout[0], buffer, sizeof(buffer) - 1);

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/09 19:55:22 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 11:58:26 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ private:
 	int		_fdin[2];
 	int		_fdout[2];
 	int		_status;
-	static const int _TimeoutSec = 3;
+	static const int _TimeoutSec = 30;
 	pid_t _pid;
 	time_t _start;
 

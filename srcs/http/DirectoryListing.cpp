@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/25 11:53:03 by rjobert           #+#    #+#             */
-/*   Updated: 2024/04/26 10:36:49 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/23 15:03:05 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ std::vector<std::string> DirectoryListing::getListing(const std::string& path) c
 	std::string tmp;
 	DIR *dir;
 	struct dirent *ent;
+	std::cout << "Path Dir Listing: " << path << std::endl;
 	if ((dir = opendir(path.c_str())) != NULL)
 	{
 		int count = 0;

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/16 16:58:24 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/24 11:59:58 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,13 +106,17 @@ std::string Response::getResponse() const
 */
 void	Response::addHeaders()
 {
+	if (_fromCgi && _status >= 500)
+	{
+		_headers["Content-Length"] = "0"; //working but can trunc content
+		return;
+	}	
 	if (_fromCgi)
 		return;
 	if (this->_status == 301)
 	{
 		_headers["Location"] = this->_assetPath;
 		_headers["content-length"] = "0";
-		//_headers["Connection"] = "close";
 	}
 	else if (this->_status == 204)
 		_headers.clear();
@@ -264,7 +268,9 @@ std::map<int, std::string>	Response::initStatusMaps()
 	s[413] = "Content Too Large";
     s[405] = "Method Not Allowed";
     s[500] = "Internal Server Error";
+	s[502] = "Bad Gateway";
     s[505] = "HTTP Version not supported";
+	s[508] = "Loop Detected";
 
 	return s;
 }
