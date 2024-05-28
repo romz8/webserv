@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/28 13:33:01 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 19:58:55 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <ServerConfig.hpp>
 #include <ParseContent.hpp>
 #include <LocationConfig.hpp>
+#include <Utils.hpp>
 
 Parser::Parser( void ) {
 }
@@ -89,6 +90,132 @@ void	Parser::checkValidSeparator( std::string name, int type ) {
 		throw std::logic_error( "\"" + name \
 				+ "\" invalid separator for this directive, expected \"" \
 				+ separators[ expectedSeparator - 1 ] + "\"" );
+}
+
+void	Parser::parseLine( std::vector<ServerConfig> &vector, StrVector allowed_directives, std::string &content) {
+	std::string	head;
+	std::string	body;
+	std::string	name;
+	int			type;
+
+	if ( (type = SUtils::get_pair(content, head, body) ) != NOT_SEPARATOR )
+	{
+		name = head.substr(0, head.find_first_of(ISSPACE));
+		checkValidDirective(name, allowed_directives);
+		checkValidSeparator(name, type);
+		parseDirective(head, body, vector, allowed_directives);
+	}
+	else
+		throw std::logic_error( "Unxpected \"}\" or end of file" );
+};
+
+void	Parser::parseDirective( std::string head, std::string body, std::vector<ServerConfig> &server, StrVector allowed_directives ) {
+	int idx;
+	std::string name;
+
+	name = head.substr(0, head.find_first_of(ISSPACE));
+	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
+		parseSimpleServ(head, server[server.size() - 1], allowed_directives);
+	else
+		parseComplex(head, body, server);
+}
+
+void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_directives, std::string &content ) {
+	while (content.length() > 0)
+	{
+		try
+		{
+			parseLine(vector, allowed_directives, content);
+		} catch ( std::exception &e ) {
+			throw std::logic_error(e.what());
+		}
+	}
+}
+
+void	Parser::parseSimpleServ( std::string head, ServerConfig &server, StrVector allowed_directives ) {
+	std::string name = head.substr(0, head.find_first_of(ISSPACE));
+	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
+	if (idx == 0)
+		Parser::parseSimpleSA[idx](head, server);
+}
+
+void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
+	std::cout << head << " in location " << &server << std::endl;
+}
+
+void	Parser::parseComplex( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
+	std::string	name;
+	
+	name = head.substr(0, head.find_first_of(ISSPACE));
+	if (!name.compare("server"))
+		parseServer( head, body, vector);
+	else
+		parseLocation( head, body, vector);
+}
+
+void	Parser::parseServer( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
+	ServerConfig server;
+	vector.push_back(server);
+	std::cout << &vector[vector.size() - 1] << std::endl;
+	getConfig(vector, server.getAD(), body);
+}
+
+
+void	Parser::parseLocation( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
+	StrVector shead;
+	LocationConfig	location;
+	ServerConfig	&server = vector[vector.size() - 1];
+
+	SUtils::split(shead, head, " \t");
+	std::string uri = shead[1];
+	size_t pos = uri.find_first_of("{");
+	if (pos != std::string::npos) {
+		uri = uri.substr(0, pos);
+	}
+	if (uri.empty())
+		throw std::logic_error("Needed one uri for location");
+	location.setUri(uri);
+	getLocConfig(location, location.getAD(), body);
+	server.addLocationConfig(location);
+	return ;
+}
+
+void Parser::getLocConfig( LocationConfig &location, StrVector allowed_directives, std::string &content ) {
+	while (content.length() > 0)
+	{
+		try
+		{
+			parseLocLine(location, allowed_directives, content);
+		} catch ( std::exception &e ) {
+			throw std::logic_error(e.what());
+		}
+	}
+}
+
+void	Parser::parseLocLine( LocationConfig &vector, StrVector allowed_directives, std::string &content) {
+	std::string	head;
+	std::string	body;
+	std::string	name;
+	int			type;
+
+	if ( (type = SUtils::get_pair(content, head, body) ) != NOT_SEPARATOR )
+	{
+		name = head.substr(0, head.find_first_of(ISSPACE));
+		checkValidDirective(name, allowed_directives);
+		checkValidSeparator(name, type);
+		parseDirectiveLoc(head, body, vector, allowed_directives);
+	}
+	else
+		throw std::logic_error( "Unxpected \"}\" or end of file" );
+};
+
+void	Parser::parseDirectiveLoc( std::string head, std::string body, LocationConfig &location, StrVector allowed_directives ) {
+	int idx;
+	std::string name;
+
+	name = head.substr(0, head.find_first_of(ISSPACE));
+	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
+		parseSimpleLoc(head, location, allowed_directives);
 }
 
 std::string	Parser::getContent(void) {

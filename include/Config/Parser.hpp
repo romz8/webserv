@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/28 13:33:43 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/28 19:59:53 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,13 @@
 class ServerConfig;
 class LocationConfig;
 
+
+
 class Parser {
 	private:
+		typedef void	(*parseSimpServ) (std::string, ServerConfig &);
+		typedef parseSimpServ	parseSimpleSA[ N_SERVER_DIRECTIVES ];
+		static parseSimpleSA _parseSimpleSA;
 		std::string _file;
 		std::string	_content;
 		StrVector _allowed_directives;
@@ -50,30 +55,28 @@ class Parser {
 		StrVector	getAD( void );
 		std::string	getContent( void );
 		
-		template <typename T>
-		void	parseLine( std::vector<T> &vector, StrVector allowed_directives, std::string &content);
-		template <typename T>
-		void	parseDirective( std::string head, std::string body, std::vector<T> &vector );
-		template <typename T>
-		void	getConfig( std::vector<T> &vector, StrVector allowed_directives, std::string &content );
+		void	parseLine( std::vector<ServerConfig> &vector, StrVector allowed_directives, std::string &content);
+		void	getConfig( std::vector<ServerConfig> &vector, StrVector allowed_directives, std::string &content );
+		void	parseDirective( std::string head, std::string body, std::vector<ServerConfig> &sserver, StrVector allowed_directives );
 
+		void	getLocConfig( LocationConfig &location, StrVector allowed_directives, std::string &content );
+		void	parseLocLine( LocationConfig &location, StrVector allowed_directives, std::string &content);
+		void	parseDirectiveLoc( std::string head, std::string body, LocationConfig &location, StrVector allowed_directives );
 
 	private:
-		template <typename T>
-		void	parseServer( std::string head, std::string body, std::vector<T> &servers );
-		template <typename T>
-		void	parseLocation( std::string head, std::string body, std::vector<T> &servers );
+		void	parseServer( std::string head, std::string body, std::vector<ServerConfig> &servers );
+		void	parseLocation( std::string head, std::string body, std::vector<ServerConfig> &servers );
+		
 		void	getInfo( void );
+		
 		void	check_command( int ac, char **av );
 		int		checkValidDirective( std::string name, StrVector allowed_directives );
 		void	checkValidSeparator( std::string name, int type );
 		
-		template <typename T>
-		void	parseSimple( std::string, T &);
-		template <typename T>
-		void	parseComplex( std::string, std::string, std::vector<T> &);
+		void	parseComplex( std::string, std::string, std::vector<ServerConfig> &);
+		
+		void	parseSimpleServ( std::string, ServerConfig &, StrVector allowed_directives);
+		void	parseSimpleLoc( std::string, LocationConfig &, StrVector allowed_directives );
 };
-
-#include <Parser.ipp>
 
 #endif

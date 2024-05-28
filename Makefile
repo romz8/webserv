@@ -6,7 +6,7 @@
 #    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/28 13:20:14 by jsebasti         ###   ########.fr        #
+#    Updated: 2024/05/28 16:49:03 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,7 +25,7 @@ SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp htt
 	config/serverConfig.cpp config/Parser.cpp config/Utils.cpp config/ParseInit.cpp config/ParseContent.cpp
 INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
 	LocationConfig.hpp ServerConfig.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp Config/Parser.hpp \
-	Config/Utils.hpp Config/ParseContent.hpp Config/Utils.ipp Config/Parser.ipp
+	Config/Utils.hpp Config/ParseContent.hpp Config/Utils.ipp
 
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))
