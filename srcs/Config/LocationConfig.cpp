@@ -6,17 +6,27 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:39 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 13:09:34 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 15:36:40 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "LocationConfig.hpp"
+#include <ServerConfig.hpp>
 #include <Utils.hpp>
 
 LocationConfig::LocationConfig() : _autoIndex(false), _allowUpload(false) {
 	SUtils::set_allowed_directives(this->_allowed_directives, LOCATION);
 }
 LocationConfig::~LocationConfig(){}
+
+LocationConfig::LocationConfig( const ServerConfig &serv ) {
+	_root = serv.getRootDir();
+	_error_pages = serv.getErrorPages();
+	_cgiConfigs = serv.getCgiConf();
+	_autoIndex = serv.getAutoIndex();
+	_allowUpload = false;
+	SUtils::set_allowed_directives(this->_allowed_directives, LOCATION);
+}
 
 LocationConfig::LocationConfig(const LocationConfig& src)
 {

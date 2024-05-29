@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:08:51 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 13:09:22 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 15:30:30 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 # include <iostream>
 # include <vector>
 # include <map>
+
+class ServerConfig;
 
 struct CgiConfig 
 {
@@ -43,7 +45,8 @@ private:
 
 public:
 	LocationConfig();
-	LocationConfig(const LocationConfig& src);
+	LocationConfig( const ServerConfig &serv);
+	LocationConfig(const LocationConfig &src);
 	LocationConfig& operator=(const LocationConfig& src);
 	~LocationConfig();
 
@@ -66,7 +69,7 @@ public:
 	const std::vector<CgiConfig>& getCgiConfigs() const;
 	const std::string& getIndex() const;
 	bool getAutoIndex() const;
-	bool getAllowUpload() const;
+	bool getAllowUpload() const ;
 	const std::string& getUploadDir() const;
 	std::vector<std::string>	getAD(void);
 };

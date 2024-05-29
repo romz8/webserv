@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/28 19:59:53 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 15:41:05 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ class Parser {
 		
 		void	parseComplex( std::string, std::string, std::vector<ServerConfig> &);
 		
-		void	parseSimpleServ( std::string, ServerConfig &, StrVector allowed_directives);
+		void	parseSimpleServ( std::string, std::string, ServerConfig &, StrVector allowed_directives);
 		void	parseSimpleLoc( std::string, LocationConfig &, StrVector allowed_directives );
 };
 

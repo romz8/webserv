@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 19:30:00 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/09 20:03:06 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 14:24:06 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ int	ParseDirectives::parseLocation( Directives *d, StrVector & content, int n_li
 	return (last - 1);
 }
 
-void	ParseDirectives::save_root( Directives *d, const StrVector &line ) {
+void	ParseDirectives::save_root( const std::string &head,  ) {
 	if ( line.size() != 2 )
 		throw logic_error("Unexpected amount of arguments");
 	if (d->dirSet["alias"] == true)

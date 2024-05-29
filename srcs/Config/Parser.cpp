@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/28 19:58:55 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 15:44:42 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ void	Parser::parseDirective( std::string head, std::string body, std::vector<Ser
 
 	name = head.substr(0, head.find_first_of(ISSPACE));
 	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
-		parseSimpleServ(head, server[server.size() - 1], allowed_directives);
+		parseSimpleServ(head, body, server[server.size() - 1], allowed_directives);
 	else
 		parseComplex(head, body, server);
 }
@@ -132,11 +132,14 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 	}
 }
 
-void	Parser::parseSimpleServ( std::string head, ServerConfig &server, StrVector allowed_directives ) {
+void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
 	if (idx == 0)
-		Parser::parseSimpleSA[idx](head, server);
+	{
+		std::cout << head << std::endl;
+		(Parser::_parseSimpleSA[idx])(head, server);
+	}
 }
 
 void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
@@ -163,8 +166,8 @@ void	Parser::parseServer( std::string head, std::string body, std::vector<Server
 
 void	Parser::parseLocation( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
 	StrVector shead;
-	LocationConfig	location;
 	ServerConfig	&server = vector[vector.size() - 1];
+	LocationConfig	location(server);
 
 	SUtils::split(shead, head, " \t");
 	std::string uri = shead[1];
