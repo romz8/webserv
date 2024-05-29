@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:07:08 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 15:18:13 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 17:40:32 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,20 @@ class ParseContent {
 		~ParseContent( void );
 		template <typename T>
 		static void		save_root(std::string head, T &);
+		template <typename T>
+		static void		save_listen(std::string head, T &);
+		template <typename T>
+		static void		save_server_name(std::string head, T &);
+		template <typename T>
+		static void		save_client_max_body_size(std::string head, T &);
+		template <typename T>
+		static void		save_autoindex(std::string head, T &);
+		template <typename T>
+		static void		save_error_page(std::string head, T &);
+		template <typename T>
+		static void		save_upload_store(std::string head, T &);
+		template <typename T>
+		static void		save_cgi(std::string head, T &);
 		static string	total_directives[ DIRECTIVES_NUM ];
 		static string	location_directives[ N_LOCATION_DIRECTIVES ];
 		static string	server_directives[ N_SERVER_DIRECTIVES ];

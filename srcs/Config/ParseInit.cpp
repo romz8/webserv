@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/27 11:21:58 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/28 19:57:48 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 17:35:45 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void Parser::init( void ) {
 
 Parser::parseSimpleSA Parser::_parseSimpleSA = {
 	&ParseContent::save_root<ServerConfig>,
-	// &ParseContent::listen,
+	&ParseContent::save_listen<ServerConfig>,
 	// &ParseContent::server_name,
 	// &ParseContent::client_max_body_size,
 	// &ParseContent::autoindex,
