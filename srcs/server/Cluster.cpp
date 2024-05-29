@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 16:05:39 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 20:29:48 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,7 @@ void	Cluster::setUpServer() // should we throw or handle any issue here ? how ?
  *    - **Error Events**: Handles errors such as `POLLERR`, `POLLHUP`, and `POLLNVAL` by removing the client.
  * 5. **Revents Reset**: Resets the `revents` field of each pollfd structure after processing.
  * 6. **Sleep**: Adds a small sleep interval (`usleep(1000)`) to prevent busy-waiting.
+ * 7. **Timeout Handling**: Checks for timeouts on client connections and sends responses if needed.
  */
 void Cluster::run()
 {
@@ -133,10 +134,8 @@ void Cluster::run()
 						}
 					else
 					{
-						//Request *req = &_fdtoReq[i];
 						std::cout << BG_CYAN "ENTER READCLIENT" RESET << std::endl;
 						int ret = serv->readClient(_fdSet[i], _fdtoReq[_fdSet[i].fd]);
-						std::cout << "ret read client is : " << ret << std::endl;
 						if (ret <= 0)
 							removeClient(_fdSet[i].fd);
 						else if (ret == 1)
@@ -149,7 +148,6 @@ void Cluster::run()
 				{
 					std::cout << BG_CYAN "ENTER POLLOUT" RESET << std::endl;
 					int ret = serv->sendClient(_fdSet[i]);
-					std::cout << "ret send client is : " << ret << std::endl;
 					if (ret < 0)
 						removeClient(_fdSet[i].fd);
 					else if (ret == 1)
@@ -157,7 +155,6 @@ void Cluster::run()
 				}
 				else if (_fdSet[i].revents & (POLLERR | POLLHUP | POLLNVAL))
 					removeClient(_fdSet[i].fd);
-				//POTENTIAL TIMEOUT HERE INSTEAD OF NEW LOOP ?
 				_fdSet[i].revents = 0;
 			}
 		}
@@ -183,7 +180,10 @@ void Cluster::run()
 }
 
 /**
- * @brief Adds a file descriptor and associated events to the polling set.
+ * @brief Adds a file descriptor and associated events to the polling set. it maps 
+ * the file descriptor to a `Server` instance to handle the events. in READY state, 
+ * it also maps the file descriptor to a `Request` instance to handle the request.
+ * the request will then  be handled by the request instance based on server rule
  * 
  * The `addPollFd` function registers a new file descriptor along with the events it should be 
  * monitored for (e.g., `POLLIN`, `POLLOUT`) into the `_fdSet`, which is used by the `poll()` system call.
@@ -261,16 +261,36 @@ void	Cluster::removeClient(int fd)
 }
 
 /**
- * checkCGI
- * This function validates the CGI response to ensure it is correctly formatted.
+ * @brief Checks the state of ongoing CGI processes and handles their completion.
+ * this is becasuse if it was done in the readClient function, it would block the
+ * server from handling other requests. It has to go through the main loop with poll
  * 
- * Steps involved:
- * 1. Checks if the status is not 200 (OK) and returns early if not.
- * 2. Checks if the response body is empty or lacks a `Content-Type` header.
- * 3. Searches for the end of the HTTP headers using double newlines.
- * 4. Extracts and separates the headers and body:
- * 5. Checks if the `Content-Length` header is present and add-it if not
- * 6. Returns a correctly formatted CGI response.
+ * This function iterates through all requests tracked by the `_fdtoReq` map to
+ * monitor the state of CGI processes. It performs the following logical steps:
+ * 
+ * 1. Iterates through the map of file descriptors to requests.
+ * 2. Checks if a request is currently executing a CGI process (`_onCGI` is true)
+ *    and if the `execCgi()` function returns true, indicating that the CGI process is active.
+ * 3. If the CGI process has been running longer than `TIMEOUTCGI`, it:
+ *    - Marks the CGI process as done (`cgiDone = true`).
+ *    - Kills the CGI process using `kill` with `SIGKILL`.
+ *    - Sets the request status to 504 (Gateway Timeout).
+ * 4. If the CGI process has completed (`waitpid` returns > 0), it:
+ *    - Marks the CGI process as done (`cgiDone = true`).
+ *    - Reads the CGI process output from the file descriptor `_fdout[0]`.
+ *    - Checks if the CGI process exited with a non-zero status or if reading failed.
+ *      If so, sets the request status to 502 (Bad Gateway).
+ *    - Otherwise, reads the output into a buffer, stores it in the request's `_respbody`,
+ *      and sets the request status to 200 (OK).
+ * 5. If the CGI process is done (`cgiDone` is true):
+ *    - Closes the CGI output file descriptor `_fdout[0]`.
+ *    - Calls `checkCGISHeader` on the request to validate the CGI response headers.
+ *    - Constructs a `Response` object using the request and builds the HTTP response.
+ *    - If the status is 502 or 504, sets the connection to close after sending the response.
+ *      Otherwise, sets the connection header based on the request's `Connection` field.
+ *    - Stores the prepared response in `_clientResponse`.
+ *    - Initializes the request for future use.
+ *    - Changes the poll event to `POLLOUT` to indicate readiness to send the response.
  */
 void Cluster::checkCGIState()
 {

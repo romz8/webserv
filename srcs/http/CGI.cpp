@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ReqCGI.cpp                                         :+:      :+:    :+:   */
+/*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/28 19:10:29 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 15:29:12 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 18:26:36 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "CGI.hpp"
+#include "Request.hpp"
 
 void Request::initCgi(std::string execPath) {
     _cgi._path = getParsePath();

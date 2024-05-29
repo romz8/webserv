@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 11:36:32 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 20:22:41 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,6 @@ int main(int argc, char *argv[])
         Cluster cluster(serverConfs);
         std::cout << BG_BLUE "BUFERSIZE: " << BUFSIZE << std::endl;
         cluster.run();
-        //Server serv(test);
-		// std::cout << "Server created" << std::endl;
-		// std::cout << serv << std::endl;
-		// serv.run();
 	}
 	catch (const std::exception& e)
 	{
@@ -36,49 +32,6 @@ int main(int argc, char *argv[])
 	}
 }
 
-/*
-Configuration class and setup corresponding to 
-server {
-    listen 4242;
-    server_name testing Server;
-    root ./html/;
-    error_page 404 error_pages/404.html;
-    error_page 500 error_pages/500.html;
-    error_page 400 error_pages/400.html;
-    error_page 413 error_pages/413.html;
-
-    cgi .sh /bin/bash;
-    cgi .py /usr/bin/python3;
-    cgi .js /usr/local/bin/node;
-
-    location /getorder {
-        root ./html/;
-        alias index.html;
-        autoindex on;
-        allow_methods GET POST;
-    }
-
-    location /postfile {
-        root ./html/;
-        alias index.html;
-        allow_methods GET POST;
-    }
-
-    location / {
-        root ./html/;
-        index index.html;
-        alias index.html;
-        allow_methods GET POST;
-        cgi .sh /bin/bash;
-        cgi .py /usr/bin/python3;
-        cgi .js /usr/local/bin/node;
-        error_page 404 error_pages/404.html;
-        error_page 500 error_pages/500.html;
-        error_page 400 error_pages/400.html;
-        error_page 413 error_pages/413.html;
-    }
-}
-*/
 
 ServerConfig testBuild(std::string hostname, int port)
 {
@@ -116,7 +69,7 @@ ServerConfig testBuild(std::string hostname, int port)
     location1.setRoot("./html/getorder"); 
 	location1.setAutoIndex(true);
     location1.setAllowedMethods(methodGP);
-    location1.setIndex("index.html");
+    //location1.setIndex("index.html");
     location1.setAllowUpload(true);
     location1.setUploadDir("./upload/");
     serverConfig.addLocationConfig(location1);
@@ -124,7 +77,7 @@ ServerConfig testBuild(std::string hostname, int port)
     LocationConfig location2;
     location2.setUri("/test2");
     location2.setRoot(serverConfig.getRootDir() + "/postfile");
-    location2.setAlias("https://www.youtube.com/watch?v=qoeCvcE-gKY");
+    location2.setAlias("/test1");
     location2.setAllowedMethods(methodGP);
     //location2.setCgiPath("./upload/files/");
 	location2.setAllowUpload(true);
@@ -204,7 +157,7 @@ ServerConfig createServerConfig(std::string hostname, int port, const std::strin
 std::vector<ServerConfig> multipleTest()
 {
     std::vector<ServerConfig> serverConfs;
-    //ServerConfig basic4243 = testBuild("127.0.0.1", 4243);
+    ServerConfig basic4243 = testBuild("127.0.0.1", 4242);
     ServerConfig basic4242 = testBuild("localhost", 4242);
     //ServerConfig basic4244 = testBuild("0.0.0.0", 4244);
     //serverConfs.push_back(basic4243);

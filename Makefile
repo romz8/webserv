@@ -6,7 +6,7 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/29 16:15:49 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/29 18:26:25 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,7 @@ SRC_NAME = main.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
 	server/Location.cpp http/DirectoryListing.cpp config/LocationConfig.cpp \
 	config/ServerConfig.cpp server/Cluster.cpp http/CGI.cpp
 INC_NAME = Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
-	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp Cluster.hpp LocationConfig.hpp \
+	Location.hpp DirectoryListing.hpp Config/Directives.hpp Cluster.hpp LocationConfig.hpp \
 	ServerConfig.hpp 
 
 

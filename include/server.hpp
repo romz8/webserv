@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 11:41:01 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 19:12:31 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,27 +31,7 @@
 # define BUFSIZE 8192
 # define MAX_HEADER_SIZE 8193
 # define TIMEOUTCGI 8
-// typedef struct Config
-// {
-// 	std::string	host;
-// 	std::string	port; //need to atoi : careful on overflow in conf file parsing
-// 	std::string	serverName;
-// 	std::string	root;
-// 	std::string	index;
-// 	std::string	hostName;
-// 	std::map<int, std::string> errPageGlobal;
-// 	std::vector<CgiConfig> cgiConf;
-	
-// 	// Location	loc; 	//later on std::vector<Location> locs;
-// } Config;
 
-// struct client
-// {
-// 	int fd;
-// 	std::string request;
-// 	std::string response;
-// 	bool httpDone;
-// };
 class Request;
 
 class Server
@@ -66,7 +46,7 @@ private:
 	std::vector<Location>	_locations;
 	std::map<int, std::string> _errPageGlobal;
 	Location _rootloc; //if no url match a location, use root location
-	std::map<int , std::string> _clientRequest;
+	std::map<int , std::string> _clientConnect;
 	std::map<int , std::string> _clientResponse;
 
 	std::map<int, std::string> _inputHead;

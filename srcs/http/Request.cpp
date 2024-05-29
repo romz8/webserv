@@ -794,26 +794,6 @@ void Request::DeleteDirectory()
 *********************************************************************
 */
 
-// bool	Request::handleCgi()
-// {
-// 	if (_location.hasCgi(parseExtension(this->_path, "")))
-// 	{
-// 		this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
-// 		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
-// 		if (_method == "POST")
-// 			_query = _body;		
-// 		CGI cgi(*this, execpath);
-// 		cgi.executeCGI();
-// 		cgi.checkCGI();
-// 		this->_status = cgi.getStatus();
-// 		if (this->_status == 200)
-// 			this->_respbody = cgi.getBody();
-// 		this->_execCgi = true;
-// 		return (true);
-// 	}
-// 	return (false);
-// }
-
 bool	Request::handleCgi()
 {
 	if (_location.hasCgi(parseExtension(this->_path, "")))
@@ -1345,13 +1325,6 @@ bool Request::processChunkBody(std::string buffer)
 	std::cout << "arrived in chunk body" << std::endl;
 	bool endChunk = (buffer.find("0\r\n\r\n") != std::string::npos);
 	_chunkBody.append(buffer);
-	// if (endChunk)
-	// {
-	// 	size_t end = buffer.find("0\r\n\r\n");
-	// 	_chunkBody = buffer.substr(0, end);
-	// }
-	// else
-	// 	_chunkBody.append(buffer);
 	return (endChunk);
 }
 
