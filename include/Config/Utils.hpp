@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 13:12:13 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/28 18:16:46 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 22:14:17 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <sstream>
 # include <vector>
 
+# define IPVALID ".0123456789"
 # define ISSPACE "\t\n\v\f\r "
 # define NOT_SEPARATOR -1
 # define COMMENT 1
@@ -47,11 +48,14 @@ namespace SUtils {
 namespace std {
 	template <typename T>
 	string	to_string( const T &n );
+
+	int		ft_stoi( string );
 }
 
 std::string		trim_left( std::string );
 std::string		trim_right( std::string );
 void            split_pair( const std::string str, std::string &head, std::string &body );
+void			checkValidIp(std::string);
 
 # include <Utils.ipp>
 

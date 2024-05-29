@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 15:44:42 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 22:12:55 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
-	if (idx == 0)
+	if (idx == 0 || idx == 1)
 	{
 		std::cout << head << std::endl;
 		(Parser::_parseSimpleSA[idx])(head, server);

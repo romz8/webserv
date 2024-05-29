@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 15:17:12 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 22:09:54 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,6 @@ string	ParseContent::total_directives[ DIRECTIVES_NUM ] = {
 	"location",
 	"server"
 };
-
-
 
 
 

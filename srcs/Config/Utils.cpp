@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 14:29:06 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 15:44:15 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/29 22:16:03 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,19 @@ namespace SUtils {
 		ret--;
 		return ( ret );
 	}
+}
+
+namespace std {
+	int	ft_stoi( string num ) {
+		int n;
+
+		n << ;
+	}
+}
+
+void	checkValidIp(std::string ip) {
+	if (ip.find_first_not_of(IPVALID) != std::string::npos)
+		throw std::logic_error("Invalid ip " + ip);
 }
 
 void	split_pair( const string str, string &head, string &body ) {
