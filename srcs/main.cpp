@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 15:05:30 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 11:36:32 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,11 +102,13 @@ ServerConfig testBuild(std::string hostname, int port)
 
     std::vector<std::string> methodGP;
 	std::vector<std::string> methodG;
-	std::vector<std::string> methodD;
+	std::vector<std::string> methodGPD;
 	methodGP.push_back("GET");
 	methodGP.push_back("POST");
 	methodG.push_back("GET");
-	methodD.push_back("DELETE");
+	methodGPD.push_back("GET");
+	methodGPD.push_back("POST");
+    methodGPD.push_back("DELETE");
 	
 	// Create and configure LocationConfig instances
     LocationConfig location1;
@@ -144,7 +146,7 @@ ServerConfig testBuild(std::string hostname, int port)
     rootLocation.setRoot(serverConfig.getRootDir());
 	rootLocation.setIndex("index.html");
     //rootLocation.setAlias("index.html");
-    rootLocation.setAllowedMethods(methodGP);
+    rootLocation.setAllowedMethods(methodGPD);
     //rootLocation.setCgiPath("");
     rootLocation.addCgiConfig(CgiConfig(".sh", "/bin/bash"));
     rootLocation.addCgiConfig(CgiConfig(".py", "/usr/bin/python3"));

@@ -6,7 +6,7 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/24 15:49:18 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/29 16:15:49 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,11 +20,11 @@ INC_DIR = ./include/ ./include/Config/
 OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
-	server/Location.cpp http/DirectoryListing.cpp CGI/CGI.cpp config/LocationConfig.cpp \
-	config/ServerConfig.cpp server/Cluster.cpp
+	server/Location.cpp http/DirectoryListing.cpp config/LocationConfig.cpp \
+	config/ServerConfig.cpp server/Cluster.cpp http/CGI.cpp
 INC_NAME = Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
 	Location.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp Cluster.hpp LocationConfig.hpp \
-	ServerConfig.hpp
+	ServerConfig.hpp 
 
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 16:35:39 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 16:02:45 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,13 +106,13 @@ std::string Response::getResponse() const
 */
 void	Response::addHeaders()
 {
-	if (_fromCgi && _status >= 500)
-	{
-		_headers["Content-Length"] = "0"; //working but can trunc content
-		_headers["Connection"] = "close";
-		return;
-	}	
-	if (_fromCgi)
+	// if (_fromCgi && _status >= 500)
+	// {
+	// 	_headers["Content-Length"] = "0"; //working but can trunc content
+	// 	_headers["Connection"] = "close";
+	// 	return;
+	// }	
+	if (_fromCgi && _status == 200)
 		return;
 	if (this->_status == 301)
 	{
@@ -270,6 +270,7 @@ std::map<int, std::string>	Response::initStatusMaps()
     s[405] = "Method Not Allowed";
     s[500] = "Internal Server Error";
 	s[502] = "Bad Gateway";
+	s[504] = "Gateway Timeout";
     s[505] = "HTTP Version not supported";
 	s[508] = "Loop Detected";
 

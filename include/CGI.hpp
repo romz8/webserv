@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 17:13:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 17:05:25 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 21:18:56 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <signal.h>
 
 class Request;
+
 
 class	CGI 
 {

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 14:52:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 11:41:01 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 # define MAX_Q 420
 # define BUFSIZE 8192
 # define MAX_HEADER_SIZE 8193
-
+# define TIMEOUTCGI 8
 // typedef struct Config
 // {
 // 	std::string	host;
@@ -78,7 +78,7 @@ private:
 	sockaddr_in _servAddr;
 	struct sockaddr_in _client_addr;
 	size_t _addr_size;
-	static const int _readTimeout = 3;
+	static const int _readTimeout = 5;
 
 public:
 	Server(const ServerConfig& conf);
@@ -112,6 +112,8 @@ public:
 	int getPort() const;
 	int getMaxBodySize() const;
 	std::string getserverName() const;
+	void setClientRequest(int fd, const std::string& request);
+	void setClientResponse(int fd, const std::string& response);
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& serv);

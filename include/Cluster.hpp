@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:18:22 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 14:09:23 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/28 19:53:11 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ public:
 	void	removePollFd(int fd);
 	void	setPoll(int fd, short events, Server* server);
 	void	removeClient(int fd);
+	void	checkCGIState();
 	void	run();
 };
 

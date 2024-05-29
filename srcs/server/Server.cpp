@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 16:28:34 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 15:56:54 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
 			_rootloc = loc;
 	}
 	std::cout << "Locations size : " << _locations.size() << std::endl;
-	for (size_t i = 0; i < _locations.size(); ++i) 
+	for (size_t i = 0; i < _locations.size(); ++i)
 	{
         std::cout << "Location " << i << ": " << _locations[i] << std::endl;
     }
@@ -184,6 +184,12 @@ void	Server::processRequest(Request& request, int io_fd)
 	}
 	else
 		request.buildRequest();
+	if (request.execCgi())
+	{
+		std::cout << BG_GREEN "Lauching CGI" RESET << std::endl;
+		return;
+	}
+	
 	//request.printRequest(); //TO REMOVE AFTER TEST
 	Response resp(request);
 	resp.buildResponse();
@@ -209,20 +215,24 @@ int	Server::readClient(pollfd& pfd, Request& request)
 {
 	try
 	{
-		if (_start.find(pfd.fd) == _start.end())
+		if (_start.find(pfd.fd) == _start.end() || request.getStatus() == 0)
+		{
 			_start[pfd.fd] = std::time(NULL);
-		
+			std::cout << "time start in read fd: "<< pfd.fd << "is : " << _start[pfd.fd] << std::endl;
+		}
 		int byteRead;
 		char buffer[BUFSIZE];
 		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
 		if (byteRead < 0 )
 		{
 			std::cerr << "recv socket Error :" << strerror(errno) << std::endl;
+			_start.erase(pfd.fd);
 			return (-1);
 		}
 		if (byteRead == 0)
 		{
 			std::cout << "Client disconnected for fd"<< pfd.fd << std::endl;
+			_start.erase(pfd.fd);
 			return (0);
 		}
 		buffer[byteRead] = '\0';
@@ -231,6 +241,11 @@ int	Server::readClient(pollfd& pfd, Request& request)
 		{
 			_start.erase(pfd.fd);
 			processRequest(request, pfd.fd);
+			if (request.execCgi())
+			{
+				std::cout << BG_GREEN "Lauching CGI" RESET << std::endl;
+				return (2);
+			}
 			return (1);
 		}
 		return (2);
@@ -257,7 +272,6 @@ int	Server::sendClient(pollfd &pfd)
 	if (_clientResponse.find(io_fd) == _clientResponse.end())
 		return (-1);
 	std::string response = _clientResponse[io_fd];
-	std::cout << "Response to send : " << response << std::endl;
 	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
 	if (byteSent < 0)
 	{
@@ -321,11 +335,12 @@ int	Server::handleTimeout(const int io_fd, Request& request)
 		return(0);
 	if (std::time(NULL) -  _start[io_fd] > _readTimeout)
 	{
-		std::cerr << "Timeout for socket : " << io_fd << std::endl;
+		std::cerr << BG_RED "Timeout for socket : " RESET << io_fd << std::endl;
+		std::cout << BG_GREEN "timeout in : "<< io_fd << "is : " << _start[io_fd] << std::endl;
 		request.setStatus(408);
 		Response resp(request);
 		resp.buildResponse();
-		_clientRequest[io_fd] = "close";//request.getHeaderField("Connection");
+		_clientRequest[io_fd] = "close";
 		_clientResponse[io_fd] = resp.getResponse();
 		request.initRequest();
 		_start.erase(io_fd);
@@ -386,7 +401,7 @@ const int Server::acceptConnection()
 }
 
 
-/********************** GETTERS****************************/
+/********************** GETTERS & SETTERS ****************************/
 
 std::string Server::getHost() const
 {
@@ -408,6 +423,15 @@ std::string Server::getserverName() const
 	return (_serverName);
 }
 
+void Server::setClientRequest(int fd, const std::string& request)
+{
+	this->_clientRequest[fd] = request;
+}
+
+void Server::setClientResponse(int fd, const std::string& response)
+{
+	this->_clientResponse[fd] = response;
+}
 
 void printSockAddrIn(const sockaddr_in& addr) 
 {

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 15:10:41 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 16:05:39 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,8 @@ void Cluster::run()
 			for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
 				addPollFd(it->getSocketInit(), POLLIN, &(*it), INIT);
 		}
-		else if (ret == 0)
+		checkCGIState();
+		if (ret == 0)
 			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
 		else
 		{
@@ -120,6 +121,7 @@ void Cluster::run()
 				{
 					if (_fdSet[i].fd == serv->getSocketInit())
 						{
+							std::cout << BG_CYAN "ACCEPT NEW CLIENT" RESET << std::endl;
 							int newFd = serv->acceptConnection();
 							if (newFd < 0)
 							{
@@ -132,7 +134,9 @@ void Cluster::run()
 					else
 					{
 						//Request *req = &_fdtoReq[i];
+						std::cout << BG_CYAN "ENTER READCLIENT" RESET << std::endl;
 						int ret = serv->readClient(_fdSet[i], _fdtoReq[_fdSet[i].fd]);
+						std::cout << "ret read client is : " << ret << std::endl;
 						if (ret <= 0)
 							removeClient(_fdSet[i].fd);
 						else if (ret == 1)
@@ -143,8 +147,9 @@ void Cluster::run()
 				}
 				else if (_fdSet[i].revents & POLLOUT)
 				{
-					std::cout <<"ENTER POLLOUT" << std::endl;
+					std::cout << BG_CYAN "ENTER POLLOUT" RESET << std::endl;
 					int ret = serv->sendClient(_fdSet[i]);
+					std::cout << "ret send client is : " << ret << std::endl;
 					if (ret < 0)
 						removeClient(_fdSet[i].fd);
 					else if (ret == 1)
@@ -193,9 +198,9 @@ void	Cluster::addPollFd(int fd, short events, Server* server, servState state)
 	_fdtoServ[fd] = server;
 	if (state == READY)
 		_fdtoReq.insert(std::make_pair(fd, Request(server->getHost(), server->getMaxBodySize(), server->getserverName(), server->getPort())));
-	std::cout << BG_RED "created new pollfd for fd " RESET << fd << std::endl;
-	std::cout << "server conf is : " << server->getHost() << " " << server->getPort() << std::endl;
-	std::cout << "fdtoServ size is : " << _fdtoServ.size() << std::endl;
+	// std::cout << BG_RED "created new pollfd for fd " RESET << fd << std::endl;
+	// std::cout << "server conf is : " << server->getHost() << " " << server->getPort() << std::endl;
+	// std::cout << "fdtoServ size is : " << _fdtoServ.size() << std::endl;
 	//std::cout << "request set up is : " << _fdtoReq[fd] << std::endl;
 }
 
@@ -251,8 +256,65 @@ void	Cluster::removeClient(int fd)
 	
 	close(fd);
 	removePollFd(fd);
-	if (_fdtoServ.find(fd) != _fdtoServ.end())
-		_fdtoServ.erase(fd);
-	if (_fdtoReq.find(fd) != _fdtoReq.end())
-		_fdtoReq.erase(fd);
+	_fdtoServ.erase(fd);
+	_fdtoReq.erase(fd);
 }
+
+/**
+ * checkCGI
+ * This function validates the CGI response to ensure it is correctly formatted.
+ * 
+ * Steps involved:
+ * 1. Checks if the status is not 200 (OK) and returns early if not.
+ * 2. Checks if the response body is empty or lacks a `Content-Type` header.
+ * 3. Searches for the end of the HTTP headers using double newlines.
+ * 4. Extracts and separates the headers and body:
+ * 5. Checks if the `Content-Length` header is present and add-it if not
+ * 6. Returns a correctly formatted CGI response.
+ */
+void Cluster::checkCGIState()
+{
+	for (std::map<int, Request>::iterator it = _fdtoReq.begin(); it != _fdtoReq.end(); ++it)
+	{
+		if (!(it->second.getCgi()._onCGI && it->second.execCgi()))
+			continue;
+		bool cgiDone = false;
+		int status;
+		if (std::time(NULL) - it->second.getCgi()._start > TIMEOUTCGI)
+		{
+			cgiDone = true;
+			kill(it->second.getCgi()._pid, SIGKILL);
+				it->second.setStatus(504);
+		}
+		else if (waitpid(it->second.getCgi()._pid, &status, WNOHANG) > 0)
+		{
+			cgiDone = true;
+			char buffer[BUFSIZE];
+			int ret = read(it->second.getCgi()._fdout[0], buffer, BUFSIZE - 1);
+			if (WIFEXITED(status) && WEXITSTATUS(status) != 0 || ret < 0)
+				it->second.setStatus(502);
+			else
+			{
+				buffer[ret] = '\0';
+				std::string respbuff = buffer;
+				it->second.getCgi()._respbody = buffer;
+				it->second.setStatus(200);
+			}
+		}
+		if (cgiDone)
+		{
+			close(it->second.getCgi()._fdout[0]);
+			it->second.checkCGISHeader();
+			Response resp(it->second);
+			resp.buildResponse();
+			if (it->second.getStatus() == 502 || it->second.getStatus() == 504)
+				_fdtoServ[it->first]->setClientRequest(it->first, "close");
+			else
+				_fdtoServ[it->first]->setClientRequest(it->first, it->second.getHeaderField("Connection"));
+			_fdtoServ[it->first]->setClientResponse(it->first,resp.getResponse());
+			it->second.initRequest();
+			setPoll(it->first, POLLOUT, _fdtoServ[it->first]);
+		}
+	}
+}
+	

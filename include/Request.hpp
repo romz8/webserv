@@ -32,6 +32,21 @@
 # include "ServerConfig.hpp"
 # include "DirectoryListing.hpp"
 
+typedef struct s_cgi
+{
+	std::map<std::string, std::string>	_env;
+	std::string							_path;
+	std::string							_body;
+	std::string							_respbody;
+	std::string							_execPath;
+	int		_fdin[2];
+	int		_fdout[2];
+	pid_t _pid;
+	time_t _start;
+	bool _onCGI;
+	
+} t_cgi;
+
 class Request
 {
 private:
@@ -58,6 +73,7 @@ private:
 	bool			_HeaderOK;
 	std::string		_rawinput;
 	std::string		_rawBody;
+	t_cgi			_cgi;
 	
 
 	time_t			_start;
@@ -98,7 +114,10 @@ public:
 	void		DeleteDirectory();
 	void		StatusCode();
 	void		buildRequest();
-	
+	void		initCgi(std::string execPath);
+	void		executeCGI();
+	void		checkCGISHeader();
+
 	bool		isValidMethod() const;
 	bool		isValidPath();
 	bool		isValidVersion() const;
@@ -134,6 +153,7 @@ public:
 	std::string getHost() const;
 	void		setPath(const std::string& path);
 	std::string getrawBody() const;
+	t_cgi&		getCgi();
 	friend std::ostream& operator<<(std::ostream& os, const Request& req);
 }; 
 
