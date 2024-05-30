@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 15:41:55 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 19:12:50 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,7 +141,7 @@ void	Parser::parseSimpleServ( std::string head, ServerConfig &server, StrVector 
 
 void	Parser::parseComplex( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
 	std::string	name;
-	
+
 	name = head.substr(0, head.find_first_of(ISSPACE));
 	if (!name.compare("server"))
 		parseServer( body, vector);
@@ -163,7 +163,7 @@ void	Parser::parseLocation( std::string head, std::string body, std::vector<Serv
 	ServerConfig	&server = vector[vector.size() - 1];
 	LocationConfig	location(server);
 
-	SUtils::split(shead, head, " \t");
+	SUtils::split(shead, head, ISSPACE);
 	std::string uri = shead[1];
 	size_t pos = uri.find_first_of("{");
 	if (pos != std::string::npos) {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:48:41 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 19:12:12 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,21 @@
 int main(int argc, char *argv[])
 {
 	std::vector<ServerConfig> serverConfs;
+    std::vector<int> ports;
 	// ServerConfig test = testBuild();
 	try
 	{
         Parser parse(argc, argv);
         std::string content = parse.getContent();
         parse.getConfig(serverConfs, parse.getAD(), content);
+        for (size_t i = 0; i < serverConfs.size(); i++)
+            ports.push_back(serverConfs[i].getPort());
+        for (size_t i = 0; i < ports.size(); i++)
+        {
+            for (size_t j = i + 1; j < ports.size(); j++)
+                if (ports[i] == ports[j])
+                    throw std::logic_error("Unexpected ports equals");
+        }
 		Cluster cluster(serverConfs);
         std::cout << BG_BLUE "BUFERSIZE: " << BUFSIZE << std::endl;
         cluster.run();
