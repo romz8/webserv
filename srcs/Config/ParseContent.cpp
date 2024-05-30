@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 05:42:19 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 06:18:31 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,8 @@ string	ParseContent::simple_directives[ N_SIMPLE_DIRECTIVES ] = {
 	"client_max_body_size",
 	"root",
 	"error_page",
-	"upload_store",
+	"upload_dir",
+	"allow_upload",
 	"allow_methods",
 	"index",
 	"alias",
@@ -57,8 +58,8 @@ string	ParseContent::location_directives[ N_LOCATION_DIRECTIVES ] = {
 	"root",
 	"error_page",
 	"autoindex",
-	"upload_store",
-	"allow_update",
+	"upload_dir",
+	"allow_upload",
 	"index",
 	"alias",
 	"allow_methods",
@@ -72,8 +73,8 @@ string	ParseContent::total_directives[ DIRECTIVES_NUM ] = {
 	"error_page",
 	"server_name",
 	"client_max_body_size",
-	"upload_store",
-	"allow_update",
+	"upload_dir",
+	"allow_upload",
 	"index",
 	"alias",
 	"autoindex",
@@ -208,6 +209,37 @@ void	ParseContent::save_alias(string head, LocationConfig &config) {
 	// if (config.isSet("root"))
 	// 	throw std::logic_error("Cannot initializate alias. Root setted previously");
 	config.setAlias(data[1]);
+}
+
+void	ParseContent::save_allow_methods(string head, LocationConfig &config) {
+	StrVector data;
+	string value;
+	StrVector allowedmethods;
+	SUtils::split(data, head, ISSPACE);
+	if (data.size() < 2 || data.size() > 4)
+		throw std::logic_error("Invalid number of arguments for " + data[0]);
+	for (int i = 1; i < data.size(); i++)
+	{
+		if (i != data.size() - 1 && data[i].find_first_of(";") != string::npos)
+			throw logic_error("Unexpected token ; in value " + data[i]);
+		else if (i == data.size() - 1)
+			value = data[i].substr(0, data[i].find_first_of(";"));
+		else
+			value = data[i];
+		if (value.compare("POST") && value.compare("GET") && value.compare("DELETE"))
+			throw logic_error("Value \"" + value + "\" not valid for allow_methods");
+		allowedmethods.push_back(value);
+	}
+	config.setAllowedMethods(allowedmethods);
+}
+
+void	ParseContent::save_cgi(string head, LocationConfig &config) {
+	StrVector data;
+	SUtils::split(data, head, ISSPACE);
+	if (data.size() != 3)
+		throw std::logic_error("Invalid number of arguments for " + data[0]);
+	config.addCgiConfig(CgiConfig(data[1], data[2]));
+	
 }
 
 // void	ParseContent::save_return(string head, LocationConfig &config) {

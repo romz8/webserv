@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 05:46:18 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 06:09:35 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,8 +138,7 @@ void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &
 void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
-	if (idx < 7)
-		(Parser::_parseSimpleLA[idx])(head, server);
+	(Parser::_parseSimpleLA[idx])(head, server);
 }
 
 void	Parser::parseComplex( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
