@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 14:58:43 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 15:41:55 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@ void	Parser::parseDirective( std::string head, std::string body, std::vector<Ser
 
 	name = head.substr(0, head.find_first_of(ISSPACE));
 	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
-		parseSimpleServ(head, body, server[server.size() - 1], allowed_directives);
+		parseSimpleServ(head, server[server.size() - 1], allowed_directives);
 	else
 		parseComplex(head, body, server);
 }
@@ -131,8 +131,7 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 	}
 }
 
-void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &server, StrVector allowed_directives ) {
-	(void)body;
+void	Parser::parseSimpleServ( std::string head, ServerConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
 	ParseContent::checkDuplicate<ServerConfig>(name, server);
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
@@ -145,13 +144,12 @@ void	Parser::parseComplex( std::string head, std::string body, std::vector<Serve
 	
 	name = head.substr(0, head.find_first_of(ISSPACE));
 	if (!name.compare("server"))
-		parseServer( head, body, vector);
+		parseServer( body, vector);
 	else
 		parseLocation( head, body, vector);
 }
 
-void	Parser::parseServer( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
-	(void)head;
+void	Parser::parseServer( std::string body, std::vector<ServerConfig> &vector ) {
 	ServerConfig server;
 	vector.push_back(server);
 	getConfig(vector, server.getAD(), body);
@@ -202,7 +200,7 @@ void	Parser::parseLocLine( LocationConfig &vector, StrVector allowed_directives,
 		name = head.substr(0, head.find_first_of(ISSPACE));
 		checkValidDirective(name, allowed_directives);
 		checkValidSeparator(name, type);
-		parseDirectiveLoc(head, body, vector, allowed_directives);
+		parseDirectiveLoc(head, vector, allowed_directives);
 	}
 	else
 		throw std::logic_error( "Unxpected \"}\" or end of file" );
@@ -215,18 +213,14 @@ void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector
 	(Parser::_parseSimpleLA[idx])(head, server);
 }
 
-void	Parser::parseDirectiveLoc( std::string head, std::string body, LocationConfig &location, StrVector allowed_directives ) {
+void	Parser::parseDirectiveLoc( std::string head, LocationConfig &location, StrVector allowed_directives ) {
 	int idx;
 	std::string name;
 
-	(void)body;
 	name = head.substr(0, head.find_first_of(ISSPACE));
 	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
 		parseSimpleLoc(head, location, allowed_directives);
 }
-
-
-
 
 std::string	Parser::getContent(void) {
 	return (this->_content);

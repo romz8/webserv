@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 13:06:51 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 15:33:52 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ void Cluster::run()
 			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
 		else
 		{
-			for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); ++i)
+			for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); i++)
 			{
 				std::map<int, Server*>::iterator it = _fdtoServ.find(_fdSet[i].fd);
 				if (it == _fdtoServ.end())
