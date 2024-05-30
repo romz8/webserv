@@ -6,12 +6,12 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/30 15:01:05 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/30 15:57:41 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = c++
-FLAGS = -MMD -std=c++98 #-fsanitize=address,undefined -g #-Wall -Wextra -Werror
+FLAGS = -MMD -std=c++98 -fsanitize=address,undefined -g #-Wall -Wextra -Werror
 NAME = webserv
 RM = rm -rf
 NPD = --no-print-directory

@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:08:51 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:50:59 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:03:35 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ public:
 	bool isSet(std::string name);
 
 	const std::string& getUri() const;
-	const std::string& getRoot() const;
+	const std::string& getRootDir() const;
 	const std::string& getAlias() const;
 	const std::map<int, std::string>& getErrorPages() const;
 	const std::vector<std::string>& getAllowedMethods() const;
