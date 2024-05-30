@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 13:20:28 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 16:59:07 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,9 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
       _response(""), _fromCgi(head.execCgi()), _location(head.getLocation())
 {
 	if (this->_status >= 400)
-		this->_assetPath = _location.getRootDir() + getErrorPage(this->_status);
+		this->_assetPath = getErrorPage(this->_status);
 	else if (head.getParsePath().empty())
-		this->_assetPath = _location.getRootDir() + getErrorPage(404);
+		this->_assetPath = getErrorPage(404);
 	else
 		this->_assetPath = head.getParsePath();
 	std::cout << CYAN "Respons obj built with ressource Path : " << this->_assetPath << std::endl;

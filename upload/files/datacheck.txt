@@ -1,0 +1,20 @@
+4.7G	/Users/rjobert
+2.4G	/Users/rjobert/Library
+1.3G	/Users/rjobert/Library/Application Support
+819M	/Users/rjobert/.brew
+675M	/Users/rjobert/.brew/Library 
+672M	/Users/rjobert/Library/Containers
+645M	/Users/rjobert/.vscode/extensions
+645M	/Users/rjobert/.vscode
+629M	/Users/rjobert/.brew/Library/Taps/homebrew/homebrew-core
+629M	/Users/rjobert/.brew/Library/Taps/homebrew
+629M	/Users/rjobert/.brew/Library/Taps
+596M	/Users/rjobert/.brew/Library/Taps/homebrew/homebrew-core/.git
+595M	/Users/rjobert/.brew/Library/Taps/homebrew/homebrew-core/.git/objects/pack
+595M	/Users/rjobert/.brew/Library/Taps/homebrew/homebrew-core/.git/objects
+581M	/Users/rjobert/Library/Containers/com.docker.docker/Data
+581M	/Users/rjobert/Library/Containers/com.docker.docker
+560M	/Users/rjobert/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.qcow2
+560M	/Users/rjobert/Library/Containers/com.docker.docker/Data/vms/0/data
+560M	/Users/rjobert/Library/Containers/com.docker.docker/Data/vms/0
+560M	/Users/rjobert/Library/Containers/com.docker.docker/Data/vms

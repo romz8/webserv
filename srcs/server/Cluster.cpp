@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 15:33:52 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 17:26:29 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ Cluster& Cluster::operator=(const Cluster& src)
 
 Cluster::~Cluster()
 {
-	for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); ++i)
+	for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); i++)
 		close(_fdSet[i].fd);
 	_servers.clear();
 	_fdSet.clear();
@@ -152,10 +152,9 @@ void Cluster::run()
 				}
 				else if (_fdSet[i].revents & (POLLERR | POLLHUP | POLLNVAL))
 					removeClient(_fdSet[i].fd);
-				_fdSet[i].revents = 0;
 			}
 		}
-		for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); ++i)
+		for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); i++)
 		{
 			std::map<int, Server*>::iterator it = _fdtoServ.find(_fdSet[i].fd);
 			if (it != _fdtoServ.end())

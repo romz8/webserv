@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ParseDirectives.ipp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/29 15:17:13 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 14:04:31 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 17:00:00 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ void	ParseContent::save_error_page(std::string head, T &config) {
 		int key = std::stoui<int>(data[i]);
 		if (key < 400 || key > 599)
 			throw logic_error("Value " + data[i] + " not valid for error_page");
-		config.addErrorPage(key, value);
+		config.addErrorPage(key, config.getRootDir() + value);
 	}
 };
 

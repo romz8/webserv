@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:39 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:46:56 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:03:21 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ bool LocationConfig::isSet( std::string name ) {
 }
 
 const std::string& LocationConfig::getUri() const { return _uri; }
-const std::string& LocationConfig::getRoot() const { return _root; }
+const std::string& LocationConfig::getRootDir() const { return _root; }
 const std::string& LocationConfig::getAlias() const { return _alias; }
 const std::map<int, std::string>& LocationConfig::getErrorPages() const { return _error_pages; }
 const std::vector<std::string>& LocationConfig::getAllowedMethods() const { return _allowed_methods; }

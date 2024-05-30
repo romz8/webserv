@@ -271,10 +271,12 @@ bool	Request::hasCorrectHost() const
 		throw std::runtime_error("Error parsing Request : no Host header");
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
-	if (it->second != this->_host)
+	if (it->second != this->_host && it->second != (this->_serverName + ":" + std::to_string(this->_port)))
 	{
 		std::cerr << "Host is : " << it->second << std::endl;
 		std::cerr << "bad host is : " << this->_host << std::endl;
+		std::cerr << "servername is : " << this->_serverName << std::endl;
+		std::cerr << "test servername complete is : " << this->_serverName + ":" + std::to_string(this->_port) << std::endl;
 		throw std::runtime_error("Error parsing Request : invalid Host header");
 	}
 	return(true);
@@ -355,6 +357,13 @@ void	Request::initRequest()
 	this->_rawinput.clear();
 	this->_rawBody.clear();
 	this->_start = -1;
+	this->_cgi._env.clear();
+	this->_cgi._path.clear();
+	this->_cgi._body.clear();
+	this->_cgi._respbody.clear();
+	this->_cgi._execPath.clear();
+	this->_cgi._onCGI = false;
+	this->_cgi._start = -1;
 }
 
 /**
@@ -647,7 +656,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 			fname = line.substr(pos, bracketpos);
 		}
 	}
-	std::string filePath = _location.getRootDir() + _location.getUploadFile() + fname;
+	std::string filePath = _location.getUploadFile() + fname;
 	//std::cout << "POST UPLOAD file Ressource is : " << filePath << std::endl;
 	std::ofstream file(filePath); //very testy ..update with Location and actual logic
 	if (!file.is_open())

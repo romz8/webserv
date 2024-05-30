@@ -6,16 +6,16 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 21:09:16 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 11:10:42 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:03:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Location.hpp"
 
-Location::Location(){};
+Location::Location() : _AutoIndex(true), _allowUpload(true) {};
 
 Location::Location(const LocationConfig& locConf) : \
-	_path(locConf.getUri()), _rootDir(locConf.getRoot()), _allowedMethods(locConf.getAllowedMethods()), \
+	_path(locConf.getUri()), _rootDir(locConf.getRootDir()), _allowedMethods(locConf.getAllowedMethods()), \
 	_uploadDirectory(locConf.getUploadDir()), _index(locConf.getIndex()), _AutoIndex(locConf.getAutoIndex()), \
 	_allowUpload(locConf.getAllowUpload())
 {

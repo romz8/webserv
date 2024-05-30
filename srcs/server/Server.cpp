@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:49:33 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 16:31:27 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,6 +292,7 @@ void	Server::processRequest(Request& request, int io_fd)
 		request.buildRequest();
 	if (request.execCgi())
 		return;
+	std::cout << request << std::endl;
 	Response resp(request);
 	resp.buildResponse();
 	std::string response = resp.getResponse();
