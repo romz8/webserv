@@ -6,14 +6,15 @@
 #    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/30 13:53:52 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/30 15:01:05 by rjobert          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = c++
-FLAGS = -MMD -std=c++98 -Wall -Wextra -Werror
-NAME = testserv
+FLAGS = -MMD -std=c++98 #-fsanitize=address,undefined -g #-Wall -Wextra -Werror
+NAME = webserv
 RM = rm -rf
+NPD = --no-print-directory
 
 SRC_DIR = ./srcs/
 INC_DIR = ./include/ ./include/Config/
@@ -21,10 +22,13 @@ OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
 	server/Location.cpp http/DirectoryListing.cpp config/LocationConfig.cpp \
-	config/ServerConfig.cpp server/Cluster.cpp http/CGI.cpp
+	config/serverConfig.cpp config/Parser.cpp config/Utils.cpp config/ParseInit.cpp config/ParseContent.cpp \
+	server/Cluster.cpp http/CGI.cpp
+
 INC_NAME = Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
-	Location.hpp DirectoryListing.hpp Config/Directives.hpp Cluster.hpp LocationConfig.hpp \
-	ServerConfig.hpp 
+	LocationConfig.hpp ServerConfig.hpp DirectoryListing.hpp Config/Directives.hpp Config/Parser.hpp \
+	Config/Utils.hpp Config/ParseContent.hpp Config/Defines.hpp Config/Utils.ipp Config/ParseDirectives.ipp \
+	Cluster.hpp
 
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_NAME))
@@ -50,13 +54,17 @@ $(OBJS_PATH)%.o: $(SRC_DIR)%.cpp Makefile
 	$(CC) $(FLAGS) $(ALL_INC) -c $< -o $@
 
 clean:
-	$(RM) $(OBJS) $(DEPS)
-	$(RM) $(OBJS_PATH)
+	@$(RM) $(OBJS_PATH)	
+	@echo "$(OBJS_PATH) and company leave 42 🗑"
 
 fclean: clean
-	$(RM) $(NAME)
+	@$(RM) $(NAME)
+	@echo "$(NAME) has been black holed 🕳"
 
-re: fclean all
+re:
+	@$(MAKE) fclean $(NPD)
+	@$(MAKE) $(NPD)
+	
+-include $(DEP)
 
 .PHONY: all clean fclean re
-	

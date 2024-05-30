@@ -6,26 +6,27 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 12:32:16 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 14:48:41 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include <vector>
+#include "Parser.hpp"
 #include "Cluster.hpp"
 
-ServerConfig testBuild();
-std::vector<ServerConfig> multipleTest();
+// ServerConfig testBuild();
 
 int main(int argc, char *argv[])
 {
-	//ServerConfig test = testBuild();
-    if (argc > 1) //later 2 for conf file
-        return 0;
-    argv = NULL;
-    std::vector<ServerConfig> serverConfs = multipleTest();
+	std::vector<ServerConfig> serverConfs;
+	// ServerConfig test = testBuild();
 	try
 	{
-        Cluster cluster(serverConfs);
+        Parser parse(argc, argv);
+        std::string content = parse.getContent();
+        parse.getConfig(serverConfs, parse.getAD(), content);
+		Cluster cluster(serverConfs);
         std::cout << BG_BLUE "BUFERSIZE: " << BUFSIZE << std::endl;
         cluster.run();
 	}
@@ -35,8 +36,52 @@ int main(int argc, char *argv[])
 	}
 }
 
+/*
+Configuration class and setup corresponding to 
+server {
+    listen 4242;
+    server_name testing Server;
+    root ./html/;
+    error_page 404 error_pages/404.html;
+    error_page 500 error_pages/500.html;
+    error_page 400 error_pages/400.html;
+    error_page 413 error_pages/413.html;
 
-ServerConfig testBuild(std::string hostname, int port)
+    cgi .sh /bin/bash;
+    cgi .py /usr/bin/python3;
+    cgi .js /usr/local/bin/node;
+
+    location /getorder {
+        root ./html/;
+        alias index.html;
+        autoindex on;
+        allow_methods GET POST;
+    }
+
+    location /postfile {
+        root ./html/;
+        alias index.html;
+        allow_methods GET POST;
+    }
+
+    location / {
+        root ./html/;
+        index index.html;
+        alias index.html;
+        allow_methods GET POST;
+        cgi .sh /bin/bash;
+        cgi .py /usr/bin/python3;
+        cgi .js /usr/local/bin/node;
+        error_page 404 error_pages/404.html;
+        error_page 500 error_pages/500.html;
+        error_page 400 error_pages/400.html;
+        error_page 413 error_pages/413.html;
+    }
+}
+*/
+
+/*
+ServerConfig testBuild()
 {
 	ServerConfig serverConfig;
     serverConfig.setHostName(hostname); 
@@ -168,3 +213,4 @@ std::vector<ServerConfig> multipleTest()
     //serverConfs.push_back(basic4244);
     return serverConfs;
 }
+*/
