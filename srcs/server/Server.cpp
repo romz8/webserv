@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 17:47:42 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 01:16:56 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,7 +144,7 @@ int	Server::readClient(pollfd& pfd, Request& request)
 		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
 		if (byteRead < 0 )
 		{
-			std::cerr << "recv socket Error :" << strerror(errno) << std::endl;
+			std::cerr << "recv socket Error : in fd " << pfd.fd << std::endl;
 			_start.erase(pfd.fd);
 			return (-1);
 		}
@@ -204,7 +204,7 @@ int	Server::sendClient(pollfd &pfd)
 	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
 	if (byteSent < 0)
 	{
-		std::cerr << "send socket Error :" << strerror(errno) << std::endl;
+		std::cerr << "send socket Error : in fd " << io_fd << std::endl;
 		return (-1);
 	}
 	else if (byteSent < response.length())

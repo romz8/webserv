@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 19:12:50 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 00:30:22 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,6 +133,8 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 
 void	Parser::parseSimpleServ( std::string head, ServerConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
+	if (head.find_first_of("\n") != std::string::npos)
+		throw std::logic_error("Unexpected \\n in a simple directive");
 	ParseContent::checkDuplicate<ServerConfig>(name, server);
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
 		(Parser::_parseSimpleSA[idx])(head, server);
@@ -218,6 +220,8 @@ void	Parser::parseDirectiveLoc( std::string head, LocationConfig &location, StrV
 	std::string name;
 
 	name = head.substr(0, head.find_first_of(ISSPACE));
+	if (head.find_first_of("\n") != std::string::npos)
+		throw std::logic_error("Unexpected \\n in a simple directive");
 	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
 		parseSimpleLoc(head, location, allowed_directives);
 }
