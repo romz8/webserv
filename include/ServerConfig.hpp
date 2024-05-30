@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 03:56:12 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:02:32 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 # include <map>
 # include "LocationConfig.hpp"
 
-# define MAX_BODY_SIZE 10000000000 //10GB
+# define MAX_BODY_SIZE 10000000000 //10GB in bytes
 # define DEFAULT_BODY_SIZE 10000000 //10MB
 class ServerConfig
 {

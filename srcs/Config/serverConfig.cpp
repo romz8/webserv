@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 05:24:37 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:21:18 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ void	ServerConfig::_initConfig()
 	_hostName = "";
 	_port = 0;
 	_serverName = "";
-	_rootDir = "";
+	_rootDir = "./html/";
 	_locations.clear();
 	error_pages.clear();
 	client_max_body_size = DEFAULT_BODY_SIZE;

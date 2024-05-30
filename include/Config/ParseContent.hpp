@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:07:08 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 06:04:57 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:23:28 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,10 +58,9 @@ class ParseContent {
 		static void		save_allow_upload(string head, LocationConfig &config);
 		static void		save_cgi(std::string head, LocationConfig &);
 		static void		save_index(std::string head, LocationConfig &);
-		static void		save_alias(string head, LocationConfig &config);
 		static void		save_allow_methods(string head, LocationConfig &config);
+		static void		save_return(std::string head, LocationConfig &);
 
-		// static void		save_return(std::string head, LocationConfig &);
 		// static StrBoolPair		_canRepeatDirectiveList[N_DIRECTIVES];
 		// static StrBoolMap		canRepeatDirectiveList;
 		// static void				checkValidIp( string );

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 06:09:35 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 12:00:24 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,8 @@ void	Parser::checkValidSeparator( std::string name, int type ) {
 				+ separators[ expectedSeparator - 1 ] + "\"" );
 }
 
+//	SERVER FUNCTIONS -----------------------------
+
 void	Parser::parseLine( std::vector<ServerConfig> &vector, StrVector allowed_directives, std::string &content) {
 	std::string	head;
 	std::string	body;
@@ -135,11 +137,6 @@ void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &
 		(Parser::_parseSimpleSA[idx])(head, server);
 }
 
-void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
-	std::string name = head.substr(0, head.find_first_of(ISSPACE));
-	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
-	(Parser::_parseSimpleLA[idx])(head, server);
-}
 
 void	Parser::parseComplex( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
 	std::string	name;
@@ -157,6 +154,8 @@ void	Parser::parseServer( std::string head, std::string body, std::vector<Server
 	getConfig(vector, server.getAD(), body);
 }
 
+
+// 	LOCATIONS FUNCTIONS --------------------------------------------------------------------
 
 void	Parser::parseLocation( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
 	StrVector shead;
@@ -206,6 +205,12 @@ void	Parser::parseLocLine( LocationConfig &vector, StrVector allowed_directives,
 		throw std::logic_error( "Unxpected \"}\" or end of file" );
 };
 
+void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
+	std::string name = head.substr(0, head.find_first_of(ISSPACE));
+	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
+	(Parser::_parseSimpleLA[idx])(head, server);
+}
+
 void	Parser::parseDirectiveLoc( std::string head, std::string body, LocationConfig &location, StrVector allowed_directives ) {
 	int idx;
 	std::string name;
@@ -214,6 +219,9 @@ void	Parser::parseDirectiveLoc( std::string head, std::string body, LocationConf
 	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
 		parseSimpleLoc(head, location, allowed_directives);
 }
+
+
+
 
 std::string	Parser::getContent(void) {
 	return (this->_content);
