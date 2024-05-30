@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   serverConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:56:49 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:32:11 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,10 +45,11 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 	return (*this);
 }
 
-ServerConfig::ServerConfig(const std::string& host, int port, const std::string& serverName, const std::string& rootDir, const std::vector<LocationConfig>& locations, const std::map<int, std::string>& error_pages, size_t client_max_body_size, const std::vector<CgiConfig>& cgiConf, bool autoindex)	
-	: _host(host), _port(port), _serverName(serverName), _rootDir(rootDir), _locations(locations), error_pages(error_pages), _max_body_size(client_max_body_size), cgiConf(cgiConf), autoindex(autoindex)
-{
-}
+// ServerConfig::ServerConfig(const std::string& host, int port, const std::string& serverName, const std::string& rootDir, const std::vector<LocationConfig>& locations, const std::map<int, std::string>& error_pages, size_t client_max_body_size, const std::vector<CgiConfig>& cgiConf, bool autoindex)	
+// 	: _host(host), _port(port), _rootDir(rootDir), _locations(locations), error_pages(error_pages), _max_body_size(client_max_body_size), cgiConf(cgiConf), autoindex(autoindex)
+// {
+	
+// }
 
 void	ServerConfig::_initConfig()
 {
@@ -57,7 +58,7 @@ void	ServerConfig::_initConfig()
 	_host = "";
 	_hostName = "";
 	_port = 0;
-	_serverName = "";
+	_serverName.clear();
 	_rootDir = DEFAULTROOOT;
 	_locations.clear();
 	error_pages.clear();
@@ -72,7 +73,7 @@ std::string ServerConfig::getHost() const {return (_host);}
 
 int ServerConfig::getPort() const {return (_port);}
 
-std::string ServerConfig::getServerName() const {return (_serverName);}
+std::vector<std::string> ServerConfig::getServerName() const {return (_serverName);}
 
 std::string ServerConfig::getRootDir() const {return (_rootDir);}
 
@@ -90,7 +91,7 @@ void ServerConfig::setHost(const std::string& host) {_host = host;}
 
 void ServerConfig::setPort(int port) {_port = port;}
 
-void ServerConfig::setServerName(const std::string& serverName) {_serverName = serverName;}
+void ServerConfig::setServerName(std::string serverName) {_serverName.push_back(serverName);}
 
 void ServerConfig::setRootDir(const std::string& rootDir) {_rootDir = rootDir;}
 

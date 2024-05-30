@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 16:31:27 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:35:36 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -446,7 +446,7 @@ int Server::getMaxBodySize() const
 	return (_maxBodySize);
 }
 
-std::string Server::getserverName() const
+std::vector<std::string> Server::getserverName() const
 {
 	return (_serverName);
 }
@@ -490,7 +490,7 @@ void	setNonBlocking(int fd)
 }
 std::ostream& operator<<(std::ostream& os, const Server& serv)
 {
-	os << "Server : " << serv._serverName << std::endl;
+	os << "Server : " << serv._serverName[0] << std::endl;
 	os << "Host : " << serv._host << std::endl;
 	os << "Port : " << serv._port << std::endl;
 	os << "Root : " << serv._root << std::endl;

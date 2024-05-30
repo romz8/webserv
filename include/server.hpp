@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 16:26:10 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:34:44 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ class Server
 private:
 	int	_port;
 	std::string	_root;
-	std::string	_serverName;
+	std::vector<std::string>	_serverName;
 	std::string	_hostName;
 	std::string	_host; //is it corrrect to have hostName and host ? how is it done on José side
 	size_t		_maxBodySize;
@@ -91,7 +91,7 @@ public:
 	std::string getHost() const;
 	int getPort() const;
 	int getMaxBodySize() const;
-	std::string getserverName() const;
+	std::vector<std::string> getserverName() const;
 	void setClientRequest(int fd, const std::string& request);
 	void setClientResponse(int fd, const std::string& response);
 };

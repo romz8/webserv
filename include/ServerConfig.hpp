@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:57:01 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:31:15 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ private:
 	std::string _hostName;
 	std::map<std::string, bool>	_isSet;
 	int _port;
-	std::string _serverName;
+	std::vector<std::string> _serverName;
 	std::string _rootDir;
 	std::vector<LocationConfig> _locations;
 	std::map<int, std::string> error_pages;
@@ -50,7 +50,7 @@ public:
 	void _initConfig();
 	std::string getHost() const;
 	int getPort() const;
-	std::string getServerName() const;
+	std::vector<std::string> getServerName() const;
 	std::string getRootDir() const;
 	std::vector<LocationConfig> getLocationConf() const;
 	std::map<int, std::string> getErrorPages() const;
@@ -59,7 +59,7 @@ public:
 	bool getAutoIndex() const;
 	void setHost(const std::string& host);
 	void setPort(int port);
-	void setServerName(const std::string& serverName);
+	void setServerName(std::string serverName);
 	void setRootDir(const std::string& rootDir);
 	void addLocationConfig(const LocationConfig& locations);
 	bool isSet(std::string name);
