@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/27 11:21:58 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 17:35:45 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 05:41:23 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,22 @@ void Parser::init( void ) {
 
 Parser::parseSimpleSA Parser::_parseSimpleSA = {
 	&ParseContent::save_root<ServerConfig>,
-	&ParseContent::save_listen<ServerConfig>,
-	// &ParseContent::server_name,
-	// &ParseContent::client_max_body_size,
-	// &ParseContent::autoindex,
-	// &ParseContent::error_page,
-	// &ParseContent::upload_store,
-	// &ParseContent::cgi;
+	&ParseContent::save_listen,
+	&ParseContent::save_server_name,
+	&ParseContent::save_client_max_body_size,
+	&ParseContent::save_autoindex<ServerConfig>,
+	&ParseContent::save_error_page<ServerConfig>
+};
+
+Parser::parseSimpleLA Parser::_parseSimpleLA = {
+	&ParseContent::save_root<LocationConfig>,
+	&ParseContent::save_error_page<LocationConfig>,
+	&ParseContent::save_autoindex<LocationConfig>,
+	&ParseContent::save_upload_dir,
+	&ParseContent::save_allow_upload,
+	&ParseContent::save_index,
+	&ParseContent::save_alias,
+	// &ParseContent::save_return,
+	// &ParseContent::save_allow_methods,
+	// &ParseContent::save_cgi
 };

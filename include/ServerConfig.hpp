@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 13:30:04 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 03:56:12 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ public:
 	void setServerName(const std::string& serverName);
 	void setRootDir(const std::string& rootDir);
 	void addLocationConfig(const LocationConfig& locations);
+	// void deleteErrorPageWithKey(int key);
 	void addErrorPage(int code, const std::string& page);
 	void setErrorPages(const std::map<int, std::string>& error_pages);
 	void setClientMaxBodySize(size_t client_max_body_size);
@@ -66,6 +67,7 @@ public:
 	void addCgiConfig(const CgiConfig& cgiConf);
 	void setAutoIndex(bool autoindex);
 	void setHostName(const std::string& hostName);
+	// bool errorPageSet( int key ) const;
 	std::string getHostName() const;
 	std::vector<std::string>	getAD( void ) const;
 	std::vector<LocationConfig> &getLocationConfEdit();

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:08:51 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 17:49:43 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 04:51:14 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,15 +51,17 @@ public:
 	~LocationConfig();
 
 	void setUri(const std::string& uri);
-	void setRoot(const std::string& root);
+	void setRootDir(const std::string& root);
 	void setAlias(const std::string& alias);
 	void setErrorPages(const std::map<int, std::string>& error_pages);
 	void setAllowedMethods(const std::vector<std::string>& allowed_methods);
-	void addCgiConfig(const CgiConfig& cgiConfig);
 	void setIndex(const std::string& index);
 	void setAutoIndex(bool autoIndex);
 	void setAllowUpload(bool allowUpload);
 	void setUploadDir(const std::string& uploadDir);
+
+	void addErrorPage(int code, const std::string& page);
+	void addCgiConfig(const CgiConfig& cgiConfig);
 
 	const std::string& getUri() const;
 	const std::string& getRoot() const;

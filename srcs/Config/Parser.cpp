@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 22:12:55 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 05:46:18 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,15 +65,12 @@ StrVector	Parser::getAD( void ) {
 	return (this->_allowed_directives);
 }
 
-int	Parser::checkValidDirective( std::string name, StrVector allowed_directives ) {
+void	Parser::checkValidDirective( std::string name, StrVector allowed_directives ) {
 	if (SUtils::easyfind< StrVector >(_directives.begin(), _directives.end(), name) == -1)
 		throw std::logic_error(name + " is not a valid directive");
 	else if (SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name) == -1)
 		throw std::logic_error(name + " is not valid for this block");
-	
-	if (SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name) >= 0)
-		return (SIMPLE);
-	return (SUtils::easyfind< StrVector >(_complexDirectives.begin(), _complexDirectives.end(), name));
+	return ;
 }
 
 void	Parser::checkValidSeparator( std::string name, int type ) {
@@ -135,15 +132,14 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
-	if (idx == 0 || idx == 1)
-	{
-		std::cout << head << std::endl;
 		(Parser::_parseSimpleSA[idx])(head, server);
-	}
 }
 
 void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
-	std::cout << head << " in location " << &server << std::endl;
+	std::string name = head.substr(0, head.find_first_of(ISSPACE));
+	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
+	if (idx < 7)
+		(Parser::_parseSimpleLA[idx])(head, server);
 }
 
 void	Parser::parseComplex( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
@@ -159,7 +155,6 @@ void	Parser::parseComplex( std::string head, std::string body, std::vector<Serve
 void	Parser::parseServer( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
 	ServerConfig server;
 	vector.push_back(server);
-	std::cout << &vector[vector.size() - 1] << std::endl;
 	getConfig(vector, server.getAD(), body);
 }
 

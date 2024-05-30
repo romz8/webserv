@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 13:12:13 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 22:14:17 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 02:45:47 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,11 @@
 # include <sstream>
 # include <vector>
 
+# define MAX_NUMERIC_LIMITS( t ) numeric_limits< t >::max()
+# define MAX_NUMERIC_LIMITS_STR( t ) to_string( MAX_NUMERIC_LIMITS( t ) )
+# define COMPARE_NBR_MAX_STR( s, t ) compareNumbersAsStrings( s, MAX_NUMERIC_LIMITS_STR( t ) )
+
+# define ISNUM "0123456789"
 # define IPVALID ".0123456789"
 # define ISSPACE "\t\n\v\f\r "
 # define NOT_SEPARATOR -1
@@ -41,22 +46,24 @@ namespace SUtils {
 	// int				check_brackets( StrVector & content, int n_line );
 	// void			parse_line( const std::string & , int );
 	// unsigned int	stoui( const std::string &num );
-	// string			deleteExtraZeros( const string );
-	// int				compareNumbersAsStrings( const string , const string );
 }
 
 namespace std {
 	template <typename T>
 	string	to_string( const T &n );
-
+	template <typename T>
+	T		stoui( string );
+	
 	int		ft_stoi( string );
 }
 
+std::string			deleteExtraZeros( const std::string );
+int				compareNumbersAsStrings( const std::string , const std::string );
 std::string		trim_left( std::string );
 std::string		trim_right( std::string );
 void            split_pair( const std::string str, std::string &head, std::string &body );
 void			checkValidIp(std::string);
-
+bool			checkIpSyntax( std::string ip );
 # include <Utils.ipp>
 
 #endif

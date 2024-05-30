@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/27 11:40:06 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 05:21:41 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ const sockaddr_in Server::setServAddr(const ServerConfig& conf)
 	servAddr.sin_port = htons(conf.getPort()); 
 	
 	//handling IP (either from 0 / nothing or "127.25.24") -> Will need to include getaddress()
-	if (conf.getHost().empty() || conf.getHost() == "0.0.0.0")
+	if (conf.getHostName().empty() || conf.getHostName() == "0.0.0.0")
 		servAddr.sin_addr.s_addr = INADDR_ANY;
 	else
 		inet_pton(servAddr.sin_family, conf.getHostName().c_str(), &servAddr.sin_addr);

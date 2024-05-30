@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:39 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 15:36:40 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 04:51:55 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ LocationConfig::~LocationConfig(){}
 
 LocationConfig::LocationConfig( const ServerConfig &serv ) {
 	_root = serv.getRootDir();
-	_error_pages = serv.getErrorPages();
-	_cgiConfigs = serv.getCgiConf();
+	setErrorPages(serv.getErrorPages());
 	_autoIndex = serv.getAutoIndex();
 	_allowUpload = false;
 	SUtils::set_allowed_directives(this->_allowed_directives, LOCATION);
@@ -52,7 +51,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& src)
 }
 
 void LocationConfig::setUri(const std::string& uri) { this->_uri = uri; }
-void LocationConfig::setRoot(const std::string& root) { this->_root = root; }
+void LocationConfig::setRootDir(const std::string& root) { this->_root = root; }
 void LocationConfig::setAlias(const std::string& alias) { this->_alias = alias; }
 void LocationConfig::setErrorPages(const std::map<int, std::string>& error_pages) { this->_error_pages = error_pages; }
 void LocationConfig::setAllowedMethods(const std::vector<std::string>& allowed_methods) { this->_allowed_methods = allowed_methods; }
@@ -61,6 +60,10 @@ void LocationConfig::setIndex(const std::string& index) { this->_index = index; 
 void LocationConfig::setAutoIndex(bool autoIndex) { this->_autoIndex = autoIndex; }
 void LocationConfig::setAllowUpload(bool allowUpload) { this->_allowUpload = allowUpload; }
 void LocationConfig::setUploadDir(const std::string& uploadDir) { this->_uploadDir = uploadDir; }
+
+void LocationConfig::addErrorPage(int code, const std::string& page) {
+	_error_pages[code] = page;
+}
 
 const std::string& LocationConfig::getUri() const { return _uri; }
 const std::string& LocationConfig::getRoot() const { return _root; }

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 16:33:51 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 04:53:00 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,18 @@
 #include <vector>
 #include "Parser.hpp"
 
-ServerConfig testBuild();
+// ServerConfig testBuild();
 
 int main(int argc, char *argv[])
 {
 	std::vector<ServerConfig> servs;
-	ServerConfig test = testBuild();
+	// ServerConfig test = testBuild();
 	try
 	{
         Parser parse(argc, argv);
         std::string content = parse.getContent();
         parse.getConfig(servs, parse.getAD(), content);
-        return (1);
-		Server serv(test);
+		Server serv(servs[0]);
 		std::cout << "Server created" << std::endl;
 		std::cout << serv << std::endl;
 		serv.run();
@@ -80,7 +79,7 @@ server {
     }
 }
 */
-
+/*
 ServerConfig testBuild()
 {
 	ServerConfig serverConfig;
@@ -143,3 +142,4 @@ ServerConfig testBuild()
 	return serverConfig;
 }
 
+*/

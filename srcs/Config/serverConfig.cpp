@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/28 13:30:40 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 05:24:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 	{
 		_allowed_directives = src._allowed_directives;
 		_host = src._host;
+		_hostName = src._hostName;
 		_port = src._port;
 		_serverName = src._serverName;
 		_rootDir = src._rootDir;
@@ -51,6 +52,7 @@ ServerConfig::ServerConfig(const std::string& host, int port, const std::string&
 void	ServerConfig::_initConfig()
 {
 	_host = "";
+	_hostName = "";
 	_port = 0;
 	_serverName = "";
 	_rootDir = "";
@@ -93,6 +95,8 @@ void ServerConfig::addLocationConfig(const LocationConfig& locations)
 {
 	_locations.push_back(locations);
 }
+
+// void ServerCOnfig::deleteErrorPageWithKey( int key)
 
 void ServerConfig::addErrorPage(int code, const std::string& page)
 {

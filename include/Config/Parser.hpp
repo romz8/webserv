@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/29 15:41:05 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 05:44:11 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,15 +17,7 @@
 # include <iostream>
 # include <fstream>
 # include <Utils.hpp>
-
-# define N_SERVER_DIRECTIVES 8
-# define N_LOCATION_DIRECTIVES 10
-# define N_SIMPLE_DIRECTIVES 13
-# define N_COMPLEX_DIRECTIVES 2
-# define DIRECTIVES_NUM 15
-# define SIMPLE 3
-# define SERVER 0
-# define LOCATION 1
+# include <Defines.hpp>
 
 class ServerConfig;
 class LocationConfig;
@@ -37,6 +29,9 @@ class Parser {
 		typedef void	(*parseSimpServ) (std::string, ServerConfig &);
 		typedef parseSimpServ	parseSimpleSA[ N_SERVER_DIRECTIVES ];
 		static parseSimpleSA _parseSimpleSA;
+		typedef void	(*parseSimpLoc) (std::string, LocationConfig &);
+		typedef parseSimpLoc	parseSimpleLA[ N_LOCATION_DIRECTIVES ];
+		static parseSimpleLA _parseSimpleLA;
 		std::string _file;
 		std::string	_content;
 		StrVector _allowed_directives;
@@ -70,7 +65,7 @@ class Parser {
 		void	getInfo( void );
 		
 		void	check_command( int ac, char **av );
-		int		checkValidDirective( std::string name, StrVector allowed_directives );
+		void	checkValidDirective( std::string name, StrVector allowed_directives );
 		void	checkValidSeparator( std::string name, int type );
 		
 		void	parseComplex( std::string, std::string, std::vector<ServerConfig> &);
