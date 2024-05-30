@@ -6,12 +6,12 @@
 #    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/30 05:44:37 by jsebasti         ###   ########.fr        #
+#    Updated: 2024/05/30 13:51:10 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = c++
-FLAGS = -MMD -std=c++98 -fsanitize=address,undefined -g
+FLAGS = -MMD -std=c++98 -fsanitize=address,undefined -g #-Wall -Wextra -Werror
 NAME = webserv
 RM = rm -rf
 NPD = --no-print-directory
@@ -22,7 +22,7 @@ OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp networking/Socket.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
 	server/Location.cpp http/DirectoryListing.cpp CGI/CGI.cpp config/LocationConfig.cpp \
-	config/serverConfig.cpp config/Parser.cpp config/Utils.cpp config/ParseInit.cpp config/ParseContent.cpp
+	config/ServerConfig.cpp config/Parser.cpp config/Utils.cpp config/ParseInit.cpp config/ParseContent.cpp
 INC_NAME = Socket.hpp Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \
 	LocationConfig.hpp ServerConfig.hpp DirectoryListing.hpp CGI.hpp Config/Directives.hpp Config/Parser.hpp \
 	Config/Utils.hpp Config/ParseContent.hpp Config/Defines.hpp Config/Utils.ipp Config/ParseDirectives.ipp

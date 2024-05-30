@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:07:08 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 12:23:28 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:00:54 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <fstream>
 # include <limits>
 # include <vector>
+# include <map>
 # include <Defines.hpp>
 
 using namespace std;
@@ -31,7 +32,8 @@ class LocationConfig;
 class ParseContent {
 	private:
 		ParseContent( void );
-
+		static const pair<const std::string, bool> canRepeat[DIRECTIVES_NUM];
+		static const map<const std::string, bool> canRepeatList;
 
 	public:
 		~ParseContent( void );
@@ -41,6 +43,8 @@ class ParseContent {
 		static void		save_autoindex(std::string head, T &);
 		template <typename T>
 		static void		save_error_page(std::string head, T &);
+		template <typename T>
+		static void		checkDuplicate(std::string name, T &);
 
 
 		static string	total_directives[ DIRECTIVES_NUM ];
@@ -60,6 +64,7 @@ class ParseContent {
 		static void		save_index(std::string head, LocationConfig &);
 		static void		save_allow_methods(string head, LocationConfig &config);
 		static void		save_return(std::string head, LocationConfig &);
+		
 
 		// static StrBoolPair		_canRepeatDirectiveList[N_DIRECTIVES];
 		// static StrBoolMap		canRepeatDirectiveList;

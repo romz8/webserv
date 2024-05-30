@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 12:02:32 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 13:47:24 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class ServerConfig
 private:
 	std::string _host;
 	std::string _hostName;
+	std::map<std::string, bool>	_isSet;
 	int _port;
 	std::string _serverName;
 	std::string _rootDir;
@@ -59,7 +60,8 @@ public:
 	void setServerName(const std::string& serverName);
 	void setRootDir(const std::string& rootDir);
 	void addLocationConfig(const LocationConfig& locations);
-	// void deleteErrorPageWithKey(int key);
+	bool isSet(std::string name);
+	void setListen(int port, std::string ip);
 	void addErrorPage(int code, const std::string& page);
 	void setErrorPages(const std::map<int, std::string>& error_pages);
 	void setClientMaxBodySize(size_t client_max_body_size);

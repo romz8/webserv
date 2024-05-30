@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/29 15:17:13 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 05:32:49 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:04:31 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ void	ParseContent::save_autoindex(std::string head, T &config) {
 		config.setAutoIndex(true);
 	else
 		throw std::logic_error("Invalid argument \"" + boolean + "\" expected: true|false");
-}
+};
 
 template <typename T>
 void	ParseContent::save_error_page(std::string head, T &config) {
@@ -57,10 +57,14 @@ void	ParseContent::save_error_page(std::string head, T &config) {
 		int key = std::stoui<int>(data[i]);
 		if (key < 400 || key > 599)
 			throw logic_error("Value " + data[i] + " not valid for error_page");
-		// if (config.errorPageSet(key))
-		// 	config.deleteErrorPageWithKey(key);
 		config.addErrorPage(key, value);
 	}
+};
+
+template <typename T>
+void	ParseContent::checkDuplicate(std::string name, T &config) {
+	if (config.isSet(name) && ParseContent::canRepeatList.at(name)== false)
+		throw std::logic_error("Duplicated directive " + name);
 }
 
 #endif

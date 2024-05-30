@@ -6,12 +6,13 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 12:21:18 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:13:05 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerConfig.hpp"
 #include <ParseContent.hpp>
+#include <Defines.hpp>
 #include <Utils.hpp>
 
 ServerConfig::ServerConfig()
@@ -51,6 +52,8 @@ ServerConfig::ServerConfig(const std::string& host, int port, const std::string&
 
 void	ServerConfig::_initConfig()
 {
+	for (int i = 0; i < DIRECTIVES_NUM; i++)
+		_isSet[ParseContent::total_directives[i]] = false;
 	_host = "";
 	_hostName = "";
 	_port = 0;
@@ -94,13 +97,17 @@ void ServerConfig::setRootDir(const std::string& rootDir) {_rootDir = rootDir;}
 void ServerConfig::addLocationConfig(const LocationConfig& locations) 
 {
 	_locations.push_back(locations);
+	_isSet["location"] = true;
 }
 
-// void ServerCOnfig::deleteErrorPageWithKey( int key)
+bool ServerConfig::isSet( std::string name ) {
+	return (_isSet[name]);
+}
 
 void ServerConfig::addErrorPage(int code, const std::string& page)
 {
 	error_pages[code] = page;
+	_isSet["error_pages"] = true;
 }
 
 void ServerConfig::setErrorPages(const std::map<int, std::string>& error_pages)
@@ -114,11 +121,14 @@ void ServerConfig::setClientMaxBodySize(size_t client_max_body_size)
 		this->client_max_body_size = MAX_BODY_SIZE - 1;
 	else
 		this->client_max_body_size = client_max_body_size;
+	_isSet["client_max_body_size"] = true;
+	
 }
 
 void ServerConfig::addCgiConfig(const CgiConfig& cgiConf)
 {
 	this->cgiConf.push_back(cgiConf);
+	_isSet["cgi"] = true;
 }
 void ServerConfig::setCgiConf(const std::vector<CgiConfig>& cgiConf)
 {
@@ -128,6 +138,7 @@ void ServerConfig::setCgiConf(const std::vector<CgiConfig>& cgiConf)
 void ServerConfig::setAutoIndex(bool autoindex)
 {
 	this->autoindex = autoindex;
+	_isSet["autoindex"] = true;
 }
 
 void ServerConfig::setHostName(const std::string& hostName)
@@ -140,6 +151,11 @@ std::string ServerConfig::getHostName() const
 	return (_hostName);
 }
 
+void	ServerConfig::setListen(int port, std::string ip) {
+	setPort(port);
+	setHostName(ip);
+	_isSet["listen"] = true;
+}
 
 std::vector<std::string>	ServerConfig::getAD( void ) const {
 	return (this->_allowed_directives);

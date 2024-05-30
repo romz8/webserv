@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 12:00:24 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:18:47 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,6 +133,7 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 
 void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
+	ParseContent::checkDuplicate<ServerConfig>(name, server);
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
 		(Parser::_parseSimpleSA[idx])(head, server);
 }
@@ -207,6 +208,7 @@ void	Parser::parseLocLine( LocationConfig &vector, StrVector allowed_directives,
 
 void	Parser::parseSimpleLoc( std::string head, LocationConfig &server, StrVector allowed_directives ) {
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
+	ParseContent::checkDuplicate<LocationConfig>(name, server);
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
 	(Parser::_parseSimpleLA[idx])(head, server);
 }

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 12:25:40 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:25:57 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,24 @@ string	ParseContent::total_directives[ DIRECTIVES_NUM ] = {
 	"server"
 };
 
+const pair<const std::string, bool>	ParseContent::canRepeat[DIRECTIVES_NUM] = {
+	make_pair<	const string, bool >( "root", false ),
+	make_pair<	const string, bool >( "listen", false ),
+	make_pair<	const string, bool >( "server_name", true ),
+	make_pair<	const string, bool >( "error_page", true ),
+	make_pair<	const string, bool >( "client_max_body_size", false ),
+	make_pair<	const string, bool >( "upload_store", false ), 
+	make_pair<	const string, bool >( "index", false ),
+	make_pair<	const string, bool >( "autoindex", false ),
+	make_pair<	const string, bool >( "return", false ),
+	make_pair<	const string, bool >( "allow_methods", false ),
+	make_pair<	const string, bool >( "cgi", true ),
+	make_pair<	const string, bool >( "server", true ),
+	make_pair<	const string, bool >( "location", true )
+};
+
+const map<const std::string, bool>	ParseContent::canRepeatList( ParseContent::canRepeat, ParseContent::canRepeat + DIRECTIVES_NUM);
+
 //			SERVER CONFIG DIRECTIVES 
 
 void	ParseContent::save_listen(string head, ServerConfig &config) {
@@ -110,8 +128,7 @@ void	ParseContent::save_listen(string head, ServerConfig &config) {
 	if (port < 0 || port > USHRT_MAX)
 			throw logic_error("Invalid port " + s_port);
 	checkValidIp(ip);
-	config.setPort(port);
-	config.setHostName(ip);
+	config.setListen(port, ip);
 }
 
 void		ParseContent::save_server_name(string head, ServerConfig &config) {

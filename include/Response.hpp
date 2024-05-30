@@ -4,8 +4,6 @@
 # include "Request.hpp"
 # include <fstream>
 
-
-
 class Response
 {
 private:

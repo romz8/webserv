@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:08:51 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 04:51:14 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:17:51 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ struct CgiConfig
 class LocationConfig
 {
 private:
+	std::map<std::string, bool > _isSet;
 	std::string _uri;
     std::string _root;
     std::string _alias;
@@ -62,6 +63,8 @@ public:
 
 	void addErrorPage(int code, const std::string& page);
 	void addCgiConfig(const CgiConfig& cgiConfig);
+
+	bool isSet(std::string name);
 
 	const std::string& getUri() const;
 	const std::string& getRoot() const;
