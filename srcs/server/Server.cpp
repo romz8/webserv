@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 17:35:36 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 17:40:28 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAdd
 	_initServ();
 	this->_host = conf.getHost();
 	std::cout << "host in server: " << this->_host << std::endl;
-	this->_port = conf.getPort();
-	this->_hostName = 
+	this->_port = conf.getPort(); 
 	this->_hostName = _host.substr(0, _host.find(':'));
 	this->_serverName = conf.getServerName();
 	this->_root = conf.getRootDir();
@@ -240,7 +239,7 @@ const Location* Server::findLocationForRequest(const std::string& requestPath) c
     for (size_t i = 0; i < _locations.size(); ++i) 
 	{
         const std::string& locationPath = _locations[i].getPath();
-       
+    
         if (requestPath.compare(0, locationPath.length(), locationPath) == 0) 
 		{
 			if (locationPath.length() > longestMatchLength) 
