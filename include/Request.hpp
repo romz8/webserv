@@ -68,7 +68,7 @@ private:
 	bool 			_execCgi;
 	std::string		_query;
 	std::map<std::string, std::string> _headers;
-	std::string		_serverName;
+	std::vector<std::string>		_serverName;
 	int				_port;
 	bool			_HeaderRead;
 	bool			_HeaderOK;
@@ -82,8 +82,8 @@ private:
 	//static const std::string CRLF = "\r\n";
 
 public:
-	Request(const std::string host, const int maxBody, const std::string servName, const int port);
-	Request();
+	Request(const std::string host, const int maxBody, const std::vector<std::string> servName, const int port);
+	//Request();
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
@@ -172,5 +172,6 @@ std::string	formattedTime();
 void	hexDecoding(std::string& url);
 std::ostream& operator<<(std::ostream& os, const Request& req);
 bool isExecutable(const std::string& path);
+bool foundStringinVec(const std::string& target, const std::vector<std::string>& vec);
 
 #endif

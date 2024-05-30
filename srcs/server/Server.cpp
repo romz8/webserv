@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 16:31:27 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 17:38:03 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAdd
 	_initServ();
 	this->_host = conf.getHost();
 	std::cout << "host in server: " << this->_host << std::endl;
-	this->_port = conf.getPort();
-	this->_hostName = 
+	this->_port = conf.getPort(); 
 	this->_hostName = _host.substr(0, _host.find(':'));
 	this->_serverName = conf.getServerName();
 	this->_root = conf.getRootDir();
@@ -446,7 +445,7 @@ int Server::getMaxBodySize() const
 	return (_maxBodySize);
 }
 
-std::string Server::getserverName() const
+std::vector<std::string> Server::getserverName() const
 {
 	return (_serverName);
 }
@@ -490,7 +489,7 @@ void	setNonBlocking(int fd)
 }
 std::ostream& operator<<(std::ostream& os, const Server& serv)
 {
-	os << "Server : " << serv._serverName << std::endl;
+	os << "Server : " << serv._serverName[0] << std::endl;
 	os << "Host : " << serv._host << std::endl;
 	os << "Port : " << serv._port << std::endl;
 	os << "Root : " << serv._root << std::endl;

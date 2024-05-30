@@ -23,18 +23,18 @@
  */
 
 Request::Request(const std::string host, \
-const int maxBody, const std::string servName, const int port) : \
+const int maxBody, const std::vector<std::string> servName, const int port) : \
 	_host(host), _maxBodySize(maxBody), _serverName(servName), _port(port)
 {
 	initRequest();
 }
 
 // Default constructor definition
-Request::Request()
-    : _host(""), _status(0), _maxBodySize(0), _serverName("bla"),  _port(0), _HeaderRead(false), _HeaderOK(false) 
-{
-    initRequest();
-}
+// Request::Request()
+//     : _host(""), _status(0), _maxBodySize(0), _serverName("bla"),  _port(0), _HeaderRead(false), _HeaderOK(false) 
+// {
+//     initRequest();
+// }
 
 bool	Request::processHeader(const std::string& rawHead)
 {
@@ -271,7 +271,7 @@ bool	Request::hasCorrectHost() const
 		throw std::runtime_error("Error parsing Request : no Host header");
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
-	if (it->second != this->_host && it->second != (this->_serverName + ":" + std::to_string(this->_port)))
+	if (it->second != this->_host && !foundStringinVec(it->second, this->_serverName))
 	{
 		std::cerr << "Host is : " << it->second << std::endl;
 		std::cerr << "bad host is : " << this->_host << std::endl;
@@ -281,6 +281,7 @@ bool	Request::hasCorrectHost() const
 	}
 	return(true);
 }
+
 
 bool	Request::parseContentLenBody()
 {
@@ -613,7 +614,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		std::istringstream stream(input);
 		std::string ftime = formattedTime();
 
-		std::string filePath = _location.getRootDir() + _location.getUploadFile() + ftime + ".txt";
+		std::string filePath = _location.getUploadFile() + ftime + ".txt";
 		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
 		std::cout << BLUE "POST url FORM Ressource is : " RESET<< filePath << std::endl;
 		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
@@ -1401,4 +1402,13 @@ void	Request::byteUpload(char *buffer, int byteSize)
 		else
 			_rawBody.push_back(buffer[i]);
 	}
+}
+
+bool foundStringinVec(const std::string& target, const std::vector<std::string>& vec)
+{
+	std::vector<std::string>::const_iterator it;
+	it = std::find(vec.begin(), vec.end(), target);
+	if (it != vec.end())
+		return (true);
+	return (false);
 }
