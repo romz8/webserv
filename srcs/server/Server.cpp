@@ -3,32 +3,43 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 05:21:41 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:49:33 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(const ServerConfig& conf) : _servAddr(setServAddr(conf)), _sock(socketFactory(_servAddr))
+
+/******************** Constructor and init part *******************************/
+
+Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAddr(conf))
 {
 	
 	_initServ();
-	
 	this->_host = conf.getHost();
+	std::cout << "host in server: " << this->_host << std::endl;
 	this->_port = conf.getPort();
+	this->_hostName = 
 	this->_hostName = _host.substr(0, _host.find(':'));
 	this->_serverName = conf.getServerName();
 	this->_root = conf.getRootDir();
 	this->_errPageGlobal = conf.getErrorPages();
-	this->_maxBodySize = conf.getClientMaxBodySize();
+	this->_maxBodySize = conf.getMaxBodySize();
 	_initLocations(conf.getLocationConf());
+	
 	printSockAddrIn(_servAddr);
 }
 
-Server::~Server(){}
+Server::~Server()
+{
+	if (_socket_fd != -1)
+		close(_socket_fd);
+	_clientConnect.clear();
+	_clientResponse.clear();
+}
 
 void	Server::_initServ()
 {
@@ -41,209 +52,178 @@ void	Server::_initServ()
 	_locations.clear();
 	_errPageGlobal.clear();
 	_host.clear();
-	_fdSet.clear();
-	_clientRequest.clear();
+	_clientConnect.clear();
 	_clientResponse.clear();
+	
 }
 
-const sockaddr_in Server::setServAddr(const ServerConfig& conf)
+Server::Server(const Server& src)
 {
-	std::cout << "host : " << conf.getHost() << std::endl;
-	std::cout << "port : " << conf.getPort() << std::endl;
-	sockaddr_in servAddr;
-	servAddr.sin_family = AF_INET; 
-	servAddr.sin_port = htons(conf.getPort()); 
-	
-	//handling IP (either from 0 / nothing or "127.25.24") -> Will need to include getaddress()
-	if (conf.getHostName().empty() || conf.getHostName() == "0.0.0.0")
-		servAddr.sin_addr.s_addr = INADDR_ANY;
-	else
-		inet_pton(servAddr.sin_family, conf.getHostName().c_str(), &servAddr.sin_addr);
-	return (servAddr);
+	*this = src;
 }
+
+Server& Server::operator=(const Server& src)
+{
+	if (this == &src)
+		return (*this);
+	_host = src._host;
+	_port = src._port;
+	_root = src._root;
+	_serverName = src._serverName;
+	_hostName = src._hostName;
+	_maxBodySize = src._maxBodySize;
+	_locations = src._locations;
+	_servAddr = src._servAddr;
+	_socket_fd = src._socket_fd;
+	_client_addr = src._client_addr;
+	_addr_size = src._addr_size;
+	_errPageGlobal = src._errPageGlobal;
+	_rootloc = src._rootloc;
+	_clientConnect = src._clientConnect;
+	_clientResponse = src._clientResponse;
+	return (*this);
+}
+
+
 
 void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
 {
-	std::cout << " Loca conf size is : " << locationConf.size() << std::endl;
 	for (size_t i = 0; i < locationConf.size(); ++i)
 	{
 		Location loc(locationConf[i]);
-		std::cout << "Location : " << loc << std::endl;
 		this->_locations.push_back(loc);
 		if (loc.getPath() == "/")
 			_rootloc = loc;
 	}
-	std::cout << "Locations size : " << _locations.size() << std::endl;
-	for (size_t i = 0; i < _locations.size(); ++i) 
+	for (size_t i = 0; i < _locations.size(); ++i)
 	{
         std::cout << "Location " << i << ": " << _locations[i] << std::endl;
     }
 }
-/**
- * @brief Executes the main server loop, monitoring and responding to socket events.
- * 
- * continuously polls the set of file descriptors (_fdSet) to detect and handle
- * events. It manages the server's listening socket for new connections and other sockets for
- * read/write operations. 
- * The function uses a blocking poll call with a timeout.
- * In case of errors in poll, it throws a runtime exception, and on timeout, 
- * it logs a waiting message. 
- * Actual socket handling is delegated to other functions based 
- * on the type of event (POLLIN or POLLOUT).
- * 
- * @throws std::runtime_error if poll fails.
- */
-void	Server::run()
-{
-	addPollFd(_sock.getSocketFd(), POLLIN);
-	while(42)
-	{
-		int ret = poll(_fdSet.data(), _fdSet.size(), _timeout * 1000);
-		if (ret < 0)
-			throw (std::runtime_error("Poll failed"));
-		else if (ret == 0)
-			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
-		else
-		{
-			for (size_t i = 0; i < _fdSet.size(); ++i)
-			{
-				if (_fdSet[i].revents & POLLIN)
-				{
-					if (_fdSet[i].fd == _sock.getSocketFd())
-						this->handleConnection();
-					else
-						readClient(_fdSet[i].fd);
-				}
-				else if (_fdSet[i].revents & POLLOUT)
-					sendClient(_fdSet[i].fd);
-			}
-		}
-		usleep(1000);
-	}
-}
 
-void	Server::processRequest(const std::string& rawhead, const int io_fd)
-{
-	Request request(rawhead, _host, _maxBodySize); //to replace with config max body size
-	if (request.hasBody())
-	{
-		std::string body;
-		body.clear();
-		int retBody = this->_sock.readBody(io_fd, request.getHeader(), rawhead, body);
-		if(retBody == -2)
-			request.setStatus(408);
-		else if (retBody == -1)
-			request.setStatus(400);
-		else
-			request.setBody(body);
-	}
-	const Location* matchLoc = findLocationForRequest(request.getPath()); //TO VERIFY AND EDIT WITH CONFIG NEW LOCATION
-	if (matchLoc == NULL)
-		request.setLocation(_rootloc); // to replace with root location in config logic
-	else
-	{
-		request.setLocation(*matchLoc);
-		std::cout << BG_GREEN "Location found : " << matchLoc->getPath() << RESET << std::endl; //TO REMOVE AFTER TEST
-	}
-	request.buildRequest();
-	request.printRequest(); //TO REMOVE AFTER TEST
-	Response resp(request);
-	resp.buildResponse();
-	std::string response = resp.getResponse();
-	//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
-	_clientRequest[io_fd] = request.getHeaderField("Connection");
-	_clientResponse[io_fd] = resp.getResponse();
-	setPoll(io_fd, POLLOUT);
-}
+
+/*===================================================================================================*/
+/******************** SERVER PART : interfacing socket with Request/Response *************************/
+/*===================================================================================================*/
+
+
 
 /**
- * @brief Handles read operations for a specified client socket.
+ * @brief Handles read operations for a specified client socket. 
+ * 1. **Initialization**:
+ *    - Checks if the start time for the given fd exists in the `_start` map
+ *      or if the request status is `0` (indicating a new request).
+ *    - If either condition is true, initializes the start time for the file descriptor to the current time.
  * 
- * Attempts to read data from the specified socket. If the header read is successful,
- * it processes the data depending on whether the request has additional body content.
- * If reading fails at any point, the client is disconnected and the socket is closed.
- * Upon successful reading, it determines the appropriate response based on the request
- * and prepares the socket for a write operation by setting its event to POLLOUT.
+ * 2. **Reading Data**:
+ *    - Attempts to read data from the client socket using `recv`.
+ *    - If `recv` returns a negative value, logs the error, removes the start time entry, and returns `-1`.
+ *    - If `recv` returns `0`, indicating the client has disconnected, logs the disconnection, 
+ * 	removes the start time entry, and returns `0`.
+ *    - otherwise read data is stored in a buffer and terminated with a null character for nbr of bytes read.
  * 
- * @param io_fd The file descriptor of the client socket.
- * @exception Catches and logs exceptions related to socket operations.
+ * 3. **Processing the Request**:
+ *    - Calls `request._readRequest` to process the read data.
+ *    - If `_readRequest` returns `true` (indicating the request is fully read and valid):
+ *      - Removes the start time entry.
+ *      - Calls `processRequest` to handle the request.
+ *      - If the request requires CGI execution (`request.execCgi()` returns `true`), logs the CGI launch and returns `2` to indicate the CGI process.
+ *      - Otherwise, returns `1` to indicate a successfully processed request.
+ *    - If the request is not fully read, returns `2` to continue reading.
+ * 
+ * 4. **Exception Handling**:
+ *    - Catches any exceptions, logs the error message, and returns `-1`.
  */
-void	Server::readClient(int io_fd)
+int	Server::readClient(pollfd& pfd, Request& request)
 {
 	try
 	{
-		std::string rawhead; 
-		rawhead.clear();
-		int retHead = this->_sock.readHeader(io_fd, rawhead);
-		if (retHead == 1)
-			processRequest(rawhead, io_fd);
-		else
-			closeClient(io_fd);
-			//handleError(io_fd, retHead);
+		if (_start.find(pfd.fd) == _start.end() || request.getStatus() == 0)
+			_start[pfd.fd] = std::time(NULL);
+		int byteRead;
+		char buffer[BUFSIZE];
+		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
+		if (byteRead < 0 )
+		{
+			std::cerr << "recv socket Error :" << strerror(errno) << std::endl;
+			_start.erase(pfd.fd);
+			return (-1);
+		}
+		if (byteRead == 0)
+		{
+			std::cout << "Client disconnected for fd"<< pfd.fd << std::endl;
+			_start.erase(pfd.fd);
+			return (0);
+		}
+		buffer[byteRead] = '\0';
+		//std::cout << BLUE << "bytes read : " << byteRead << RESET << std::endl;
+		if (request._readRequest(buffer, byteRead))
+		{
+			_start.erase(pfd.fd);
+			processRequest(request, pfd.fd);
+			if (request.execCgi())
+				return (2);
+			return (1);
+		}
+		return (2);
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
-		removePollFd(io_fd);
-		close(io_fd);
+		return (-1);
 	}
 }
 
+
 /**
- * @brief Handles sending responses to a client's socket.
+ * @brief Handles sending the HTTP responses to a client's socket.
  * 
- * Sends the prepared response to the specified client socket. After sending,
- * it checks the 'Connection' header to decide whether to close the socket or
- * keep it open for further communications. If 'close' is indicated, it disconnects the client;
- * otherwise, it resets the socket to listen for more data (POLLIN).
+ * 1. **Response Preparation**:
+ *    - Checks if a response exists for the given fd in the `_clientResponse` map.
+ *    - If no response is found, returns `-1` to indicate an error.
+ *    - Retrieves the response string from the map.
  * 
- * @param io_fd The file descriptor of the client socket to send data to.
+ * 2. **Sending Data**:
+ *    - Attempts to send the response to the client socket using `send`.
+ *    - If `send` returns a negative value, logs the error and returns `-1`.
+ *    - If `send` returns a value less than the response length, indicating a partial send, 
+ * 		updates the response in the `_clientResponse` map with the unsent portion. 
+ * 		Returns `0` to continue sending.
+ * 
+ * 3. **Connection Management**:
+ *    - If the `Connection` header indicates "close",removes the connection
+ *  and response entries from their respective maps, and returns `-1` to close the connection.
+ *    - Otherwise, removes the connection and response entries from their respective maps 
+ * and returns `1` to indicate the response was sent successfully and the connection should remain open.
  */
-void Server::sendClient(int io_fd)
+int	Server::sendClient(pollfd &pfd)
 {
+	int io_fd = pfd.fd;
 	if (_clientResponse.find(io_fd) == _clientResponse.end())
-	{
-		closeClient(io_fd);
-		return;
-	}
+		return (-1);
 	std::string response = _clientResponse[io_fd];
-	//std::cout << YELLOW "Response : " << response << RESET << std::endl;
 	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
 	if (byteSent < 0)
 	{
 		std::cerr << "send socket Error :" << strerror(errno) << std::endl;
-		closeClient(io_fd);
-		return;
+		return (-1);
 	}
 	else if (byteSent < response.length())
 	{
 		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
 		_clientResponse[io_fd] = response.substr(byteSent);
-		setPoll(io_fd, POLLOUT);
-		return;
+		return (0);
 	}
-	if ( _clientRequest[io_fd].find("close") != std::string::npos)
-		closeClient(io_fd);
-	else
-		setPoll(io_fd, POLLIN);
-	//std::cout << " bytesent : " << byteSent << std::endl;
-	//std::cout << " response sent : " << response << std::endl;
-	_clientRequest.erase(io_fd);
+	if ( _clientConnect[io_fd].find("close") != std::string::npos)
+	{
+		std::cout << "Closing connection for fd : " << io_fd << std::endl;
+		_clientConnect.erase(io_fd);
+		_clientResponse.erase(io_fd);
+		return (-1);
+	}
+	_clientConnect.erase(io_fd);
 	_clientResponse.erase(io_fd);
-}
-
-Socket Server::socketFactory(const sockaddr_in& addr) 
-{
-    try 
-	{
-        return Socket(addr);
-    } 
-	catch(const std::exception& e) 
-	{
-        std::cerr << this->_serverName;
-		std::cerr << "Failed to create socket: " << e.what() << std::endl;
-        throw;
-    }
+	return (1);
 }
 
 /*
@@ -274,81 +254,239 @@ const Location* Server::findLocationForRequest(const std::string& requestPath) c
 }
 
 /**
- * @brief Adds a new file descriptor and its interested events to the polling set.
+ * @brief Processes the incoming HTTP request.
  * 
- * Registers a new file descriptor with specified events (POLLIN, POLLOUT) into the _fdSet,
- * enabling the main loop to monitor this new descriptor for the given events.
+ * This function is handling the entire lifecycle of an HTTP request from a client.
+ * It performs the following steps:
+ * 1. **Request Initialization**: Creates a `Request` object using the raw HTTP header.
+ * 2. **Body Handling**: If the request contains a body, it sets the body content in the request object.
+ * 3. **Location Matching**: Finds the best matching location configuration for the request path.
+ *    - Uses `findLocationForRequest` to match the request path to a location.
+ *    - If no match is found, sets the root location as the default.
+ *   - If an alias is found, updates the request path and status code accordingly.
+ * 4. **Request Building**: Finalizes the request object through HTTP Methods check
+ * 	  - if the request is executing a CGI, it returns to the caller (the response is handled in Cluster to
+ * be non-blocking
+ * 5. **Response Creation**: Creates a `Response` object using the built request.
+ *    - Calls `buildResponse` to generate the HTTP response.
+ * 6. **Response Storage**: Stores the response and connection header for later use.
  * 
- * @param fd The file descriptor to add.
- * @param events The polling events to watch for (POLLIN, POLLOUT).
+ * @param rawhead The raw HTTP request header received from the client.
+ * @param pfd The pollfd structure associated with the client connection.
  */
-void	Server::addPollFd(int fd, short events)
+void	Server::processRequest(Request& request, int io_fd)
 {
-	struct pollfd pfd;
-	pfd.fd = fd;
-	pfd.events = events;
-	_fdSet.push_back(pfd);
+	if (request.hasBody())
+		request.setBody(request.getrawBody());
+	const Location* matchLoc = findLocationForRequest(request.getPath());
+	if (matchLoc == NULL)
+		request.setLocation(_rootloc); // to replace with root location in config logic
+	else
+		request.setLocation(*matchLoc);
+	if (matchLoc != NULL && !matchLoc->getAlias().empty())
+	{
+		request.setPath(matchLoc->getAlias());
+		request.setStatus(301);
+	}
+	else
+		request.buildRequest();
+	if (request.execCgi())
+		return;
+	Response resp(request);
+	resp.buildResponse();
+	std::string response = resp.getResponse();
+	_clientConnect[io_fd] = request.getHeaderField("Connection");
+	_clientResponse[io_fd] = resp.getResponse();
+	request.initRequest();
 }
 
-void Server::removePollFd(int fd)
-{
-	for (size_t i = 0; i < _fdSet.size(); ++i)
-	{
-		if (_fdSet[i].fd == fd)
-		{
-			_fdSet.erase(_fdSet.begin() + i);
-			break;
-		}
-	}
-}
+
 /**
- * @brief Accepts a new connection and adds it to the polling set.
+ * @brief Handles read timeouts for client connections.
  * 
- * This function is called when there is an incoming connection request on the server's listening socket.
- * It accepts the connection, sets the new socket to non-blocking mode, and adds it to the set of polled
- * file descriptors, listening for incoming data (POLLIN).
+ * This function checks if a read timeout has occurred for a given client connection
+ * (identified by `io_fd`). If a timeout is detected, it sets the appropriate status
+ * code, prepares a response, and updates the connection state. The function performs
+ * the following logical steps:
+ * 
+ * 1. Checks if the start time for the given file descriptor (`io_fd`) exists in the `_start` map.
+ *    - If the start time is not found, it returns `0`, indicating no timeout handling is needed.
+ * 2. Calculates the elapsed time since the start of the read operation using `std::time(NULL)`.
+ * 3. Compares the elapsed time to the configured read timeout (`_readTimeout`).
+ *    - If the elapsed time exceeds the read timeout, it proceeds to handle the timeout:
+ *      - Sets the request status to `408` (Request Timeout).
+ *      - Creates a `Response` object using the timed-out request and builds the HTTP response.
+ *      - Updates the `_clientConnect` map to indicate the connection should be closed.
+ *      - Stores the prepared response in the `_clientResponse` map.
+ *      - Resets the request by calling `request.initRequest()` to prepare it for future use.
+ *      - Removes the start time entry from the `_start` map to clean up the state.
+ *      - Returns `-1` to indicate that the timeout was handled and the connection should be closed.
+ * 4. If no timeout has occurred, it returns `0`, indicating that no action is needed.
  */
-void	Server::handleConnection()
+int	Server::handleTimeout(const int io_fd, Request& request)
 {
-	try 
+	if (_start.find(io_fd) == _start.end())
+		return(0);
+	if (std::time(NULL) -  _start[io_fd] > _readTimeout)
 	{
-		int io_fd = this->_sock.acceptConnection();
-		setNonBlocking(io_fd);
-		this->addPollFd(io_fd, POLLIN);
+		request.setStatus(408);
+		Response resp(request);
+		resp.buildResponse();
+		_clientConnect[io_fd] = "close";
+		_clientResponse[io_fd] = resp.getResponse();
+		request.initRequest();
+		_start.erase(io_fd);
+		return (-1);
+		
 	}
-	catch(const std::exception& e)
+	return(0);
+}
+
+/*=========================================================================*/
+/******************** SOCKET I/O PART **************************************/
+/*=========================================================================*/
+
+/**
+ * @brief Initializes server address structure from server configuration.
+ * 
+ * Sets up the sockaddr_in structure using the provided ServerConfig, converting
+ * the hostname and port into appropriate network representations.
+ */
+const sockaddr_in Server::setServAddr(const ServerConfig& conf)
+{
+	sockaddr_in servAddr;
+	struct addrinfo hints, *res;
+	memset(&servAddr, 0, sizeof(servAddr));
+	memset(&hints, 0, sizeof(hints));
+	servAddr.sin_family = AF_INET; 
+	servAddr.sin_port = htons(conf.getPort());
+
+	hints.ai_family = AF_INET;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+	std::string port = std::to_string(conf.getPort());
+	std::string hostname = conf.getHostName();
+	
+	if (hostname.empty())
+		hostname = "localhost";
+	int gaierr = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &res);
+	if (gaierr != 0)
 	{
-		std::cerr << e.what() << std::endl;
+		freeaddrinfo(res);
+		std::string msg = gai_strerror(gaierr);
+		throw std::runtime_error("Error getaddrinfo() : " + msg);
 	}
+	servAddr.sin_addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr;
+	freeaddrinfo(res);
+	return (servAddr);
+}
+
+void	Server::_initSock()
+{
+	this->_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (this->_socket_fd < 0)
+		throw std::runtime_error("Error creating socket");
+	this->_addr_size = sizeof(struct sockaddr_in);
+	
+	printSockAddrIn(_servAddr);
+	setNonBlocking(this->_socket_fd);
+	int enable = 1;
+	if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		std::string catchsys = strerror(errno);
+		throw std::runtime_error("Error setsockopt() on the socket" + catchsys);
+	}
+	if (bind(this->_socket_fd, (const struct sockaddr *) &_servAddr, _addr_size) < 0)
+	{
+		std::string catchsys = strerror(errno);
+		throw std::runtime_error("Error binding the socket : " + catchsys);
+		std::cout << "Error binding the socket" << std::endl;
+	}
+	
+	if (listen(this->_socket_fd, MAX_Q) < 0)
+		throw std::runtime_error("Error listening socket stage");
 }
 
 /**
- * @brief Removes a file descriptor from the polling set.
+ * @brief Accepts a new client connection.
  * 
- * Searches for and removes the specified file descriptor from the _fdSet, effectively
- * stopping any further monitoring of this descriptor in the server loop.
- * 
- * @param fd The file descriptor to remove.
+ * Accepts a connection on the server socket, sets the new socket to non-blocking mode,
+ * and returns the client socket file descriptor.
+ * we then create the request object that will handle the request and store it in a map
+ * this allow to "stream" the request building as the data is read from the socket
+ * @return The file descriptor of the accepted client socket, or -1 on error.
  */
-void	Server::setPoll(int fd, short events)
+int Server::acceptConnection()
 {
-	for (size_t i = 0; i < _fdSet.size(); ++i)
-	{
-		if (_fdSet[i].fd == fd)
-		{
-			_fdSet[i].events = events;
-			break;
-		}
-	}
+	int io_socket = accept(this->_socket_fd, (struct sockaddr *) &this->_client_addr, (socklen_t *) &this->_addr_size);
+	setNonBlocking(io_socket);
+	if (io_socket < 0)
+		throw std::runtime_error("Error accepting client request");
+	//Request request(_host, _maxBodySize, _serverName, _port);
+	//_inputRequest[io_socket] = request;
+	return (io_socket);
 }
 
-void Server::closeClient(int io_fd)
+
+/********************** GETTERS & SETTERS ****************************/
+
+std::string Server::getHost() const
 {
-	removePollFd(io_fd);
-	close(io_fd);
-	//usleep(1000); //because to fast to retrun to fd to kernel when using siege
+	return (_host);
 }
 
+int	Server::getPort() const
+{
+	return (_port);
+}
+
+int Server::getMaxBodySize() const
+{
+	return (_maxBodySize);
+}
+
+std::string Server::getserverName() const
+{
+	return (_serverName);
+}
+
+void Server::setClientRequest(int fd, const std::string& request)
+{
+	this->_clientConnect[fd] = request;
+}
+
+void Server::setClientResponse(int fd, const std::string& response)
+{
+	this->_clientResponse[fd] = response;
+}
+
+int Server::getSocketInit()const
+{
+	return (_socket_fd);
+}
+
+
+/******************* UTILS ***************************************/
+
+void printSockAddrIn(const sockaddr_in& addr) 
+{
+    // Convert the IP address to a string
+    char* ipStr = inet_ntoa(addr.sin_addr);
+
+    // Convert the port number from network byte order to host byte order
+    unsigned int port = ntohs(addr.sin_port);
+
+    std::cout << "IP Address: " << ipStr << ", Port: " << port << std::endl;
+}
+
+void	setNonBlocking(int fd)
+{
+	int flags = fcntl(fd, F_GETFL, 0);
+	if (flags == -1)
+		throw std::runtime_error("Impossible to get flags");
+	if (fcntl(fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) 
+		throw std::runtime_error("Impossible to set non blocking");
+}
 std::ostream& operator<<(std::ostream& os, const Server& serv)
 {
 	os << "Server : " << serv._serverName << std::endl;
@@ -364,21 +502,4 @@ std::ostream& operator<<(std::ostream& os, const Server& serv)
 		os << serv._locations[i] << std::endl;
 	return os;
 }
-// void Server::handleError(const int io_socket))
-// {
-// 	std::string response;
-	
-// 	if (error == 0)
-// 	{
-// 		closeClient(io_socket);
-// 		return;
-// 	}
-// 	if (error == -2)
-// 		response = "HTTP/1.1 408 Request Timeout\r\nContent-Length: 0\r\n\r\n";
-// 	else 
-// 		response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
-// 	_clientRequest[io_socket] = "close";
-// 	_clientResponse[io_socket] = response;
-// 	setPoll(io_socket, POLLOUT);
-// }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:36:45 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 14:18:47 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:58:43 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,7 @@ void Parser::getConfig( std::vector<ServerConfig> &vector, StrVector allowed_dir
 }
 
 void	Parser::parseSimpleServ( std::string head, std::string body, ServerConfig &server, StrVector allowed_directives ) {
+	(void)body;
 	std::string name = head.substr(0, head.find_first_of(ISSPACE));
 	ParseContent::checkDuplicate<ServerConfig>(name, server);
 	int idx = SUtils::easyfind< StrVector >(allowed_directives.begin(), allowed_directives.end(), name);
@@ -150,6 +151,7 @@ void	Parser::parseComplex( std::string head, std::string body, std::vector<Serve
 }
 
 void	Parser::parseServer( std::string head, std::string body, std::vector<ServerConfig> &vector ) {
+	(void)head;
 	ServerConfig server;
 	vector.push_back(server);
 	getConfig(vector, server.getAD(), body);
@@ -217,6 +219,7 @@ void	Parser::parseDirectiveLoc( std::string head, std::string body, LocationConf
 	int idx;
 	std::string name;
 
+	(void)body;
 	name = head.substr(0, head.find_first_of(ISSPACE));
 	if ((idx = SUtils::easyfind< StrVector >(_simpleDirectives.begin(), _simpleDirectives.end(), name)) >= 0)
 		parseSimpleLoc(head, location, allowed_directives);

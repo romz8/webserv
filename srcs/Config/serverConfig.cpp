@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   serverConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 14:13:05 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 14:56:49 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 		_rootDir = src._rootDir;
 		_locations = src._locations;
 		error_pages = src.error_pages;
-		client_max_body_size = src.client_max_body_size;
+		_max_body_size = src._max_body_size;
 		cgiConf = src.cgiConf;
 		autoindex = src.autoindex;
 	}
@@ -46,7 +46,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 }
 
 ServerConfig::ServerConfig(const std::string& host, int port, const std::string& serverName, const std::string& rootDir, const std::vector<LocationConfig>& locations, const std::map<int, std::string>& error_pages, size_t client_max_body_size, const std::vector<CgiConfig>& cgiConf, bool autoindex)	
-	: _host(host), _port(port), _serverName(serverName), _rootDir(rootDir), _locations(locations), error_pages(error_pages), client_max_body_size(client_max_body_size), cgiConf(cgiConf), autoindex(autoindex)
+	: _host(host), _port(port), _serverName(serverName), _rootDir(rootDir), _locations(locations), error_pages(error_pages), _max_body_size(client_max_body_size), cgiConf(cgiConf), autoindex(autoindex)
 {
 }
 
@@ -58,10 +58,10 @@ void	ServerConfig::_initConfig()
 	_hostName = "";
 	_port = 0;
 	_serverName = "";
-	_rootDir = "./html/";
+	_rootDir = DEFAULTROOOT;
 	_locations.clear();
 	error_pages.clear();
-	client_max_body_size = DEFAULT_BODY_SIZE;
+	_max_body_size = DEFAULT_BODY_SIZE;
 	cgiConf.clear();
 	autoindex = false;
 }
@@ -80,7 +80,7 @@ std::vector<LocationConfig> ServerConfig::getLocationConf() const {return (_loca
 
 std::map<int, std::string> ServerConfig::getErrorPages() const {return (error_pages);}
 
-size_t ServerConfig::getClientMaxBodySize() const {return (client_max_body_size);}
+size_t ServerConfig::getMaxBodySize() const {return (_max_body_size);}
 
 std::vector<CgiConfig> ServerConfig::getCgiConf() const {return (cgiConf);}
 
@@ -115,12 +115,12 @@ void ServerConfig::setErrorPages(const std::map<int, std::string>& error_pages)
 	this->error_pages = error_pages;
 }
 
-void ServerConfig::setClientMaxBodySize(size_t client_max_body_size)
+void ServerConfig::setClientMaxBodySize(size_t size)
 {
-	if (client_max_body_size > MAX_BODY_SIZE)
-		this->client_max_body_size = MAX_BODY_SIZE - 1;
+	if (size > MAX_BODY_SIZE)
+		this->_max_body_size = MAX_BODY_SIZE - 1;
 	else
-		this->client_max_body_size = client_max_body_size;
+		this->_max_body_size = size;
 	_isSet["client_max_body_size"] = true;
 	
 }

@@ -21,26 +21,43 @@
  * @param hostName The host name from the HTTP request.
  * @param maxBody The maximum body size allowed for the request.
  */
-Request::Request(const std::string& rawHead, const std::string& hostName, int maxBody) : _hostName(hostName), _maxBodySize(maxBody)
+
+Request::Request(const std::string host, \
+const int maxBody, const std::string servName, const int port) : \
+	_host(host), _maxBodySize(maxBody), _serverName(servName), _port(port)
+{
+	initRequest();
+}
+
+// Default constructor definition
+Request::Request()
+    : _host(""), _status(0), _maxBodySize(0), _serverName("bla"),  _port(0), _HeaderRead(false), _HeaderOK(false) 
+{
+    initRequest();
+}
+
+bool	Request::processHeader(const std::string& rawHead)
 {
 	std::string rawRequest;
-	initRequest();
 	if (rawHead.find("\r\n\r\n") == std::string::npos)
 	{
+		std::cerr << "Error parsing Request : no CRLF terminated at end of header" << std::endl;
 		this->_status = 400;
-		return ;
+		return (false);
 	}
 	else
 		rawRequest = rawHead.substr(0, rawHead.find("\r\n\r\n") + 4);
 	try
 	{
 		parseHeader(rawRequest);
+		return (true);
 	}
 	catch(const std::exception& e)
 	{
+		std::cout << BG_RED << "ERROR IN Header" << RESET << std::endl;
 		std::cerr << e.what() << std::endl;
 		this->_status = 400;
-		std::cout << BG_RED << "ERROR IN Header" << RESET << std::endl;
+		return (false);
 	}
 }
 
@@ -55,10 +72,32 @@ Request& Request::operator=(const Request& src)
 {
 	if (this != &src)
 	{
-		this->_method = src._method;
-		this->_path = src._path;
-		this->_version = src._version;
-		this->_headers = src._headers;
+		_host = src._host;
+		_method = src._method;
+		_path = src._path;
+		_version = src._version;
+		_isDirectory = src._isDirectory;
+		_isDirNorm	= src._isDirNorm;
+		_parsePath = src._parsePath;
+		_extension = src._extension;
+		_status = src._status;
+		_maxBodySize = src._maxBodySize;
+		_chunkBody = src._chunkBody;
+		_rawinput = src._rawinput;
+		_body = src._body;
+		_respbody = src._respbody;
+		_location = src._location;
+	 	_execCgi = src._execCgi;
+		_query = src._query;
+		_headers = src._headers;
+		_serverName = src._serverName;
+		_port = src._port;
+		_HeaderRead = src._HeaderRead;
+		_HeaderOK = src._HeaderOK;
+		_rawinput = src._rawinput;
+		_rawBody = src._rawBody;
+		_start = src._start;
+		_cgi = src._cgi;
 	}
 	return (*this);
 }
@@ -147,9 +186,9 @@ void Request::parseStartLine(const std::string& line)
 	if (!isValidRL(line))
 		throw std::runtime_error("Error parsing Request : invalid Request-Line on SP");
 	lineStream >> this->_method >> this->_path >> this->_version;
-	std::cout << "Parsed Request-Line: Method: " << this->_method
+	std::cout << GREEN "Parsed Request-Line: Method: " << this->_method
           << ", Path: " << this->_path
-          << ", Version: " << this->_version << std::endl;
+          << ", Version: " RESET << this->_version << std::endl;
 }
 
 /**
@@ -159,7 +198,7 @@ void Request::parseStartLine(const std::string& line)
  */
 bool Request::isValidRL(const std::string& line)
 {
-	std::cout << BLUE "line is : " RESET  << line << std::endl;
+	//std::cout << BLUE "line is : " RESET  << line << std::endl;
 	const std::string SP  = " ";
 	size_t firstspace, secondspace;
 	
@@ -179,7 +218,7 @@ bool Request::isValidRL(const std::string& line)
 	if (secondspace == std::string::npos || secondspace == firstspace + 1) 
 		return(false);
 	size_t nextsp = line.find(SP, secondspace + 1);
-	if ((nextsp != std::string::npos) && (nextsp != line[line.size() - 3]))
+	if ((nextsp != std::string::npos) && (nextsp != static_cast<size_t>(line[line.size() - 3])))
 		return (false);
 	for (size_t i = 0; i < line.size(); i++)
 	{
@@ -232,14 +271,17 @@ bool	Request::hasCorrectHost() const
 		throw std::runtime_error("Error parsing Request : no Host header");
 	if (it->second.empty())
 		throw std::runtime_error("Error parsing Request : empty Host header");
-	if (it->second != this->_hostName)
+	if (it->second != this->_host)
+	{
+		std::cerr << "Host is : " << it->second << std::endl;
+		std::cerr << "bad host is : " << this->_host << std::endl;
 		throw std::runtime_error("Error parsing Request : invalid Host header");
+	}
 	return(true);
 }
 
 bool	Request::parseContentLenBody()
 {
-	bool bodyok = false;
 	if (_headers["Content-Length"].empty())
 	{
 		this->_status = 400;
@@ -252,7 +294,7 @@ bool	Request::parseContentLenBody()
 			this->_status = 400;
 		std::cout << "Content-Length is : " << len << std::endl;
 		std::cout << "maxBodySize is : " << this->_maxBodySize << std::endl;
-		if (len > this->_maxBodySize)
+		if (len > static_cast<size_t>(this->_maxBodySize))
 		{ 
 			this->_status = 413;
 			return(false);
@@ -307,6 +349,12 @@ void	Request::initRequest()
 	this->_respbody.clear();
 	this->_extension.clear();
 	this->_query.clear();
+	this->_headers.clear();
+	this->_HeaderOK = false;
+	this->_HeaderRead = false;
+	this->_rawinput.clear();
+	this->_rawBody.clear();
+	this->_start = -1;
 }
 
 /**
@@ -346,15 +394,10 @@ bool	loneCR(const std::string& header)
 void	Request::buildRequest()
 {
 	
-	//std::cout << "init path path is ; " << this->_path << std::endl;
+	//std::cout << BG_GREEN << "init path path is ; " << this->_path << RESET << std::endl;
 	sanitizeUrl();
 	getQueryParams();
 	hexDecoding(_path); //CAREFULL SF (tested with /cgi-bin/hello.py?firstname=lljfamf&lastname=%3Bl%3Blf&address=%3B%3Blkfkdkf)
-	// std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
-	// std::cout << BG_CYAN << "method is " << this->_method << std::endl;
-	// std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
-	//std::cout << "path is ; " << this->_path << std::endl;
-	//std::cout << "query string is : " << this->_query << std::endl;
 
 	StatusCode();
 	if (this->_status >= 400)
@@ -419,7 +462,7 @@ void	Request::StatusCode() //later on add the location check and GET / POST / DE
 	}
 	if (this->_method=="POST")
 	{
-		if (this->_headers.find("Content-Length") !=  this->_headers.end() && safeStrToSizeT(this->_headers["Content-Length"]) > _maxBodySize)
+		if (this->_headers.find("Content-Length") !=  this->_headers.end() && safeStrToSizeT(this->_headers["Content-Length"]) > static_cast<size_t>(_maxBodySize))
 			this->_status = 413;
 		return ;
 	}
@@ -496,11 +539,12 @@ void		Request::handleGetRequest()
 			this->_status = 301;
 			return;
 		}
-		if (!index.empty() && fileExists(this->_location.getRootDir() + this->_path + index))
-			this->_parsePath = _location.getRootDir() + this->_path + index;
+		//std::cout << "looking for index file at : " << this->_parsePath + index << std::endl;
+		if (!index.empty() && fileExists(this->_parsePath + index))
+			this->_parsePath.append(index);
 		else if(_location.getAutoIndex() == true)
 		{
-			DirectoryListing dirList(this->_location.getRootDir() + this->_path);
+			DirectoryListing dirList(this->_parsePath);
 			this->_respbody = dirList.getHTMLListing();
 			//return; ->otherwise no 200 status
 		}
@@ -530,6 +574,8 @@ void	Request::handlePostRequest()
 {	
 	std::map<std::string, std::string> data;
 	std::string body = this->_body;
+	//std::cout << "POST BODY IS : " << _body << std::endl;
+	//std::cout << "RAW BODY IS : " << _rawBody << std::endl;
 	std::map<std::string, std::string>::const_iterator it;
 	it = this->_headers.find("Content-Type");
 	if (it == this->_headers.end() || it->second.empty())
@@ -560,7 +606,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 
 		std::string filePath = _location.getRootDir() + _location.getUploadFile() + ftime + ".txt";
 		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
-		//std::cout << "POST url FORM Ressource is : " << filePath << std::endl;
+		std::cout << BLUE "POST url FORM Ressource is : " RESET<< filePath << std::endl;
 		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
 		std::ofstream file(filePath, std::ios::app);
 		if (!file.is_open())
@@ -572,16 +618,16 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		file.close();
 		this->_status = 201;
 		this->_parsePath = loc.getRootDir() + loc.getPath();
-		//std::cout << BG_GREEN << "path is : " << this->_parsePath << RESET << std::endl;
 }
 
 
 void	Request::processMultipartForm(const std::string& input, const std::string& boundary)
 {
+	std::cout << " IN MULTIPART FORM with boundary :"<< boundary << std::endl;
 	std::string delimiter = "--" + boundary;
 	std::string	endDelimiter = delimiter + "--";
 	std::string fname = "unknown.txt";
-	size_t pos = 0, start = 0, end = 0;
+	size_t start = 0, end = 0;
 
 	start += delimiter.length() + 2; 
 	end = input.find(endDelimiter) - 2;
@@ -617,7 +663,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	this->_parsePath = _location.getRootDir() + _location.getUploadFile(); // TESTING
 }
 
-void	Request::processChunkBody(std::string input)
+void	Request::parseChunkBody(const std::string& input)
 {
 	std::string data;
 	size_t totalSize = 0;
@@ -627,11 +673,12 @@ void	Request::processChunkBody(std::string input)
 	while (true)
 	{
 		size_t endBlock = input.find("\r\n", pos);
-		size_t chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
+		long chunkSize = std::strtol(input.substr(pos, endBlock - pos).c_str(), NULL, 16);
+		std::cout << "CHUNK SIZE IS : " << chunkSize << std::endl;
 		if (chunkSize == 0)
 			break;
 		totalSize += chunkSize;
-		if (totalSize > _maxBodySize)
+		if (totalSize > static_cast<size_t>(_maxBodySize))
 		{
 			this->_status = 413;
 			return;
@@ -675,7 +722,6 @@ void	Request::handleDeleteRequest()
 {
 	
 	this->_parsePath = _location.getPath() + this->_path.substr(_location.getPath().size());
-    //std::cout << "DELETE METHOD PATH IS : " << this->_parsePath << std::endl;
     if (!isValidPath())
 	{
         _status = 404;  
@@ -747,12 +793,8 @@ bool	Request::handleCgi()
 		std::string execpath = _location.getCgiHandler(parseExtension(this->_path, ""));
 		if (_method == "POST")
 			_query = _body;		
-		CGI cgi(*this, execpath);
-		cgi.executeCGI();
-		cgi.checkCGI();
-		this->_status = cgi.getStatus();
-		if (this->_status == 200)
-			this->_respbody = cgi.getBody();
+		initCgi(execpath);
+		executeCGI();
 		this->_execCgi = true;
 		return (true);
 	}
@@ -775,9 +817,9 @@ bool Request::isValidPath()
 {
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
-	this->_parsePath = _location.getRootDir() + _location.getPath() + this->_path.substr(_location.getPath().size());
-	//std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
-	//std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+	this->_parsePath = _location.getRootDir() + this->_path.substr(_location.getPath().size());
+	std::cout << BLUE << "path is : " << this->_path << RESET << std::endl;
+	std::cout << BLUE << "full path from loc is : " << this->_parsePath << RESET << std::endl;
 	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
@@ -951,7 +993,7 @@ void Request::setBody(const std::string& body)
 	std::map<std::string, std::string>::const_iterator it;
 	it = this->_headers.find("Transfer-Encoding");
 	if (it != this->_headers.end() && it->second == "chunked")
-		processChunkBody(body);
+		parseChunkBody(body);
 	else
 		this->_body = body;
 }
@@ -989,6 +1031,54 @@ std::string Request::getQueryString() const
 bool Request::execCgi() const
 {
 	return(this->_execCgi);
+}
+
+void	Request::setHost(const std::string& host)
+{
+	this->_host = host;
+}
+
+std::string Request::getHost() const
+{
+	return(this->_host);
+}
+
+void	Request::setServerName(const std::string& servername)
+{
+	this->_serverName = servername;
+}
+
+std::string Request::getServerName() const
+{
+	return(this->_serverName);
+}
+
+void	Request::setPort(int serverport)
+{
+	this->_port = serverport;
+}
+
+int Request::getPort() const
+{
+	return(this->_port);
+}
+
+/*
+only used in case of alias / redirection with 301 bypassing the buildRequest method
+*/
+void	Request::setPath(const std::string& path)
+{
+	this->_parsePath = path;
+}
+
+std::string Request::getrawBody() const
+{
+	return(this->_rawBody);
+}
+
+t_cgi&	Request::getCgi()
+{
+	return(this->_cgi);
 }
 /************************** UTILS **********************************/
 
@@ -1178,4 +1268,128 @@ void hexDecoding(std::string& url)
 		url.replace(pos, 1, " ");
 
 	//std::cout << "After hexDecoding url is : " << url << std::endl;
+}
+
+
+bool	Request::_readRequest(char* buffer, int byteSize)
+{
+
+	byteUpload(buffer, byteSize);
+	std::string input = _rawinput;
+	if (!_HeaderRead)
+	{
+		_HeaderOK = processHeader(input);
+		if (input.find("\r\n\r\n") != std::string::npos)
+		{
+			_HeaderRead = true;
+			//_HeaderOK = processHeader(input);
+			std::string tempBody = input.substr(input.find("\r\n\r\n") + 4);
+			// _rawinput.clear();
+			// _rawinput.append(tempBody);
+			_rawBody.append(tempBody);
+		}
+		else
+			return (true);
+	}
+	if (_HeaderRead && !_HeaderOK)
+	{
+		std::cout << "Header not ok" << std::endl;
+		return (true);
+	}
+	else if (_HeaderRead && _HeaderOK )
+	{
+		return(parseBody());
+	}
+	std::cout << "Header not read" << std::endl;
+	return (false);
+}
+
+bool Request::processChunkBody(std::string buffer) 
+{
+	std::cout << "arrived in chunk body" << std::endl;
+	bool endChunk = (buffer.find("0\r\n\r\n") != std::string::npos);
+	_chunkBody.append(buffer);
+	return (endChunk);
+}
+
+/**
+ * @brief Reads the HTTP body from a client socket.
+ * 
+ * Reads the body of the HTTP request based on the content length or transfer encoding.
+ * 
+ * @param io_socket The client socket file descriptor.
+ * @param header A map containing the HTTP headers previously parsed.
+ * @param rawhead The raw HTTP header - used to rebuild the body if header read had partial body.
+ * @param body A reference to the string where the body will be stored.
+ * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
+ */
+bool Request::parseBody(void)
+{
+
+	try
+	{
+		if (_headers.find("Transfer-Encoding") != _headers.end() && _headers.find("Transfer-Encoding")->second == "chunked")
+			return (processChunkBody(_rawBody));
+		else if (_headers.find("Content-Length") != _headers.end())
+		{
+			if (_rawBody.size() == safeStrToSizeT(_headers["Content-Length"]))
+			{
+				std::cout << BG_GREEN "all parsed" << RESET << std::endl;
+				return (true);
+			}
+			else
+			{
+				if (_rawBody.size() > static_cast<size_t>(_maxBodySize))
+					std::cout << "body too big Max is : " << _maxBodySize << " and current is : " << _rawBody.size() << std::endl;
+				std::cout << BG_RED "not all parsed" << RESET << std::endl;
+				std::cout << "body size is : " << _rawBody.size() << " and content length is : " << safeStrToSizeT(_headers["Content-Length"]) << std::endl;
+				std::cout << " read left is : " << safeStrToSizeT(_headers["Content-Length"]) - _rawBody.size() << std::endl;
+				return (false);
+			}
+		}
+		else
+			return (true);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		this->_status = 400;
+		return (true);
+	}
+	
+	
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Request& req)
+{
+	os << BG_YELLOW "Method : " << req.getMethod() << std::endl;
+	os << "Path : " << req.getPath() << std::endl;
+	os << "Version : " << req._version << std::endl;
+	os << "Host : " << req.getHost() << std::endl;
+	os << "PORT : " << req.getPort() << std::endl;
+	os << "ServerName : " << req.getServerName() << std::endl;
+	os << "max body size : " << req._maxBodySize << std::endl;
+	os << "Extension is  : " << req.getExtension() << std::endl;
+	os << "is Dir  : " << req._isDirectory << std::endl;
+	os << "is DirNorm  : " << req._isDirNorm << std::endl;
+	os << "Requests : " << std::endl;
+	std::map<std::string, std::string>::const_iterator it;
+	for(it = req._headers.begin(); it != req._headers.end(); ++it)
+	{
+		os << BG_CYAN << it->first << " : " << it->second << RESET << std::endl;
+	}
+	os << RESET << std::endl;
+	return (os);
+}
+
+void	Request::byteUpload(char *buffer, int byteSize)
+{
+	for (int i = 0; i < byteSize; i++)
+	{
+		if (!_HeaderRead)
+			_rawinput.push_back(buffer[i]);
+		else
+			_rawBody.push_back(buffer[i]);
+	}
 }

@@ -21,20 +21,37 @@
 # include <sstream>
 # include <fstream>
 # include <sys/stat.h>
+# include <sys/wait.h>
+# include <signal.h>
 # include <unistd.h>
 # include <dirent.h>
 # include <ctime>
 # include <cstdlib>
 # include "colors.h"
+# include "Server.hpp"
 # include "Location.hpp"
-# include "CGI.hpp"
-# include "Socket.hpp" //just for MAX_HEADER_SIZE -> maybe macro it in config.hpp later on
+# include "ServerConfig.hpp"
 # include "DirectoryListing.hpp"
+
+typedef struct s_cgi
+{
+	std::map<std::string, std::string>	_env;
+	std::string							_path;
+	std::string							_body;
+	std::string							_respbody;
+	std::string							_execPath;
+	int		_fdin[2];
+	int		_fdout[2];
+	pid_t _pid;
+	time_t _start;
+	bool _onCGI;
+	
+} t_cgi;
 
 class Request
 {
 private:
-	std::string		_hostName;
+	std::string		_host;
 	std::string		_method;
 	std::string		_path;
 	std::string		_version;
@@ -51,15 +68,29 @@ private:
 	bool 			_execCgi;
 	std::string		_query;
 	std::map<std::string, std::string> _headers;
+	std::string		_serverName;
+	int				_port;
+	bool			_HeaderRead;
+	bool			_HeaderOK;
+	std::string		_rawinput;
+	std::string		_rawBody;
+	t_cgi			_cgi;
+	
+
+	time_t			_start;
+	static const int _timeout = 5;
 	//static const std::string CRLF = "\r\n";
 
 public:
-	Request(const std::string& rawRequest, const std::string& hostName, int maxBody);
+	Request(const std::string host, const int maxBody, const std::string servName, const int port);
+	Request();
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
 
 	void		initRequest();
+	bool		_readRequest(char* buffer, int byteSize);
+	bool		processHeader(const std::string& rawHead);
 	void		parseHeader(const std::string& head);
 	void		parseStartLine(const std::string& line);
 	bool		isValidRL(const std::string& line);
@@ -68,13 +99,15 @@ public:
 	bool		hasBody();
 	void		printRequest() const;
 	void		printHeader() const;
-	void		parseBody(const std::string& header);
+	bool		parseBody();
+	//bool		parseBody(const std::string& header);
 	void		parseChunkBody(const std::string& input);
 	bool		parseContentLenBody();
+	void		byteUpload(char *buffer, int byteSize);
 
 	void		processMultipartForm(const std::string& input, const std::string& boundary);
 	void		processFormData(const std::string& body, const Location& Loc);
-	void		processChunkBody(std::string buffer);
+	bool		processChunkBody(std::string buffer);
 	void		handlePostRequest();
 	void		handleDeleteRequest();
 	void		handleGetRequest();
@@ -82,7 +115,10 @@ public:
 	void		DeleteDirectory();
 	void		StatusCode();
 	void		buildRequest();
-	
+	void		initCgi(std::string execPath);
+	void		executeCGI();
+	void		checkCGISHeader();
+
 	bool		isValidMethod() const;
 	bool		isValidPath();
 	bool		isValidVersion() const;
@@ -110,6 +146,16 @@ public:
 	void		setLocation(const Location& loc);
 	Location	getLocation() const;
 	void		getQueryParams();
+	void		setServerName(const std::string& serverName);
+	void		setPort(int port);
+	std::string getServerName() const;
+	int			getPort() const;
+	void		setHost(const std::string& host);
+	std::string getHost() const;
+	void		setPath(const std::string& path);
+	std::string getrawBody() const;
+	t_cgi&		getCgi();
+	friend std::ostream& operator<<(std::ostream& os, const Request& req);
 }; 
 
 /********************* utils ******************************/
@@ -124,5 +170,7 @@ size_t safeStrToSizeT(const std::string& str);
 bool	loneCR(const std::string& header);
 std::string	formattedTime();
 void	hexDecoding(std::string& url);
+std::ostream& operator<<(std::ostream& os, const Request& req);
+bool isExecutable(const std::string& path);
 
 #endif
