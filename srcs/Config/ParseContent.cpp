@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 18:22:04 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 18:41:10 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,10 +112,12 @@ void	ParseContent::save_listen(string head, ServerConfig &config) {
 	int port;
 	if (pos == string::npos)
 	{
+		
 		port = ft_stoi(data);
 		if (port < 0 || port > USHRT_MAX)
 			throw logic_error("Invalid port " + data);
-		config.setPort(atoi(data.c_str()));
+		config.setHost("0.0.0.0:" + std::to_string(port));
+		config.setListen(port, "0.0.0.0");
 		return ;
 	}
 	config.setHost(data);
