@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 17:26:41 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 18:22:04 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,9 +135,10 @@ void		ParseContent::save_server_name(string head, ServerConfig &config) {
 	StrVector	data;
 	SUtils::split(data, head, ISSPACE);
 	
-	if (data.size() != 2)
+	if (data.size() < 2)
 		throw logic_error("Invalid number of arguments for " + data[0]);
-	config.setServerName(data[1]);
+	for (size_t i = 1; i < data.size(); i++)
+		config.setServerName(data[i]);
 }
 
 void		ParseContent::save_client_max_body_size(string head, ServerConfig &config) {

@@ -30,11 +30,12 @@ const int maxBody, const std::vector<std::string> servName, const int port) : \
 }
 
 // Default constructor definition
-// Request::Request()
-//     : _host(""), _status(0), _maxBodySize(0), _serverName("bla"),  _port(0), _HeaderRead(false), _HeaderOK(false) 
-// {
-//     initRequest();
-// }
+Request::Request()
+    : _host(""), _status(0), _maxBodySize(0),  _port(0), _HeaderRead(false), _HeaderOK(false) 
+{
+	_serverName.clear();
+    initRequest();
+}
 
 bool	Request::processHeader(const std::string& rawHead)
 {
@@ -1053,12 +1054,12 @@ std::string Request::getHost() const
 	return(this->_host);
 }
 
-void	Request::setServerName(const std::string& servername)
+void	Request::setServerName(const std::vector<std::string>& servername)
 {
 	this->_serverName = servername;
 }
 
-std::string Request::getServerName() const
+std::vector<std::string> Request::getServerName() const
 {
 	return(this->_serverName);
 }
@@ -1378,7 +1379,7 @@ std::ostream& operator<<(std::ostream& os, const Request& req)
 	os << "Version : " << req._version << std::endl;
 	os << "Host : " << req.getHost() << std::endl;
 	os << "PORT : " << req.getPort() << std::endl;
-	os << "ServerName : " << req.getServerName() << std::endl;
+	// os << "ServerName : " << req.getServerName() << std::endl;
 	os << "max body size : " << req._maxBodySize << std::endl;
 	os << "Extension is  : " << req.getExtension() << std::endl;
 	os << "is Dir  : " << req._isDirectory << std::endl;
@@ -1404,11 +1405,17 @@ void	Request::byteUpload(char *buffer, int byteSize)
 	}
 }
 
-bool foundStringinVec(const std::string& target, const std::vector<std::string>& vec)
+bool Request::foundStringinVec(const std::string& target, const std::vector<std::string>& vec) const
 {
-	std::vector<std::string>::const_iterator it;
-	it = std::find(vec.begin(), vec.end(), target);
-	if (it != vec.end())
-		return (true);
-	return (false);
+	// std::vector<std::string>::const_iterator it;
+	// it = std::find(vec.begin(), vec.end(), target);
+	// if (it != vec.end())
+	// 	return (true);
+	// return (false);
+	for (std::vector<std::string>::const_iterator it = vec.begin(); it != vec.end(); it++)
+	{
+		if ((*it + ":" + std::to_string(this->_port)) == target)
+			return(true);
+	}
+	return(false);
 }
