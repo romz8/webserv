@@ -31,7 +31,7 @@ const int maxBody, const std::string servName, const int port) : \
 
 // Default constructor definition
 Request::Request()
-    : _host(""), _maxBodySize(0), _serverName("bla"), _port(0), _status(0), _HeaderRead(false), _HeaderOK(false) 
+    : _host(""), _status(0), _maxBodySize(0), _serverName("bla"),  _port(0), _HeaderRead(false), _HeaderOK(false) 
 {
     initRequest();
 }
@@ -218,7 +218,7 @@ bool Request::isValidRL(const std::string& line)
 	if (secondspace == std::string::npos || secondspace == firstspace + 1) 
 		return(false);
 	size_t nextsp = line.find(SP, secondspace + 1);
-	if ((nextsp != std::string::npos) && (nextsp != line[line.size() - 3]))
+	if ((nextsp != std::string::npos) && (nextsp != static_cast<size_t>(line[line.size() - 3])))
 		return (false);
 	for (size_t i = 0; i < line.size(); i++)
 	{
@@ -282,7 +282,6 @@ bool	Request::hasCorrectHost() const
 
 bool	Request::parseContentLenBody()
 {
-	bool bodyok = false;
 	if (_headers["Content-Length"].empty())
 	{
 		this->_status = 400;
@@ -295,7 +294,7 @@ bool	Request::parseContentLenBody()
 			this->_status = 400;
 		std::cout << "Content-Length is : " << len << std::endl;
 		std::cout << "maxBodySize is : " << this->_maxBodySize << std::endl;
-		if (len > this->_maxBodySize)
+		if (len > static_cast<size_t>(this->_maxBodySize))
 		{ 
 			this->_status = 413;
 			return(false);
@@ -399,14 +398,8 @@ void	Request::buildRequest()
 	sanitizeUrl();
 	getQueryParams();
 	hexDecoding(_path); //CAREFULL SF (tested with /cgi-bin/hello.py?firstname=lljfamf&lastname=%3Bl%3Blf&address=%3B%3Blkfkdkf)
-	// std::cout << BG_CYAN << "status and path are " << this->_status << " and " << this->_path << std::endl;
-	// std::cout << BG_CYAN << "method is " << this->_method << std::endl;
-	// std::cout <<BG_CYAN << "Location is : " << _location.getPath() << RESET << std::endl;
-	//std::cout << "path is ; " << this->_path << std::endl;
-	//std::cout << "query string is : " << this->_query << std::endl;
 
 	StatusCode();
-	std::cout << "status CODE OK AND is : " << this->_status << std::endl;
 	if (this->_status >= 400)
 		return; 
 	if (this->_method == "POST") 
@@ -469,7 +462,7 @@ void	Request::StatusCode() //later on add the location check and GET / POST / DE
 	}
 	if (this->_method=="POST")
 	{
-		if (this->_headers.find("Content-Length") !=  this->_headers.end() && safeStrToSizeT(this->_headers["Content-Length"]) > _maxBodySize)
+		if (this->_headers.find("Content-Length") !=  this->_headers.end() && safeStrToSizeT(this->_headers["Content-Length"]) > static_cast<size_t>(_maxBodySize))
 			this->_status = 413;
 		return ;
 	}
@@ -581,8 +574,8 @@ void	Request::handlePostRequest()
 {	
 	std::map<std::string, std::string> data;
 	std::string body = this->_body;
-	std::cout << "POST BODY IS : " << _body << std::endl;
-	std::cout << "RAW BODY IS : " << _rawBody << std::endl;
+	//std::cout << "POST BODY IS : " << _body << std::endl;
+	//std::cout << "RAW BODY IS : " << _rawBody << std::endl;
 	std::map<std::string, std::string>::const_iterator it;
 	it = this->_headers.find("Content-Type");
 	if (it == this->_headers.end() || it->second.empty())
@@ -625,7 +618,6 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		file.close();
 		this->_status = 201;
 		this->_parsePath = loc.getRootDir() + loc.getPath();
-		//std::cout << BG_GREEN << "path is : " << this->_parsePath << RESET << std::endl;
 }
 
 
@@ -635,7 +627,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	std::string delimiter = "--" + boundary;
 	std::string	endDelimiter = delimiter + "--";
 	std::string fname = "unknown.txt";
-	size_t pos = 0, start = 0, end = 0;
+	size_t start = 0, end = 0;
 
 	start += delimiter.length() + 2; 
 	end = input.find(endDelimiter) - 2;
@@ -686,7 +678,7 @@ void	Request::parseChunkBody(const std::string& input)
 		if (chunkSize == 0)
 			break;
 		totalSize += chunkSize;
-		if (totalSize > _maxBodySize)
+		if (totalSize > static_cast<size_t>(_maxBodySize))
 		{
 			this->_status = 413;
 			return;
@@ -730,7 +722,6 @@ void	Request::handleDeleteRequest()
 {
 	
 	this->_parsePath = _location.getPath() + this->_path.substr(_location.getPath().size());
-    //std::cout << "DELETE METHOD PATH IS : " << this->_parsePath << std::endl;
     if (!isValidPath())
 	{
         _status = 404;  
@@ -827,8 +818,8 @@ bool Request::isValidPath()
 	if (this->_path.empty() || this->_path[0] != '/')
 		return (false);
 	this->_parsePath = _location.getRootDir() + this->_path.substr(_location.getPath().size());
-	std::cout << BG_YELLOW << "path is : " << this->_path << RESET << std::endl;
-	std::cout << BG_YELLOW << "full path from loc is : " << this->_parsePath << RESET << std::endl;
+	std::cout << BLUE << "path is : " << this->_path << RESET << std::endl;
+	std::cout << BLUE << "full path from loc is : " << this->_parsePath << RESET << std::endl;
 	struct stat path_stat;
 	if (stat(this->_parsePath.c_str(), &path_stat) == -1)
 		return(false);
@@ -1280,16 +1271,9 @@ void hexDecoding(std::string& url)
 }
 
 
-bool	Request::_readRequest(char* buffer, int byteSize, int fd)
+bool	Request::_readRequest(char* buffer, int byteSize)
 {
-	// if (_start == -1)
-	// 	_start = std::time(NULL);
-	// else if (difftime(std::time(NULL), _start) > _timeout)
-	// {
-	// 	_status = 408;
-	// 	std::cout << "Timeout" << std::endl;
-	// 	return (true);
-	// }
+
 	byteUpload(buffer, byteSize);
 	std::string input = _rawinput;
 	if (!_HeaderRead)
@@ -1355,7 +1339,7 @@ bool Request::parseBody(void)
 			}
 			else
 			{
-				if (_rawBody.size() > _maxBodySize)
+				if (_rawBody.size() > static_cast<size_t>(_maxBodySize))
 					std::cout << "body too big Max is : " << _maxBodySize << " and current is : " << _rawBody.size() << std::endl;
 				std::cout << BG_RED "not all parsed" << RESET << std::endl;
 				std::cout << "body size is : " << _rawBody.size() << " and content length is : " << safeStrToSizeT(_headers["Content-Length"]) << std::endl;
@@ -1364,11 +1348,8 @@ bool Request::parseBody(void)
 			}
 		}
 		else
-		{
-			std::cout << "finished reading body" << std::endl;
 			return (true);
-		}
-		}
+	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';

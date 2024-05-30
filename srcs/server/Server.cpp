@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 20:17:26 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 13:04:34 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 /******************** Constructor and init part *******************************/
 
-Server::Server(const ServerConfig& conf) : _servAddr(setServAddr(conf)), _socket_fd(-1)
+Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAddr(conf))
 {
 	
 	_initServ();
@@ -88,7 +88,6 @@ Server& Server::operator=(const Server& src)
 
 void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
 {
-	std::cout << " Loca conf size is : " << locationConf.size() << std::endl;
 	for (size_t i = 0; i < locationConf.size(); ++i)
 	{
 		Location loc(locationConf[i]);
@@ -96,7 +95,6 @@ void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
 		if (loc.getPath() == "/")
 			_rootloc = loc;
 	}
-	std::cout << "Locations size : " << _locations.size() << std::endl;
 	for (size_t i = 0; i < _locations.size(); ++i)
 	{
         std::cout << "Location " << i << ": " << _locations[i] << std::endl;
@@ -141,10 +139,7 @@ int	Server::readClient(pollfd& pfd, Request& request)
 	try
 	{
 		if (_start.find(pfd.fd) == _start.end() || request.getStatus() == 0)
-		{
 			_start[pfd.fd] = std::time(NULL);
-			std::cout << "time start in read fd: "<< pfd.fd << "is : " << _start[pfd.fd] << std::endl;
-		}
 		int byteRead;
 		char buffer[BUFSIZE];
 		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
@@ -162,7 +157,7 @@ int	Server::readClient(pollfd& pfd, Request& request)
 		}
 		buffer[byteRead] = '\0';
 		//std::cout << BLUE << "bytes read : " << byteRead << RESET << std::endl;
-		if (request._readRequest(buffer, byteRead, pfd.fd))
+		if (request._readRequest(buffer, byteRead))
 		{
 			_start.erase(pfd.fd);
 			processRequest(request, pfd.fd);
@@ -287,10 +282,7 @@ void	Server::processRequest(Request& request, int io_fd)
 	if (matchLoc == NULL)
 		request.setLocation(_rootloc); // to replace with root location in config logic
 	else
-	{
 		request.setLocation(*matchLoc);
-		//std::cout << BG_GREEN "Location found : " << matchLoc->getPath() << RESET << std::endl; //TO REMOVE AFTER TEST
-	}
 	if (matchLoc != NULL && !matchLoc->getAlias().empty())
 	{
 		request.setPath(matchLoc->getAlias());
@@ -337,8 +329,6 @@ int	Server::handleTimeout(const int io_fd, Request& request)
 		return(0);
 	if (std::time(NULL) -  _start[io_fd] > _readTimeout)
 	{
-		std::cerr << BG_RED "Timeout for socket : " RESET << io_fd << std::endl;
-		std::cout << BG_GREEN "timeout in : "<< io_fd << "is : " << _start[io_fd] << std::endl;
 		request.setStatus(408);
 		Response resp(request);
 		resp.buildResponse();
@@ -426,7 +416,7 @@ void	Server::_initSock()
  * this allow to "stream" the request building as the data is read from the socket
  * @return The file descriptor of the accepted client socket, or -1 on error.
  */
-const int Server::acceptConnection()
+int Server::acceptConnection()
 {
 	int io_socket = accept(this->_socket_fd, (struct sockaddr *) &this->_client_addr, (socklen_t *) &this->_addr_size);
 	setNonBlocking(io_socket);

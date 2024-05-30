@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 20:29:48 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 13:06:51 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ Cluster& Cluster::operator=(const Cluster& src)
 
 Cluster::~Cluster()
 {
-	for (int i = 0; i < _fdSet.size(); ++i)
+	for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); ++i)
 		close(_fdSet[i].fd);
 	_servers.clear();
 	_fdSet.clear();
@@ -108,7 +108,7 @@ void Cluster::run()
 			std::cout << GREEN "Waiting Connection ..." RESET << std::endl;
 		else
 		{
-			for (size_t i = 0; i < _fdSet.size(); ++i)
+			for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); ++i)
 			{
 				std::map<int, Server*>::iterator it = _fdtoServ.find(_fdSet[i].fd);
 				if (it == _fdtoServ.end())
@@ -122,7 +122,6 @@ void Cluster::run()
 				{
 					if (_fdSet[i].fd == serv->getSocketInit())
 						{
-							std::cout << BG_CYAN "ACCEPT NEW CLIENT" RESET << std::endl;
 							int newFd = serv->acceptConnection();
 							if (newFd < 0)
 							{
@@ -134,31 +133,29 @@ void Cluster::run()
 						}
 					else
 					{
-						std::cout << BG_CYAN "ENTER READCLIENT" RESET << std::endl;
 						int ret = serv->readClient(_fdSet[i], _fdtoReq[_fdSet[i].fd]);
 						if (ret <= 0)
 							removeClient(_fdSet[i].fd);
 						else if (ret == 1)
-							setPoll(_fdSet[i].fd, POLLOUT, serv);
+							setPoll(_fdSet[i].fd, POLLOUT);
 						else
 							continue;
 					}
 				}
 				else if (_fdSet[i].revents & POLLOUT)
 				{
-					std::cout << BG_CYAN "ENTER POLLOUT" RESET << std::endl;
 					int ret = serv->sendClient(_fdSet[i]);
 					if (ret < 0)
 						removeClient(_fdSet[i].fd);
 					else if (ret == 1)
-						setPoll(_fdSet[i].fd, POLLIN, serv);
+						setPoll(_fdSet[i].fd, POLLIN);
 				}
 				else if (_fdSet[i].revents & (POLLERR | POLLHUP | POLLNVAL))
 					removeClient(_fdSet[i].fd);
 				_fdSet[i].revents = 0;
 			}
 		}
-		for (size_t i = 0; i < _fdSet.size(); ++i)
+		for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); ++i)
 		{
 			std::map<int, Server*>::iterator it = _fdtoServ.find(_fdSet[i].fd);
 			if (it != _fdtoServ.end())
@@ -170,7 +167,7 @@ void Cluster::run()
 					if (ret < 0)
 						removeClient(_fdSet[i].fd);
 					else if (ret == 1)
-						setPoll(_fdSet[i].fd, POLLIN, serv);
+						setPoll(_fdSet[i].fd, POLLIN);
 				}
 				_fdSet[i].revents = 0;
 			}
@@ -230,7 +227,7 @@ void Cluster::removePollFd(int fd)
  * The `setPoll` function updates the events to be monitored for a specified file descriptor. 
  * It modifies the `events` field of the corresponding `pollfd` structure within the `_fdSet`.
  */
-void	Cluster::setPoll(int fd, short events, Server* server)
+void	Cluster::setPoll(int fd, short events)
 {
 	for (size_t i = 0; i < _fdSet.size(); ++i)
 	{
@@ -311,7 +308,7 @@ void Cluster::checkCGIState()
 			cgiDone = true;
 			char buffer[BUFSIZE];
 			int ret = read(it->second.getCgi()._fdout[0], buffer, BUFSIZE - 1);
-			if (WIFEXITED(status) && WEXITSTATUS(status) != 0 || ret < 0)
+			if ((WIFEXITED(status) && WEXITSTATUS(status) != 0) || ret < 0)
 				it->second.setStatus(502);
 			else
 			{
@@ -333,7 +330,7 @@ void Cluster::checkCGIState()
 				_fdtoServ[it->first]->setClientRequest(it->first, it->second.getHeaderField("Connection"));
 			_fdtoServ[it->first]->setClientResponse(it->first,resp.getResponse());
 			it->second.initRequest();
-			setPoll(it->first, POLLOUT, _fdtoServ[it->first]);
+			setPoll(it->first, POLLOUT);
 		}
 	}
 }

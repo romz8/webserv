@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/23 12:44:44 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 12:30:06 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ void	ServerConfig::_initConfig()
 	_host = "";
 	_port = 0;
 	_serverName = "";
-	_rootDir = "";
+	_rootDir = DEFAULTROOOT;
 	_locations.clear();
 	error_pages.clear();
 	_max_body_size = DEFAULT_BODY_SIZE;

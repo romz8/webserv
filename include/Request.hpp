@@ -21,6 +21,8 @@
 # include <sstream>
 # include <fstream>
 # include <sys/stat.h>
+# include <sys/wait.h>
+# include <signal.h>
 # include <unistd.h>
 # include <dirent.h>
 # include <ctime>
@@ -28,7 +30,6 @@
 # include "colors.h"
 # include "Server.hpp"
 # include "Location.hpp"
-# include "CGI.hpp"
 # include "ServerConfig.hpp"
 # include "DirectoryListing.hpp"
 
@@ -88,7 +89,7 @@ public:
 	Request& operator=(const Request& src);
 
 	void		initRequest();
-	bool		_readRequest(char* buffer, int byteSize, int fd);
+	bool		_readRequest(char* buffer, int byteSize);
 	bool		processHeader(const std::string& rawHead);
 	void		parseHeader(const std::string& head);
 	void		parseStartLine(const std::string& line);
@@ -170,4 +171,6 @@ bool	loneCR(const std::string& header);
 std::string	formattedTime();
 void	hexDecoding(std::string& url);
 std::ostream& operator<<(std::ostream& os, const Request& req);
+bool isExecutable(const std::string& path);
+
 #endif

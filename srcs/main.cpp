@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 18:16:42 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 20:22:41 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 12:32:16 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,9 @@ std::vector<ServerConfig> multipleTest();
 int main(int argc, char *argv[])
 {
 	//ServerConfig test = testBuild();
+    if (argc > 1) //later 2 for conf file
+        return 0;
+    argv = NULL;
     std::vector<ServerConfig> serverConfs = multipleTest();
 	try
 	{

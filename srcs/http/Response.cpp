@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/04 12:51:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/29 16:02:45 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 13:20:28 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,10 @@
    Parameters:
    - head: A reference to the Request object based on which the Response is constructed.
 */
-Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), \
-	_version("HTTP/1.1"), _statusMsgs(initStatusMaps()), _mimeTypes(initMimeMaps()), \
-	_content_len("0"), _headerResponse(""), _body(head.getrespBody()), _response(""), _assetPath(""), \
-	_extension(".html"), _location(head.getLocation()), _fromCgi(head.execCgi())
+Response::Response(Request& head) : _status(head.getStatus()), _method(head.getMethod()), _version("HTTP/1.1"), 
+      _assetPath(""), _extension(".html"), _statusMsgs(initStatusMaps()), _mimeTypes(initMimeMaps()), 
+      _content_len("0"), _statusLine(""), _headerResponse(""), _body(head.getrespBody()), 
+      _response(""), _fromCgi(head.execCgi()), _location(head.getLocation())
 {
 	if (this->_status >= 400)
 		this->_assetPath = _location.getRootDir() + getErrorPage(this->_status);
@@ -30,9 +30,7 @@ Response::Response(Request& head) : _status(head.getStatus()), _method(head.getM
 		this->_assetPath = _location.getRootDir() + getErrorPage(404);
 	else
 		this->_assetPath = head.getParsePath();
-	// std::cout << "parsed Path is : "<< head.getParsePath() << std::endl;
-	std::cout << RED "Respons obj built with : " << this->_status << " and " << this->_assetPath << std::endl;
-	// std::cout << "extension is " << this->_extension << std::endl;
+	std::cout << CYAN "Respons obj built with ressource Path : " << this->_assetPath << std::endl;
 }
 
 Response::~Response(){}
@@ -93,6 +91,7 @@ void Response::setStatusLine(int sCode)
 	this->_statusMsg = getStatusMessage(sCode);
 	StatusLine << this->_version << " " << this->_status << " " << this->_statusMsg << "\r\n";
 	this->_statusLine = StatusLine.str();
+	std::cout << GREEN "Status-Line is : " << this->_statusLine << RESET << std::endl;	
 }
 
 std::string Response::getResponse() const
@@ -179,7 +178,6 @@ void	Response::setBody()
 		}
 		else
 		{
-			std::cout << "this case with asset path : " << this->_assetPath << std::endl;
 			this->_body = readWebFile(this->_assetPath);
 			this->_extension = parseExtension(this->_assetPath, this->_extension);
 		}
