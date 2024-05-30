@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/22 14:36:37 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 12:30:31 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@
 
 # define MAX_BODY_SIZE 10000000000 //10GB
 # define DEFAULT_BODY_SIZE 10000000 //10MB
+# define DEFAULTROOOT "./html/"
+
 class ServerConfig
 {
 private:

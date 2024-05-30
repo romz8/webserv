@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 17:20:41 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 11:30:20 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,30 +28,11 @@
 # include "colors.h"
 
 # define MAX_Q 420
-# define BUFSIZE 8194
+# define BUFSIZE 8192
 # define MAX_HEADER_SIZE 8193
+# define TIMEOUTCGI 8
 
-// typedef struct Config
-// {
-// 	std::string	host;
-// 	std::string	port; //need to atoi : careful on overflow in conf file parsing
-// 	std::string	serverName;
-// 	std::string	root;
-// 	std::string	index;
-// 	std::string	hostName;
-// 	std::map<int, std::string> errPageGlobal;
-// 	std::vector<CgiConfig> cgiConf;
-	
-// 	// Location	loc; 	//later on std::vector<Location> locs;
-// } Config;
-
-// struct client
-// {
-// 	int fd;
-// 	std::string request;
-// 	std::string response;
-// 	bool httpDone;
-// };
+class Request;
 
 class Server
 {
@@ -65,15 +46,19 @@ private:
 	std::vector<Location>	_locations;
 	std::map<int, std::string> _errPageGlobal;
 	Location _rootloc; //if no url match a location, use root location
-	std::map<int , std::string> _clientRequest;
+	std::map<int , std::string> _clientConnect;
 	std::map<int , std::string> _clientResponse;
+
+	std::map<int, std::string> _inputHead;
+	std::map<int, std::string> _inputBody;
+	std::map<int, bool> _HeaderRead;
+	std::map<int, time_t > _start;
 	
 	int	_socket_fd;
 	sockaddr_in _servAddr;
 	struct sockaddr_in _client_addr;
 	size_t _addr_size;
 	static const int _readTimeout = 5;
-	static const int	_timeout = 3;
 
 public:
 	Server(const ServerConfig& conf);
@@ -83,26 +68,32 @@ public:
 	
 	void 	_initServ();
 	void	_initLocations(const std::vector<LocationConfig>& locations);
-	std::string getRequest();
-	std::string getResponse();
-	//void	run();
-	//void	handleConnection();
+	// std::string getRequest();
+	// std::string getResponse();
 	const Location* findLocationForRequest(const std::string& requestPath) const;
 	static const sockaddr_in setServAddr(const ServerConfig& conf);
-	int		readClient(pollfd& pfd);
+	int		readClient(pollfd& pfd, Request& request);
 	int		sendClient(pollfd& pfd);
 	void	handleError(const int io_socket, const int error);
-	void	processRequest(const std::string& headeer, pollfd& pfd);
+	void	processRequest(Request& request, int io_socket);
 	int		getSocketInit()const;
+	int		handleTimeout(const int io_socket, Request& request);
 	
 	/***** Socket I/O ********/
 	void	_initSock(); // use later on to clear all sockaddr_in, set to 0 before copy or construct
-	int readHeader(pollfd& pfd, std::string& content);
-	int	readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
-	const int		acceptConnection();
-	int	readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body);	
-	int	readChunkEncodingBody(pollfd &pfd, std::string& body);
+	// int readHeader(pollfd& pfd, std::string& content);
+	// int	readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body);
+	int		acceptConnection();
+	// int	readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body);	
+	// int	readChunkEncodingBody(pollfd &pfd, std::string& body);
+	// bool	_readRequest(char* buffer, int byteSize, int fd);
 	friend std::ostream& operator<<(std::ostream& os, const Server& serv);
+	std::string getHost() const;
+	int getPort() const;
+	int getMaxBodySize() const;
+	std::string getserverName() const;
+	void setClientRequest(int fd, const std::string& request);
+	void setClientResponse(int fd, const std::string& response);
 };
 
 std::ostream& operator<<(std::ostream& os, const Server& serv);

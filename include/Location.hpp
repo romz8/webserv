@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:57:04 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 10:31:15 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/29 18:25:51 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,6 @@
 # include <map>
 # include "LocationConfig.hpp"
 
-// struct CgiConfig 
-// {
-//     std::string extension;
-//     std::string handlerPath;
-// 	CgiConfig(const std::string& ext, const std::string& handler)
-//     : extension(ext), handlerPath(handler) {}
-// };
 
 class Location 
 {
@@ -45,9 +38,6 @@ public:
 	Location(const LocationConfig& locConf);
 	Location(const Location& src);
 	Location& operator=(const Location& src);
-	// Location(const std::string& path, const std::vector<std::string>& methods,
-    //          const std::string& root, const std::string& index, bool autoIdx, bool allowupload, \
-	// 		 const std::string& uploadDir); //should we add a map of error pages?
 	~Location();
 	bool isMethodAllowed(const std::string& method) const;
 	std::string getPath() const;
@@ -61,7 +51,6 @@ public:
 	bool getUploadAllowed() const;
 	std::vector<CgiConfig> getCgi() const;
 	void setCgi(const CgiConfig& cgi);
-	//void setCgi(const std::map<std::string, const std::string>& cgiMap);
 	bool hasCgi(const std::string& extension) const;
 	std::string	getCgiHandler(const std::string& extension) const;
 	std::string getAlias() const;

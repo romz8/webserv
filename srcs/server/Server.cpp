@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/24 17:23:07 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 13:04:34 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 /******************** Constructor and init part *******************************/
 
-Server::Server(const ServerConfig& conf) : _servAddr(setServAddr(conf)), _socket_fd(-1)
+Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAddr(conf))
 {
 	
 	_initServ();
@@ -37,7 +37,7 @@ Server::~Server()
 {
 	if (_socket_fd != -1)
 		close(_socket_fd);
-	_clientRequest.clear();
+	_clientConnect.clear();
 	_clientResponse.clear();
 }
 
@@ -52,8 +52,9 @@ void	Server::_initServ()
 	_locations.clear();
 	_errPageGlobal.clear();
 	_host.clear();
-	_clientRequest.clear();
+	_clientConnect.clear();
 	_clientResponse.clear();
+	
 }
 
 Server::Server(const Server& src)
@@ -78,10 +79,272 @@ Server& Server::operator=(const Server& src)
 	_addr_size = src._addr_size;
 	_errPageGlobal = src._errPageGlobal;
 	_rootloc = src._rootloc;
-	_clientRequest = src._clientRequest;
+	_clientConnect = src._clientConnect;
 	_clientResponse = src._clientResponse;
 	return (*this);
 }
+
+
+
+void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
+{
+	for (size_t i = 0; i < locationConf.size(); ++i)
+	{
+		Location loc(locationConf[i]);
+		this->_locations.push_back(loc);
+		if (loc.getPath() == "/")
+			_rootloc = loc;
+	}
+	for (size_t i = 0; i < _locations.size(); ++i)
+	{
+        std::cout << "Location " << i << ": " << _locations[i] << std::endl;
+    }
+}
+
+
+/*===================================================================================================*/
+/******************** SERVER PART : interfacing socket with Request/Response *************************/
+/*===================================================================================================*/
+
+
+
+/**
+ * @brief Handles read operations for a specified client socket. 
+ * 1. **Initialization**:
+ *    - Checks if the start time for the given fd exists in the `_start` map
+ *      or if the request status is `0` (indicating a new request).
+ *    - If either condition is true, initializes the start time for the file descriptor to the current time.
+ * 
+ * 2. **Reading Data**:
+ *    - Attempts to read data from the client socket using `recv`.
+ *    - If `recv` returns a negative value, logs the error, removes the start time entry, and returns `-1`.
+ *    - If `recv` returns `0`, indicating the client has disconnected, logs the disconnection, 
+ * 	removes the start time entry, and returns `0`.
+ *    - otherwise read data is stored in a buffer and terminated with a null character for nbr of bytes read.
+ * 
+ * 3. **Processing the Request**:
+ *    - Calls `request._readRequest` to process the read data.
+ *    - If `_readRequest` returns `true` (indicating the request is fully read and valid):
+ *      - Removes the start time entry.
+ *      - Calls `processRequest` to handle the request.
+ *      - If the request requires CGI execution (`request.execCgi()` returns `true`), logs the CGI launch and returns `2` to indicate the CGI process.
+ *      - Otherwise, returns `1` to indicate a successfully processed request.
+ *    - If the request is not fully read, returns `2` to continue reading.
+ * 
+ * 4. **Exception Handling**:
+ *    - Catches any exceptions, logs the error message, and returns `-1`.
+ */
+int	Server::readClient(pollfd& pfd, Request& request)
+{
+	try
+	{
+		if (_start.find(pfd.fd) == _start.end() || request.getStatus() == 0)
+			_start[pfd.fd] = std::time(NULL);
+		int byteRead;
+		char buffer[BUFSIZE];
+		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
+		if (byteRead < 0 )
+		{
+			std::cerr << "recv socket Error :" << strerror(errno) << std::endl;
+			_start.erase(pfd.fd);
+			return (-1);
+		}
+		if (byteRead == 0)
+		{
+			std::cout << "Client disconnected for fd"<< pfd.fd << std::endl;
+			_start.erase(pfd.fd);
+			return (0);
+		}
+		buffer[byteRead] = '\0';
+		//std::cout << BLUE << "bytes read : " << byteRead << RESET << std::endl;
+		if (request._readRequest(buffer, byteRead))
+		{
+			_start.erase(pfd.fd);
+			processRequest(request, pfd.fd);
+			if (request.execCgi())
+				return (2);
+			return (1);
+		}
+		return (2);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return (-1);
+	}
+}
+
+
+/**
+ * @brief Handles sending the HTTP responses to a client's socket.
+ * 
+ * 1. **Response Preparation**:
+ *    - Checks if a response exists for the given fd in the `_clientResponse` map.
+ *    - If no response is found, returns `-1` to indicate an error.
+ *    - Retrieves the response string from the map.
+ * 
+ * 2. **Sending Data**:
+ *    - Attempts to send the response to the client socket using `send`.
+ *    - If `send` returns a negative value, logs the error and returns `-1`.
+ *    - If `send` returns a value less than the response length, indicating a partial send, 
+ * 		updates the response in the `_clientResponse` map with the unsent portion. 
+ * 		Returns `0` to continue sending.
+ * 
+ * 3. **Connection Management**:
+ *    - If the `Connection` header indicates "close",removes the connection
+ *  and response entries from their respective maps, and returns `-1` to close the connection.
+ *    - Otherwise, removes the connection and response entries from their respective maps 
+ * and returns `1` to indicate the response was sent successfully and the connection should remain open.
+ */
+int	Server::sendClient(pollfd &pfd)
+{
+	int io_fd = pfd.fd;
+	if (_clientResponse.find(io_fd) == _clientResponse.end())
+		return (-1);
+	std::string response = _clientResponse[io_fd];
+	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
+	if (byteSent < 0)
+	{
+		std::cerr << "send socket Error :" << strerror(errno) << std::endl;
+		return (-1);
+	}
+	else if (byteSent < response.length())
+	{
+		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
+		_clientResponse[io_fd] = response.substr(byteSent);
+		return (0);
+	}
+	if ( _clientConnect[io_fd].find("close") != std::string::npos)
+	{
+		std::cout << "Closing connection for fd : " << io_fd << std::endl;
+		_clientConnect.erase(io_fd);
+		_clientResponse.erase(io_fd);
+		return (-1);
+	}
+	_clientConnect.erase(io_fd);
+	_clientResponse.erase(io_fd);
+	return (1);
+}
+
+/*
+Pointer to store the best matchLength of the longest path match found
+Check if the location path is a prefix of the request path with compare()
+Update the length of the longest match
+Return the best match found, or NULL if no match was found
+*/
+const Location* Server::findLocationForRequest(const std::string& requestPath) const 
+{
+    const Location* bestMatch = NULL;  // Pointer to store the best match
+    size_t longestMatchLength = 0;     // Length of the longest path match found
+
+    for (size_t i = 0; i < _locations.size(); ++i) 
+	{
+        const std::string& locationPath = _locations[i].getPath();
+       
+        if (requestPath.compare(0, locationPath.length(), locationPath) == 0) 
+		{
+			if (locationPath.length() > longestMatchLength) 
+			{
+                bestMatch = &_locations[i];
+                longestMatchLength = locationPath.length();  
+            }
+        }
+    }
+	return bestMatch; 
+}
+
+/**
+ * @brief Processes the incoming HTTP request.
+ * 
+ * This function is handling the entire lifecycle of an HTTP request from a client.
+ * It performs the following steps:
+ * 1. **Request Initialization**: Creates a `Request` object using the raw HTTP header.
+ * 2. **Body Handling**: If the request contains a body, it sets the body content in the request object.
+ * 3. **Location Matching**: Finds the best matching location configuration for the request path.
+ *    - Uses `findLocationForRequest` to match the request path to a location.
+ *    - If no match is found, sets the root location as the default.
+ *   - If an alias is found, updates the request path and status code accordingly.
+ * 4. **Request Building**: Finalizes the request object through HTTP Methods check
+ * 	  - if the request is executing a CGI, it returns to the caller (the response is handled in Cluster to
+ * be non-blocking
+ * 5. **Response Creation**: Creates a `Response` object using the built request.
+ *    - Calls `buildResponse` to generate the HTTP response.
+ * 6. **Response Storage**: Stores the response and connection header for later use.
+ * 
+ * @param rawhead The raw HTTP request header received from the client.
+ * @param pfd The pollfd structure associated with the client connection.
+ */
+void	Server::processRequest(Request& request, int io_fd)
+{
+	if (request.hasBody())
+		request.setBody(request.getrawBody());
+	const Location* matchLoc = findLocationForRequest(request.getPath());
+	if (matchLoc == NULL)
+		request.setLocation(_rootloc); // to replace with root location in config logic
+	else
+		request.setLocation(*matchLoc);
+	if (matchLoc != NULL && !matchLoc->getAlias().empty())
+	{
+		request.setPath(matchLoc->getAlias());
+		request.setStatus(301);
+	}
+	else
+		request.buildRequest();
+	if (request.execCgi())
+		return;
+	Response resp(request);
+	resp.buildResponse();
+	std::string response = resp.getResponse();
+	_clientConnect[io_fd] = request.getHeaderField("Connection");
+	_clientResponse[io_fd] = resp.getResponse();
+	request.initRequest();
+}
+
+
+/**
+ * @brief Handles read timeouts for client connections.
+ * 
+ * This function checks if a read timeout has occurred for a given client connection
+ * (identified by `io_fd`). If a timeout is detected, it sets the appropriate status
+ * code, prepares a response, and updates the connection state. The function performs
+ * the following logical steps:
+ * 
+ * 1. Checks if the start time for the given file descriptor (`io_fd`) exists in the `_start` map.
+ *    - If the start time is not found, it returns `0`, indicating no timeout handling is needed.
+ * 2. Calculates the elapsed time since the start of the read operation using `std::time(NULL)`.
+ * 3. Compares the elapsed time to the configured read timeout (`_readTimeout`).
+ *    - If the elapsed time exceeds the read timeout, it proceeds to handle the timeout:
+ *      - Sets the request status to `408` (Request Timeout).
+ *      - Creates a `Response` object using the timed-out request and builds the HTTP response.
+ *      - Updates the `_clientConnect` map to indicate the connection should be closed.
+ *      - Stores the prepared response in the `_clientResponse` map.
+ *      - Resets the request by calling `request.initRequest()` to prepare it for future use.
+ *      - Removes the start time entry from the `_start` map to clean up the state.
+ *      - Returns `-1` to indicate that the timeout was handled and the connection should be closed.
+ * 4. If no timeout has occurred, it returns `0`, indicating that no action is needed.
+ */
+int	Server::handleTimeout(const int io_fd, Request& request)
+{
+	if (_start.find(io_fd) == _start.end())
+		return(0);
+	if (std::time(NULL) -  _start[io_fd] > _readTimeout)
+	{
+		request.setStatus(408);
+		Response resp(request);
+		resp.buildResponse();
+		_clientConnect[io_fd] = "close";
+		_clientResponse[io_fd] = resp.getResponse();
+		request.initRequest();
+		_start.erase(io_fd);
+		return (-1);
+		
+	}
+	return(0);
+}
+
+/*=========================================================================*/
+/******************** SOCKET I/O PART **************************************/
+/*=========================================================================*/
 
 /**
  * @brief Initializes server address structure from server configuration.
@@ -118,195 +381,6 @@ const sockaddr_in Server::setServAddr(const ServerConfig& conf)
 	return (servAddr);
 }
 
-void	Server::_initLocations(const std::vector<LocationConfig>& locationConf)
-{
-	std::cout << " Loca conf size is : " << locationConf.size() << std::endl;
-	for (size_t i = 0; i < locationConf.size(); ++i)
-	{
-		Location loc(locationConf[i]);
-		this->_locations.push_back(loc);
-		if (loc.getPath() == "/")
-			_rootloc = loc;
-	}
-	std::cout << "Locations size : " << _locations.size() << std::endl;
-	for (size_t i = 0; i < _locations.size(); ++i) 
-	{
-        std::cout << "Location " << i << ": " << _locations[i] << std::endl;
-    }
-}
-
-
-/*===================================================================================================*/
-/******************** SERVER PART : interfacing socket with Request/Response *************************/
-/*===================================================================================================*/
-
-
-/**
- * @brief Processes the incoming HTTP request.
- * 
- * This function is handling the entire lifecycle of an HTTP request from a client.
- * It performs the following steps:
- * 1. **Request Initialization**: Creates a `Request` object using the raw HTTP header.
- * 2. **Body Handling**: If the request contains a body, reads the body data from the client socket.
- *    - Calls `readBody` to handle different types of body content (e.g., fixed-length, chunked encoding).
- *    - Sets appropriate status codes if there are errors reading the body.
- * 3. **Location Matching**: Finds the best matching location configuration for the request path.
- *    - Uses `findLocationForRequest` to match the request path to a location.
- *    - If no match is found, sets the root location as the default.
- * 4. **Request Building**: Finalizes the request object.
- * 5. **Response Creation**: Creates a `Response` object using the built request.
- *    - Calls `buildResponse` to generate the HTTP response.
- * 6. **Response Storage**: Stores the response and connection header for later use.
- * 
- * @param rawhead The raw HTTP request header received from the client.
- * @param pfd The pollfd structure associated with the client connection.
- */
-void	Server::processRequest(const std::string& rawhead, pollfd& pfd)
-{
-	const int io_fd = pfd.fd;
-	Request request(rawhead, _host, _maxBodySize, _serverName, _port); //to replace with config max body size
-	if (request.hasBody())
-	{
-		std::string body;
-		body.clear();
-		int retBody = readBody(pfd, request.getHeader(), rawhead, body);
-		if(retBody == -2)
-			request.setStatus(408);
-		else if (retBody == -1)
-			request.setStatus(400);
-		else
-			request.setBody(body);
-	}
-	const Location* matchLoc = findLocationForRequest(request.getPath()); //TO VERIFY AND EDIT WITH CONFIG NEW LOCATION
-	if (matchLoc == NULL)
-		request.setLocation(_rootloc); // to replace with root location in config logic
-	else
-	{
-		request.setLocation(*matchLoc);
-		std::cout << BG_GREEN "Location found : " << matchLoc->getPath() << RESET << std::endl; //TO REMOVE AFTER TEST
-	}
-	if (matchLoc != NULL && !matchLoc->getAlias().empty())
-	{
-		request.setPath(matchLoc->getAlias());
-		request.setStatus(301);
-		std::cout <<BG_GREEN "Alias found : " RESET << matchLoc->getAlias() << std::endl;
-	}
-	else
-		request.buildRequest();
-	//request.printRequest(); //TO REMOVE AFTER TEST
-	Response resp(request);
-	resp.buildResponse();
-	std::string response = resp.getResponse();
-	//std::cout << BG_BLUE "Response : " RESET << response << std::endl;
-	_clientRequest[io_fd] = request.getHeaderField("Connection");
-	_clientResponse[io_fd] = resp.getResponse();
-}
-
-/**
- * @brief Handles read operations for a specified client socket.
- * 
- * Attempts to read data from the specified socket. If the header read is successful,
- * it processes the data depending on whether the request has additional body content.
- * If reading fails at any point, the client is disconnected and the socket is closed.
- * Upon successful reading, it determines the appropriate response based on the request
- * and prepares the socket for a write operation by setting its event to POLLOUT.
- * @param pfd The pollfd structure associated with the client connection.
- * @exception Catches and logs exceptions related to socket operations.
- */
-int	Server::readClient(pollfd& pfd)
-{
-	try
-	{
-		
-		std::string rawhead; 
-		rawhead.clear();
-		int retHead = readHeader(pfd, rawhead);
-		if (retHead == 1)
-			processRequest(rawhead, pfd);
-		return (retHead);
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-		return (-1);
-	}
-}
-
-/**
- * @brief Handles sending responses to a client's socket.
- * 
- * Sends the prepared response to the specified client socket. After sending,
- * it checks the 'Connection' header to decide whether to close the socket or
- * keep it open for further communications. If 'close' is indicated, it disconnects the client;
- * otherwise, it resets the socket to listen for more data (POLLIN).
- * @param pfd The pollfd structure associated with the client connection.
- */
-int	Server::sendClient(pollfd &pfd)
-{
-	int io_fd = pfd.fd;
-	if (_clientResponse.find(io_fd) == _clientResponse.end())
-		return (-1);
-	std::string response = _clientResponse[io_fd];
-	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
-	if (byteSent < 0)
-	{
-		std::cerr << "send socket Error :" << strerror(errno) << std::endl;
-		return (-1);
-	}
-	else if (byteSent < response.length())
-	{
-		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
-		_clientResponse[io_fd] = response.substr(byteSent);
-		return (0);
-	}
-	if ( _clientRequest[io_fd].find("close") != std::string::npos)
-	{
-		_clientRequest.erase(io_fd);
-		_clientResponse.erase(io_fd);
-		return (-1);
-	}
-	_clientRequest.erase(io_fd);
-	_clientResponse.erase(io_fd);
-	return (1);
-}
-
-/*
-Pointer to store the best matchLength of the longest path match found
-Check if the location path is a prefix of the request path with compare()
-Update the length of the longest match
-Return the best match found, or NULL if no match was found
-*/
-const Location* Server::findLocationForRequest(const std::string& requestPath) const 
-{
-    const Location* bestMatch = NULL;  // Pointer to store the best match
-    size_t longestMatchLength = 0;     // Length of the longest path match found
-
-    for (size_t i = 0; i < _locations.size(); ++i) 
-	{
-        const std::string& locationPath = _locations[i].getPath();
-       
-        if (requestPath.compare(0, locationPath.length(), locationPath) == 0) 
-		{
-			if (locationPath.length() > longestMatchLength) 
-			{
-                bestMatch = &_locations[i];
-                longestMatchLength = locationPath.length();  
-            }
-        }
-    }
-	return bestMatch; 
-}
-
-
-int Server::getSocketInit()const
-{
-	return (_socket_fd);
-}
-
-/*=========================================================================*/
-/******************** SOCKET I/O PART **************************************/
-/*=========================================================================*/
-
 void	Server::_initSock()
 {
 	this->_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -338,166 +412,61 @@ void	Server::_initSock()
  * 
  * Accepts a connection on the server socket, sets the new socket to non-blocking mode,
  * and returns the client socket file descriptor.
- * 
+ * we then create the request object that will handle the request and store it in a map
+ * this allow to "stream" the request building as the data is read from the socket
  * @return The file descriptor of the accepted client socket, or -1 on error.
  */
-const int Server::acceptConnection()
+int Server::acceptConnection()
 {
 	int io_socket = accept(this->_socket_fd, (struct sockaddr *) &this->_client_addr, (socklen_t *) &this->_addr_size);
 	setNonBlocking(io_socket);
 	if (io_socket < 0)
 		throw std::runtime_error("Error accepting client request");
+	//Request request(_host, _maxBodySize, _serverName, _port);
+	//_inputRequest[io_socket] = request;
 	return (io_socket);
 }
-/**
- * @brief Reads the HTTP header from a client socket.
- * 
- * Reads data from the client socket until the header is fully received.
- * BUFFISZE is used as the buffer size for reading data -> it is ~8k bytes as in NGINX
- * 
- * @param io_socket The client socket file descriptor.
- * @param rawRequest A reference to the string where the raw request will be stored.
- * @return 1 on successful read, 0 on client disconnection, -1 on error.
- */
-int	Server::readHeader(pollfd& pfd, std::string &rawRequest)
+
+
+/********************** GETTERS & SETTERS ****************************/
+
+std::string Server::getHost() const
 {
-	int byteRead = 1;
-	char buffer[BUFSIZE];
-	byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
-	if (byteRead < 0)
-		return (-1);
-	if (byteRead == 0)
-		return (0);
-	buffer[byteRead] = '\0';
-	rawRequest.append(buffer, byteRead);
-	return (1);
+	return (_host);
 }
 
-/**
- * @brief Reads the HTTP body from a client socket.
- * 
- * Reads the body of the HTTP request based on the content length or transfer encoding.
- * 
- * @param io_socket The client socket file descriptor.
- * @param header A map containing the HTTP headers previously parsed.
- * @param rawhead The raw HTTP header - used to rebuild the body if header read had partial body.
- * @param body A reference to the string where the body will be stored.
- * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
- */
-int	Server::readBody(pollfd &pfd, const std::map<std::string, std::string>& header, const std::string& rawhead, std::string& body)
+int	Server::getPort() const
 {
-	body = rawhead.substr(rawhead.find("\r\n\r\n") + 4);
-	std::string sheader= rawhead.substr(0,rawhead.find("\r\n\r\n"));
-	std::cout << "header is : " <<  sheader  << std::endl;
-	std::cout << "header size is : " << sheader.size() << std::endl;
-	//std::cout << "body is : " << body << std::endl;	
-
-	if (header.find("Transfer-Encoding") != header.end() && header.find("Transfer-Encoding")->second == "chunked")
-		return (readChunkEncodingBody(pfd, body));
-	else if (header.find("Content-Length") != header.end())
-	{
-		size_t contentLength = std::stol((header.find("Content-Length")->second).c_str());
-		std::cout << "content length is : " << contentLength << std::endl;
-		return (readFixedLengthBody(pfd, contentLength, body));
-	}
-	else
-		return (-1);
-}
-/**
- * @brief Reads a fixed-length body from a client socket.
- * 
- * Reads a fixed amount of data from the client socket based on the content length header.
- * 
- * @param clientSocket The client socket file descriptor.
- * @param contentLength The expected length of the content.
- * @param body A reference to the string where the body will be stored.
- * @return 1 on successful read, 0 on client disconnection, -1 on error, -2 on timeout.
- */
-int Server::readFixedLengthBody(pollfd &pfd, size_t contentLength, std::string& body) 
-{
-    
-    int bytesRead = 0;
-    size_t totalRead = 0;
-	
-	std::vector<char> buffer(contentLength + 1); 
-	time_t startTime = std::time(NULL);
-	std::cout << BLUE "body start in FL read is : " RESET << body << std::endl;
-    while (body.size() < contentLength) 
-	{
-		if (difftime(std::time(NULL), startTime) > _readTimeout)
-			return (-2);
-		bytesRead = recv(pfd.fd, buffer.data(), BUFSIZE, 0);
-		std::cout << "Bytes read : " << bytesRead << std::endl;
-		if (bytesRead > 0)
-            totalRead += bytesRead;
-        else if (bytesRead == 0)
-            return (0);
-		else if (bytesRead == -1 && pfd.revents == POLLIN) //issue with subjject ?
-			continue;
-        else
-		{
-            std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-			return (-1);
-		}
-		if (bytesRead > 0)
-		{
-			buffer[bytesRead] = '\0';
-			body.append(buffer.data(), bytesRead);
-		}
-    }
-    buffer[totalRead] = '\0';
-    std::string result(buffer.data(), totalRead);
-	body.append(result);
-    return (1);
+	return (_port);
 }
 
-/**
- * @brief Reads a chunked-encoded body from a client socket.
- * 
- * Reads and decodes chunked transfer encoding from the client socket.
- * reads chunks of data from the client socket until the entire body is received. 
- * The steps involved are:
- * - Continuously reads data from the socket until the end of the chunked body is found.
- *    - Uses `recv` to read data into a buffer.
- *    - Appends the buffer data to the `data` string.
- *    - Checks for the end of the chunked body marker (`0\r\n\r\n`). 
- * @param clientSocket The client socket file descriptor.
- * @param body A reference to the string where the body will be stored.
- * @return 1 on successful read, 0 on client disconnection, -1 on error.
- *
- */
-int Server::readChunkEncodingBody(pollfd &pfd, std::string& body) 
+int Server::getMaxBodySize() const
 {
-	std::string data;
-	char buffer[BUFSIZE];
-	int bytesRead = 0;
-	bool endChunk = (body.find("0\r\n\r\n") != std::string::npos);
-	
-	data.clear();
-	while(!endChunk)
-	{
-		bytesRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
-		if (bytesRead == -1 && pfd.revents == POLLIN)
-			continue;
-		else if (bytesRead < 0)
-		{
-			std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-			return (-1);
-		}
-		if (bytesRead == 0)
-			return (0);
-		if (bytesRead > 0)
-		{
-			buffer[bytesRead] = '\0';
-			data.append(buffer, bytesRead);
-			if (data.find("0\r\n\r\n") != std::string::npos)
-				endChunk = true;
-		}
-	}
-	body.append(data);
-	std::cout << "Bytes read : " << bytesRead << std::endl;
-	return (1);
+	return (_maxBodySize);
 }
+
+std::string Server::getserverName() const
+{
+	return (_serverName);
+}
+
+void Server::setClientRequest(int fd, const std::string& request)
+{
+	this->_clientConnect[fd] = request;
+}
+
+void Server::setClientResponse(int fd, const std::string& response)
+{
+	this->_clientResponse[fd] = response;
+}
+
+int Server::getSocketInit()const
+{
+	return (_socket_fd);
+}
+
+
+/******************* UTILS ***************************************/
 
 void printSockAddrIn(const sockaddr_in& addr) 
 {
@@ -515,7 +484,7 @@ void	setNonBlocking(int fd)
 	int flags = fcntl(fd, F_GETFL, 0);
 	if (flags == -1)
 		throw std::runtime_error("Impossible to get flags");
-	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) 
+	if (fcntl(fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) 
 		throw std::runtime_error("Impossible to set non blocking");
 }
 std::ostream& operator<<(std::ostream& os, const Server& serv)
@@ -533,3 +502,4 @@ std::ostream& operator<<(std::ostream& os, const Server& serv)
 		os << serv._locations[i] << std::endl;
 	return os;
 }
+
