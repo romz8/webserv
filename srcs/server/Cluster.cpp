@@ -6,11 +6,12 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 19:42:57 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 10:31:56 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cluster.hpp"
+#include <Signal.hpp>
 
 Cluster::Cluster(std::vector<ServerConfig> serverConfig) 
 {
@@ -92,9 +93,10 @@ void	Cluster::setUpServer() // should we throw or handle any issue here ? how ?
  */
 void Cluster::run()
 {
-	setUpServer();	
+	setUpServer();
+	Signal::reciveSigs();
 	
-	while (true)
+	while (Signal::Running)
 	{
 		int ret = poll(_fdSet.data(), _fdSet.size(), _timeout * 1000);
 		if (ret < 0)
