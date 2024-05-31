@@ -3,15 +3,15 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+         #
+#    By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/27 18:19:03 by rjobert           #+#    #+#              #
-#    Updated: 2024/05/31 10:58:09 by rjobert          ###   ########.fr        #
+#    Updated: 2024/05/31 12:55:41 by jsebasti         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = c++
-FLAGS = -MMD -std=c++98 -g #-fsanitize=address,undefined -g -Wall -Wextra -Werror
+FLAGS = -MMD -std=c++98 -g -fsanitize=address,undefined -g -Wall -Wextra -Werror
 NAME = webserv
 RM = rm -rf
 NPD = --no-print-directory
