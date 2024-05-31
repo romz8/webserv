@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/31 10:34:38 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 10:37:50 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,10 @@ Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAdd
 Server::~Server()
 {
 	if (_socket_fd != -1)
+	{
+		std::cout << RED "Closing socket : " RESET << _socket_fd << std::endl;
 		close(_socket_fd);
+	}
 	_clientConnect.clear();
 	_clientResponse.clear();
 }
@@ -424,6 +427,7 @@ int Server::acceptConnection()
 		throw std::runtime_error("Error accepting client request");
 	//Request request(_host, _maxBodySize, _serverName, _port);
 	//_inputRequest[io_socket] = request;
+	std::cout << BLUE  "New connection accepted on fd : " RESET << io_socket << std::endl;
 	return (io_socket);
 }
 

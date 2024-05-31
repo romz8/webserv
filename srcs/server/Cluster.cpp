@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/31 10:31:56 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 10:38:08 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,12 @@ Cluster& Cluster::operator=(const Cluster& src)
 
 Cluster::~Cluster()
 {
+	std::cout << BG_RED "destroying cluster" << std::endl;
 	for (std::vector<pollfd>::size_type i = 0; i < _fdSet.size(); i++)
+	{
+		std::cout << "closing fd " RESET << _fdSet[i].fd << std::endl;	
 		close(_fdSet[i].fd);
+	}
 	_servers.clear();
 	_fdSet.clear();
 	_fdtoServ.clear();
@@ -196,7 +200,7 @@ void	Cluster::addPollFd(int fd, short events, Server* server, servState state)
 	_fdtoServ[fd] = server;
 	if (state == READY)
 		_fdtoReq.insert(std::make_pair(fd, Request(server->getHost(), server->getMaxBodySize(), server->getserverName(), server->getPort())));
-	// std::cout << BG_RED "created new pollfd for fd " RESET << fd << std::endl;
+	std::cout << BG_RED "created new pollfd for fd " RESET << fd << std::endl;
 	// std::cout << "server conf is : " << server->getHost() << " " << server->getPort() << std::endl;
 	// std::cout << "fdtoServ size is : " << _fdtoServ.size() << std::endl;
 	//std::cout << "request set up is : " << _fdtoReq[fd] << std::endl;
