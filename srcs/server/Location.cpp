@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 21:09:16 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/31 08:03:25 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:44:58 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ Location& Location::operator=(const Location& src)
 
 bool Location::isMethodAllowed(const std::string& method) const 
 {
-	return (SUtils::it_easyfind< std::vector<std::string> >(_allowedMethods, method) != _allowedMethods.end());
+	return (std::find(_allowedMethods.begin(), _allowedMethods.end(), method) != _allowedMethods.end());
 }
 
 std::string Location::getRootDir() const

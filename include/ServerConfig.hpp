@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:03:12 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 17:31:15 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:10:50 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ private:
 	std::vector<CgiConfig> cgiConf;
     bool autoindex;
 	std::vector<std::string>	_allowed_directives;
+	std::vector<std::string>	_allowed_methods;
 
 public:	
 	ServerConfig();
@@ -71,6 +72,8 @@ public:
 	void addCgiConfig(const CgiConfig& cgiConf);
 	void setAutoIndex(bool autoindex);
 	void setHostName(const std::string& hostName);
+	void setAllowedMethods(std::vector<std::string> allowedMethods);
+	std::vector<std::string>	getAllowedMethods(void) const;
 	// bool errorPageSet( int key ) const;
 	std::string getHostName() const;
 	std::vector<std::string>	getAD( void ) const;

@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/31 01:20:57 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:11:49 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ string	ParseContent::server_directives[ N_SERVER_DIRECTIVES ] = {
 	"client_max_body_size",
 	"autoindex",
 	"error_page",
+	"allow_methods",
 	"location",
 };
 
@@ -212,7 +213,7 @@ void	ParseContent::save_allow_upload(string head, LocationConfig &config) {
 		config.setAllowUpload(true);
 	else
 		throw std::logic_error("Invalid argument \"" + boolean + "\" expected: true|false");
-}
+};
 
 void	ParseContent::save_index(string head, LocationConfig &config) {
 	StrVector data;
@@ -220,29 +221,6 @@ void	ParseContent::save_index(string head, LocationConfig &config) {
 	if (data.size() != 2)
 		throw std::logic_error("Invalid number of arguments for " + data[0]);
 	config.setIndex(data[1]);
-}
-
-
-void	ParseContent::save_allow_methods(string head, LocationConfig &config) {
-	StrVector data;
-	string value;
-	StrVector allowedmethods;
-	SUtils::split(data, head, ISSPACE);
-	if (data.size() < 2 || data.size() > 4)
-		throw std::logic_error("Invalid number of arguments for " + data[0]);
-	for (size_t i = 1; i < data.size(); i++)
-	{
-		if (i != data.size() - 1 && data[i].find_first_of(";") != string::npos)
-			throw logic_error("Unexpected token ; in value " + data[i]);
-		else if (i == data.size() - 1)
-			value = data[i].substr(0, data[i].find_first_of(";"));
-		else
-			value = data[i];
-		if (value.compare("POST") && value.compare("GET") && value.compare("DELETE"))
-			throw logic_error("Value \"" + value + "\" not valid for allow_methods");
-		allowedmethods.push_back(value);
-	}
-	config.setAllowedMethods(allowedmethods);
 }
 
 void	ParseContent::save_cgi(string head, LocationConfig &config) {

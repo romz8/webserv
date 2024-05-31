@@ -6,14 +6,14 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/30 05:43:32 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 06:18:41 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:11:59 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __DEFINES_HPP__
 # define __DEFINES_HPP__
 
-# define N_SERVER_DIRECTIVES 7
+# define N_SERVER_DIRECTIVES 8
 # define N_LOCATION_DIRECTIVES 9
 # define DIRECTIVES_NUM 14
 # define N_SIMPLE_DIRECTIVES 12

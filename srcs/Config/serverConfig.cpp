@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:47 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 17:32:11 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:11:01 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& src)
 	if (this != &src)
 	{
 		_allowed_directives = src._allowed_directives;
+		_allowed_methods = src._allowed_methods;
 		_host = src._host;
 		_hostName = src._hostName;
 		_port = src._port;
@@ -59,6 +60,7 @@ void	ServerConfig::_initConfig()
 	_hostName = "";
 	_port = 0;
 	_serverName.clear();
+	_allowed_methods.clear();
 	_rootDir = DEFAULTROOOT;
 	_locations.clear();
 	error_pages.clear();
@@ -99,6 +101,14 @@ void ServerConfig::addLocationConfig(const LocationConfig& locations)
 {
 	_locations.push_back(locations);
 	_isSet["location"] = true;
+}
+
+void ServerConfig::setAllowedMethods( std::vector<std::string> allowedMethods ) {
+	_allowed_methods = allowedMethods;
+}
+
+std::vector<std::string> ServerConfig::getAllowedMethods( void ) const {
+	return (this->_allowed_methods);
 }
 
 bool ServerConfig::isSet( std::string name ) {

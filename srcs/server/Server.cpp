@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/31 10:37:50 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 12:39:34 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,6 +285,7 @@ void	Server::processRequest(Request& request, int io_fd)
 		request.setLocation(_rootloc); // to replace with root location in config logic
 	else
 		request.setLocation(*matchLoc);
+	//std::cout << request.getLocation().getAllowedMethod()
 	if (matchLoc != NULL && !matchLoc->getAlias().empty())
 	{
 		request.setPath(matchLoc->getAlias());
