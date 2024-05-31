@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cluster.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 16:18:22 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 12:52:13 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 07:44:14 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ private:
 	std::vector<struct  pollfd> _fdSet;
 	std::map<int, Server*> _fdtoServ;
 	std::map<int, Request> _fdtoReq;
-	static const int	_timeout = 3;
+	static const int	_timeout = 1;
 
 public:
 	Cluster(std::vector<ServerConfig> servers);
