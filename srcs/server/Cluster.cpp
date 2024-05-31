@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/22 16:20:31 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 16:05:12 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 12:48:00 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,6 +190,7 @@ void	Cluster::addPollFd(int fd, short events, Server* server, servState state)
 	struct pollfd pfd;
 	pfd.fd = fd;
 	pfd.events = events;
+	pfd.revents = 0;
 	_fdSet.push_back(pfd);
 	_fdtoServ[fd] = server;
 	if (state == READY)

@@ -551,7 +551,14 @@ void		Request::handleGetRequest()
 		}
 		//std::cout << "looking for index file at : " << this->_parsePath + index << std::endl;
 		if (!index.empty() && fileExists(this->_parsePath + index))
-			this->_parsePath.append(index);
+		{
+            this->_parsePath.append(index);
+            if (!hasReadAccess())
+            {
+                    this->_status = 403;
+                    return;
+            }
+		}
 		else if(_location.getAutoIndex() == true)
 		{
 			DirectoryListing dirList(this->_parsePath);
