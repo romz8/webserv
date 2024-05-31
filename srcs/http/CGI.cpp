@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/28 19:10:29 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 12:20:24 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/30 18:05:49 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void Request::initCgi(std::string execPath) {
     _cgi._env["QUERY_STRING"] = getQueryString();
     _cgi._env["HTTP_COOKIE"] = getHeaderField("Cookie");
     _cgi._env["REMOTE_ADDR"] = getHost().substr(0, getHost().find(":"));
-    _cgi._env["SERVER_NAME"] = getServerName();
+    _cgi._env["SERVER_NAME"] = getHost();
     _cgi._env["SERVER_PROTOCOL"] = "HTTP/1.1";
     _cgi._env["SERVER_PORT"] = std::to_string(getPort());
     _cgi._env["HTTP_USER_AGENT"] = getHeaderField("USER_AGENT");

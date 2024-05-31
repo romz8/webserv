@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/25 10:33:49 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 05:44:11 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/30 15:41:37 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,10 +56,10 @@ class Parser {
 
 		void	getLocConfig( LocationConfig &location, StrVector allowed_directives, std::string &content );
 		void	parseLocLine( LocationConfig &location, StrVector allowed_directives, std::string &content);
-		void	parseDirectiveLoc( std::string head, std::string body, LocationConfig &location, StrVector allowed_directives );
+		void	parseDirectiveLoc( std::string head, LocationConfig &location, StrVector allowed_directives );
 
 	private:
-		void	parseServer( std::string head, std::string body, std::vector<ServerConfig> &servers );
+		void	parseServer( std::string body, std::vector<ServerConfig> &servers );
 		void	parseLocation( std::string head, std::string body, std::vector<ServerConfig> &servers );
 		
 		void	getInfo( void );
@@ -70,7 +70,7 @@ class Parser {
 		
 		void	parseComplex( std::string, std::string, std::vector<ServerConfig> &);
 		
-		void	parseSimpleServ( std::string, std::string, ServerConfig &, StrVector allowed_directives);
+		void	parseSimpleServ( std::string, ServerConfig &, StrVector allowed_directives);
 		void	parseSimpleLoc( std::string, LocationConfig &, StrVector allowed_directives );
 };
 

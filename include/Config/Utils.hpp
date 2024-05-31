@@ -16,7 +16,7 @@
 # include <sstream>
 # include <vector>
 
-# define MAX_NUMERIC_LIMITS( t ) numeric_limits< t >::max()
+# define MAX_NUMERIC_LIMITS( t ) numeric_limits<t>::max()
 # define MAX_NUMERIC_LIMITS_STR( t ) to_string( MAX_NUMERIC_LIMITS( t ) )
 # define COMPARE_NBR_MAX_STR( s, t ) compareNumbersAsStrings( s, MAX_NUMERIC_LIMITS_STR( t ) )
 
@@ -42,6 +42,8 @@ namespace SUtils {
 	void			set_allowed_directives( StrVector &allowed_methods, int flag );
 	template <typename T>
 	int	easyfind( typename T::iterator begin, typename T::iterator end, std::string toFind );
+	template <typename T>
+	typename T::iterator	it_easyfind( const T container, std::string toFind );
 	// std::string		long_to_string( long int );
 	// int				check_brackets( StrVector & content, int n_line );
 	// void			parse_line( const std::string & , int );

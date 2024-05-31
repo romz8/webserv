@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 11:31:46 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/31 12:48:32 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 12:54:19 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 # include <sys/types.h> //for getaddress() convert Ip to integer
 # include <arpa/inet.h> //for getaddress() convert Ip to integer
 # include <fcntl.h> //for setNonBlocking
+# include <cstring>
 # include "Location.hpp"
 # include "Request.hpp"
 # include "Response.hpp"

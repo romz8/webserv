@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   LocationConfig.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/21 17:24:39 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 17:03:21 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 12:38:01 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ LocationConfig::LocationConfig( const ServerConfig &serv ) {
 	_root = serv.getRootDir();
 	_error_pages = serv.getErrorPages();
 	_autoIndex = serv.getAutoIndex();
+	_allowed_methods = serv.getAllowedMethods();
 	_allowUpload = false;
 	SUtils::set_allowed_directives(this->_allowed_directives, LOCATION);
 }
@@ -61,7 +62,13 @@ void LocationConfig::setUri(const std::string& uri) { this->_uri = uri; }
 void LocationConfig::setRootDir(const std::string& root) { this->_root = root; _isSet["root"] = true;}
 void LocationConfig::setAlias(const std::string& alias) { this->_alias = alias; _isSet["return"] = true;}
 void LocationConfig::setErrorPages(const std::map<int, std::string>& error_pages) { this->_error_pages = error_pages; }
-void LocationConfig::setAllowedMethods(const std::vector<std::string>& allowed_methods) { this->_allowed_methods = allowed_methods; _isSet["allowed_methods"] = true;}
+
+void LocationConfig::setAllowedMethods(const std::vector<std::string>& allowed_methods) {
+	this->_allowed_methods.clear(); 
+	this->_allowed_methods = allowed_methods;
+	_isSet["allowed_methods"] = true;
+}
+
 void LocationConfig::addCgiConfig(const CgiConfig& cgiConfig) { _cgiConfigs.push_back(cgiConfig); _isSet["cgi"] = true;}
 void LocationConfig::setIndex(const std::string& index) { this->_index = index; _isSet["index"] = true;}
 void LocationConfig::setAutoIndex(bool autoIndex) { this->_autoIndex = autoIndex; _isSet["autoindex"] = true;}

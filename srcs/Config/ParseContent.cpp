@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ParseContent.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:13:35 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 16:24:54 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 12:11:49 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ string	ParseContent::server_directives[ N_SERVER_DIRECTIVES ] = {
 	"client_max_body_size",
 	"autoindex",
 	"error_page",
+	"allow_methods",
 	"location",
 };
 
@@ -112,10 +113,12 @@ void	ParseContent::save_listen(string head, ServerConfig &config) {
 	int port;
 	if (pos == string::npos)
 	{
+		data = SUtils::trim(data);
 		port = ft_stoi(data);
 		if (port < 0 || port > USHRT_MAX)
 			throw logic_error("Invalid port " + data);
-		config.setPort(atoi(data.c_str()));
+		config.setHost("127.0.0.1:" + data);
+		config.setListen(port, "127.0.0.1");
 		return ;
 	}
 	config.setHost(data);
@@ -135,9 +138,10 @@ void		ParseContent::save_server_name(string head, ServerConfig &config) {
 	StrVector	data;
 	SUtils::split(data, head, ISSPACE);
 	
-	if (data.size() != 2)
+	if (data.size() < 2)
 		throw logic_error("Invalid number of arguments for " + data[0]);
-	config.setServerName(data[1]);
+	for (size_t i = 1; i < data.size(); i++)
+		config.setServerName(data[i]);
 }
 
 void		ParseContent::save_client_max_body_size(string head, ServerConfig &config) {
@@ -209,7 +213,7 @@ void	ParseContent::save_allow_upload(string head, LocationConfig &config) {
 		config.setAllowUpload(true);
 	else
 		throw std::logic_error("Invalid argument \"" + boolean + "\" expected: true|false");
-}
+};
 
 void	ParseContent::save_index(string head, LocationConfig &config) {
 	StrVector data;
@@ -217,29 +221,6 @@ void	ParseContent::save_index(string head, LocationConfig &config) {
 	if (data.size() != 2)
 		throw std::logic_error("Invalid number of arguments for " + data[0]);
 	config.setIndex(data[1]);
-}
-
-
-void	ParseContent::save_allow_methods(string head, LocationConfig &config) {
-	StrVector data;
-	string value;
-	StrVector allowedmethods;
-	SUtils::split(data, head, ISSPACE);
-	if (data.size() < 2 || data.size() > 4)
-		throw std::logic_error("Invalid number of arguments for " + data[0]);
-	for (int i = 1; i < data.size(); i++)
-	{
-		if (i != data.size() - 1 && data[i].find_first_of(";") != string::npos)
-			throw logic_error("Unexpected token ; in value " + data[i]);
-		else if (i == data.size() - 1)
-			value = data[i].substr(0, data[i].find_first_of(";"));
-		else
-			value = data[i];
-		if (value.compare("POST") && value.compare("GET") && value.compare("DELETE"))
-			throw logic_error("Value \"" + value + "\" not valid for allow_methods");
-		allowedmethods.push_back(value);
-	}
-	config.setAllowedMethods(allowedmethods);
 }
 
 void	ParseContent::save_cgi(string head, LocationConfig &config) {

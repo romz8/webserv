@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rjobert <rjobert@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/30 17:38:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2024/05/31 12:39:34 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,10 @@ Server::Server(const ServerConfig& conf) :  _socket_fd(-1), _servAddr(setServAdd
 Server::~Server()
 {
 	if (_socket_fd != -1)
+	{
+		std::cout << RED "Closing socket : " RESET << _socket_fd << std::endl;
 		close(_socket_fd);
+	}
 	_clientConnect.clear();
 	_clientResponse.clear();
 }
@@ -144,7 +147,7 @@ int	Server::readClient(pollfd& pfd, Request& request)
 		byteRead = recv(pfd.fd, buffer, BUFSIZE - 1, 0);
 		if (byteRead < 0 )
 		{
-			std::cerr << "recv socket Error :" << strerror(errno) << std::endl;
+			std::cerr << "recv socket Error : in fd " << pfd.fd << std::endl;
 			_start.erase(pfd.fd);
 			return (-1);
 		}
@@ -201,13 +204,13 @@ int	Server::sendClient(pollfd &pfd)
 	if (_clientResponse.find(io_fd) == _clientResponse.end())
 		return (-1);
 	std::string response = _clientResponse[io_fd];
-	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
+	int byteSent = send(io_fd, response.c_str(), response.length(), 0);
 	if (byteSent < 0)
 	{
-		std::cerr << "send socket Error :" << strerror(errno) << std::endl;
+		std::cerr << "send socket Error : in fd " << io_fd << std::endl;
 		return (-1);
 	}
-	else if (byteSent < response.length())
+	else if ((size_t)byteSent < response.length())
 	{
 		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
 		_clientResponse[io_fd] = response.substr(byteSent);
@@ -239,7 +242,7 @@ const Location* Server::findLocationForRequest(const std::string& requestPath) c
     for (size_t i = 0; i < _locations.size(); ++i) 
 	{
         const std::string& locationPath = _locations[i].getPath();
-       
+    
         if (requestPath.compare(0, locationPath.length(), locationPath) == 0) 
 		{
 			if (locationPath.length() > longestMatchLength) 
@@ -282,6 +285,7 @@ void	Server::processRequest(Request& request, int io_fd)
 		request.setLocation(_rootloc); // to replace with root location in config logic
 	else
 		request.setLocation(*matchLoc);
+	//std::cout << request.getLocation().getAllowedMethod()
 	if (matchLoc != NULL && !matchLoc->getAlias().empty())
 	{
 		request.setPath(matchLoc->getAlias());
@@ -424,6 +428,7 @@ int Server::acceptConnection()
 		throw std::runtime_error("Error accepting client request");
 	//Request request(_host, _maxBodySize, _serverName, _port);
 	//_inputRequest[io_socket] = request;
+	std::cout << BLUE  "New connection accepted on fd : " RESET << io_socket << std::endl;
 	return (io_socket);
 }
 

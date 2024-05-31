@@ -204,7 +204,7 @@ void	Response::setBody()
 */
 std::string Response::readWebFile(const std::string& assetPath)
 {
-	std::ifstream file(assetPath, std::ios::binary | std::ios::ate);
+	std::ifstream file(assetPath.c_str(), std::ios::binary | std::ios::ate);
 	if (!file.is_open())
 		throw std::runtime_error("Impossible opening the content to serve");
 	

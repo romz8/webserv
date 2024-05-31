@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/27 11:21:58 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 12:24:41 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:15:49 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@ Parser::parseSimpleSA Parser::_parseSimpleSA = {
 	&ParseContent::save_server_name,
 	&ParseContent::save_client_max_body_size,
 	&ParseContent::save_autoindex<ServerConfig>,
-	&ParseContent::save_error_page<ServerConfig>
+	&ParseContent::save_error_page<ServerConfig>,
+	&ParseContent::save_allow_methods<ServerConfig>,
 };
 
 Parser::parseSimpleLA Parser::_parseSimpleLA = {
@@ -39,7 +40,7 @@ Parser::parseSimpleLA Parser::_parseSimpleLA = {
 	&ParseContent::save_upload_dir,
 	&ParseContent::save_allow_upload,
 	&ParseContent::save_index,
-	&ParseContent::save_allow_methods,
+	&ParseContent::save_allow_methods<LocationConfig>,
 	&ParseContent::save_return,
 	&ParseContent::save_cgi
 };

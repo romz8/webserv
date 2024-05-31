@@ -32,6 +32,7 @@
 # include "Location.hpp"
 # include "ServerConfig.hpp"
 # include "DirectoryListing.hpp"
+# include <Utils.hpp>
 
 typedef struct s_cgi
 {
@@ -82,8 +83,8 @@ private:
 	//static const std::string CRLF = "\r\n";
 
 public:
+	Request();
 	Request(const std::string host, const int maxBody, const std::vector<std::string> servName, const int port);
-	//Request();
 	~Request();
 	Request(const Request& src);
 	Request& operator=(const Request& src);
@@ -146,15 +147,16 @@ public:
 	void		setLocation(const Location& loc);
 	Location	getLocation() const;
 	void		getQueryParams();
-	void		setServerName(const std::string& serverName);
+	void		setServerName(const std::vector<std::string>& serverName);
 	void		setPort(int port);
-	std::string getServerName() const;
+	std::vector<std::string> getServerName() const;
 	int			getPort() const;
 	void		setHost(const std::string& host);
 	std::string getHost() const;
 	void		setPath(const std::string& path);
 	std::string getrawBody() const;
 	t_cgi&		getCgi();
+	bool foundStringinVec(const std::string& target, const std::vector<std::string>& vec) const;
 	friend std::ostream& operator<<(std::ostream& os, const Request& req);
 }; 
 
@@ -172,6 +174,6 @@ std::string	formattedTime();
 void	hexDecoding(std::string& url);
 std::ostream& operator<<(std::ostream& os, const Request& req);
 bool isExecutable(const std::string& path);
-bool foundStringinVec(const std::string& target, const std::vector<std::string>& vec);
+
 
 #endif

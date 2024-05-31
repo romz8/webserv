@@ -6,7 +6,7 @@
 /*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/27 12:07:08 by jsebasti          #+#    #+#             */
-/*   Updated: 2024/05/30 14:00:54 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/05/31 12:01:56 by jsebasti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <iostream>
 # include <fstream>
 # include <limits>
+# include <climits>
 # include <vector>
 # include <map>
 # include <Defines.hpp>
@@ -45,7 +46,8 @@ class ParseContent {
 		static void		save_error_page(std::string head, T &);
 		template <typename T>
 		static void		checkDuplicate(std::string name, T &);
-
+		template <typename T>
+		static void		save_allow_methods(string head, T &config);
 
 		static string	total_directives[ DIRECTIVES_NUM ];
 		static string	location_directives[ N_LOCATION_DIRECTIVES ];
@@ -62,7 +64,6 @@ class ParseContent {
 		static void		save_allow_upload(string head, LocationConfig &config);
 		static void		save_cgi(std::string head, LocationConfig &);
 		static void		save_index(std::string head, LocationConfig &);
-		static void		save_allow_methods(string head, LocationConfig &config);
 		static void		save_return(std::string head, LocationConfig &);
 		
 

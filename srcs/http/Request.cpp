@@ -30,11 +30,12 @@ const int maxBody, const std::vector<std::string> servName, const int port) : \
 }
 
 // Default constructor definition
-// Request::Request()
-//     : _host(""), _status(0), _maxBodySize(0), _serverName("bla"),  _port(0), _HeaderRead(false), _HeaderOK(false) 
-// {
-//     initRequest();
-// }
+Request::Request()
+    : _host(""), _status(0), _maxBodySize(0),  _port(0), _HeaderRead(false), _HeaderOK(false) 
+{
+	_serverName.clear();
+    initRequest();
+}
 
 bool	Request::processHeader(const std::string& rawHead)
 {
@@ -275,8 +276,8 @@ bool	Request::hasCorrectHost() const
 	{
 		std::cerr << "Host is : " << it->second << std::endl;
 		std::cerr << "bad host is : " << this->_host << std::endl;
-		std::cerr << "servername is : " << this->_serverName << std::endl;
-		std::cerr << "test servername complete is : " << this->_serverName + ":" + std::to_string(this->_port) << std::endl;
+		// std::cerr << "servername is : " << this->_serverName << std::endl;
+		// std::cerr << "test servername complete is : " << this->_serverName + ":" + std::to_string(this->_port) << std::endl;
 		throw std::runtime_error("Error parsing Request : invalid Host header");
 	}
 	return(true);
@@ -625,7 +626,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
 		std::cout << BLUE "POST url FORM Ressource is : " RESET<< filePath << std::endl;
 		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
-		std::ofstream file(filePath, std::ios::app);
+		std::ofstream file(filePath.c_str(), std::ios::app);
 		if (!file.is_open())
 		{
 			this->_status = 500;
@@ -666,7 +667,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	}
 	std::string filePath = _location.getUploadFile() + fname;
 	//std::cout << "POST UPLOAD file Ressource is : " << filePath << std::endl;
-	std::ofstream file(filePath); //very testy ..update with Location and actual logic
+	std::ofstream file(filePath.c_str()); //very testy ..update with Location and actual logic
 	if (!file.is_open())
 	{
 		std::cerr << "Error opening file" << std::endl;
@@ -1060,12 +1061,12 @@ std::string Request::getHost() const
 	return(this->_host);
 }
 
-void	Request::setServerName(const std::string& servername)
+void	Request::setServerName(const std::vector<std::string>& servername)
 {
 	this->_serverName = servername;
 }
 
-std::string Request::getServerName() const
+std::vector<std::string> Request::getServerName() const
 {
 	return(this->_serverName);
 }
@@ -1385,7 +1386,7 @@ std::ostream& operator<<(std::ostream& os, const Request& req)
 	os << "Version : " << req._version << std::endl;
 	os << "Host : " << req.getHost() << std::endl;
 	os << "PORT : " << req.getPort() << std::endl;
-	os << "ServerName : " << req.getServerName() << std::endl;
+	// os << "ServerName : " << req.getServerName() << std::endl;
 	os << "max body size : " << req._maxBodySize << std::endl;
 	os << "Extension is  : " << req.getExtension() << std::endl;
 	os << "is Dir  : " << req._isDirectory << std::endl;
@@ -1411,11 +1412,17 @@ void	Request::byteUpload(char *buffer, int byteSize)
 	}
 }
 
-bool foundStringinVec(const std::string& target, const std::vector<std::string>& vec)
+bool Request::foundStringinVec(const std::string& target, const std::vector<std::string>& vec) const
 {
-	std::vector<std::string>::const_iterator it;
-	it = std::find(vec.begin(), vec.end(), target);
-	if (it != vec.end())
-		return (true);
-	return (false);
+	// std::vector<std::string>::const_iterator it;
+	// it = std::find(vec.begin(), vec.end(), target);
+	// if (it != vec.end())
+	// 	return (true);
+	// return (false);
+	for (std::vector<std::string>::const_iterator it = vec.begin(); it != vec.end(); it++)
+	{
+		if ((*it + ":" + std::to_string(this->_port)) == target)
+			return(true);
+	}
+	return(false);
 }
