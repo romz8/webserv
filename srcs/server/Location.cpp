@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "Location.hpp"
+#include <Utils.hpp>
 
 Location::Location() : _AutoIndex(true), _allowUpload(true) {};
 
@@ -27,16 +28,16 @@ Location::Location(const LocationConfig& locConf) : \
 	std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
 	//std::cout << *this << std::endl;
 }
-
-// Location::Location(const std::string& path, const std::vector<std::string>& methods,
-//              const std::string& root, const std::string& index, bool autoIdx, bool allowup, const std::string& upload) : \
-//  _path(path), _allowedMethods(methods), _rootDir(root), _index(index), _AutoIndex(autoIdx), \
-//  _allowUpload(allowup), _uploadDirectory(upload)
-// {
-// 	_cgiConfigs.clear();
-// 	//std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
-// 	//std::cout << " and upload path is " << this->_uploadDirectory << std::endl;
-// }
+/*
+Location::Location(const std::string& path, const std::vector<std::string>& methods,
+             const std::string& root, const std::string& index, bool autoIdx, bool allowup, const std::string& upload) : \
+ _path(path), _allowedMethods(methods), _rootDir(root), _index(index), _AutoIndex(autoIdx), \
+ _allowUpload(allowup), _uploadDirectory(upload)
+{
+	_cgiConfigs.clear();
+	//std::cout << "Location object created with path : " << this->_path << " and root : " << this->_rootDir << std::endl;
+	//std::cout << " and upload path is " << this->_uploadDirectory << std::endl;
+}*/
 Location::~Location(){}
 
 Location::Location(const Location& src)
@@ -63,7 +64,7 @@ Location& Location::operator=(const Location& src)
 
 bool Location::isMethodAllowed(const std::string& method) const 
 {
-    return std::find(_allowedMethods.begin(), _allowedMethods.end(), method) != _allowedMethods.end();
+	return (SUtils::it_easyfind< std::vector<std::string> >(_allowedMethods, method) != _allowedMethods.end());
 }
 
 std::string Location::getRootDir() const

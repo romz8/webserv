@@ -21,8 +21,8 @@ INC_DIR = ./include/ ./include/Config/
 OBJS_PATH	= ./OBJS/
 
 SRC_NAME = main.cpp server/Server.cpp http/Request.cpp http/Response.cpp \
-	server/Location.cpp http/DirectoryListing.cpp config/LocationConfig.cpp \
-	config/serverConfig.cpp config/Parser.cpp config/Utils.cpp config/ParseInit.cpp config/ParseContent.cpp \
+	server/Location.cpp http/DirectoryListing.cpp Config/LocationConfig.cpp \
+	Config/serverConfig.cpp Config/Parser.cpp Config/Utils.cpp Config/ParseInit.cpp Config/ParseContent.cpp \
 	server/Cluster.cpp http/CGI.cpp
 
 INC_NAME = Server.hpp Location.hpp Requst.hpp Response.hpp colors.h \

@@ -22,6 +22,7 @@
 # include <sys/types.h> //for getaddress() convert Ip to integer
 # include <arpa/inet.h> //for getaddress() convert Ip to integer
 # include <fcntl.h> //for setNonBlocking
+# include <cstring>
 # include "Location.hpp"
 # include "Request.hpp"
 # include "Response.hpp"

@@ -201,13 +201,13 @@ int	Server::sendClient(pollfd &pfd)
 	if (_clientResponse.find(io_fd) == _clientResponse.end())
 		return (-1);
 	std::string response = _clientResponse[io_fd];
-	size_t byteSent = send(io_fd, response.c_str(), response.length(), 0);
+	int byteSent = send(io_fd, response.c_str(), response.length(), 0);
 	if (byteSent < 0)
 	{
 		std::cerr << "send socket Error : in fd " << io_fd << std::endl;
 		return (-1);
 	}
-	else if (byteSent < response.length())
+	else if ((size_t)byteSent < response.length())
 	{
 		std::cout << "Partial send, remaining to send : " << response.length() - byteSent << std::endl;
 		_clientResponse[io_fd] = response.substr(byteSent);

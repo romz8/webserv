@@ -21,11 +21,20 @@ namespace SUtils {
 		typename T::iterator	it;
 
 		it = begin; 
-		while ( it != end && *it != toFind )
+		while ( it != end && toFind.compare(*it) )
 			it++;
 		if ( it == end )
 			return ( -1 );
 		return ( it - begin );
+	}
+	template <typename T>
+	typename T::iterator	it_easyfind( T container, std::string toFind ) {
+		typename T::iterator	itBegin = container.begin();
+		typename T::iterator	itEnd = container.end();
+
+		while (itBegin != itEnd && toFind.compare(*itBegin))
+			itBegin++;
+		return (itBegin);
 	}
 };
 
@@ -45,9 +54,6 @@ namespace std {
 	
 		if (num.find_first_not_of(ISNUM) != string::npos)
 			throw logic_error("Cannot do the conversion");
-		
-		if (COMPARE_NBR_MAX_STR(num, T) > 0)
-			throw logic_error("The number is greater than SIZE_T_MAX");
 		
 		for (size_t i = 0; i < num.length(); i++) {
 			ret = (ret * 10) + (num[i]- 48);

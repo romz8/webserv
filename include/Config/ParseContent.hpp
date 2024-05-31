@@ -16,6 +16,7 @@
 # include <iostream>
 # include <fstream>
 # include <limits>
+# include <climits>
 # include <vector>
 # include <map>
 # include <Defines.hpp>

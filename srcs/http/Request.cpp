@@ -619,7 +619,7 @@ void	Request::processFormData(const std::string& input, const Location& loc)
 		//std::cout << BG_GREEN "Location is : " << _location.getPath() << std::endl;
 		std::cout << BLUE "POST url FORM Ressource is : " RESET<< filePath << std::endl;
 		//std::cout << "Location uplaod is is : " << _location.getUploadFile() << RESET <<std::endl;
-		std::ofstream file(filePath, std::ios::app);
+		std::ofstream file(filePath.c_str(), std::ios::app);
 		if (!file.is_open())
 		{
 			this->_status = 500;
@@ -660,7 +660,7 @@ void	Request::processMultipartForm(const std::string& input, const std::string& 
 	}
 	std::string filePath = _location.getUploadFile() + fname;
 	//std::cout << "POST UPLOAD file Ressource is : " << filePath << std::endl;
-	std::ofstream file(filePath); //very testy ..update with Location and actual logic
+	std::ofstream file(filePath.c_str()); //very testy ..update with Location and actual logic
 	if (!file.is_open())
 	{
 		std::cerr << "Error opening file" << std::endl;
