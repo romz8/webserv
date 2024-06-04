@@ -1381,7 +1381,7 @@ bool Request::parseBody(void)
 
 std::ostream& operator<<(std::ostream& os, const Request& req)
 {
-	os << BG_YELLOW "Method : " << req.getMethod() << std::endl;
+	os << YELLOW "Method : " << req.getMethod() << std::endl;
 	os << "Path : " << req.getPath() << std::endl;
 	os << "Version : " << req._version << std::endl;
 	os << "Host : " << req.getHost() << std::endl;
@@ -1391,11 +1391,11 @@ std::ostream& operator<<(std::ostream& os, const Request& req)
 	os << "Extension is  : " << req.getExtension() << std::endl;
 	os << "is Dir  : " << req._isDirectory << std::endl;
 	os << "is DirNorm  : " << req._isDirNorm << std::endl;
-	os << "Requests : " << std::endl;
+	os << "Request Header : " << std::endl;
 	std::map<std::string, std::string>::const_iterator it;
 	for(it = req._headers.begin(); it != req._headers.end(); ++it)
 	{
-		os << BG_CYAN << it->first << " : " << it->second << RESET << std::endl;
+		os << CYAN << it->first << " : " << it->second << RESET << std::endl;
 	}
 	os << RESET << std::endl;
 	return (os);
@@ -1414,11 +1414,6 @@ void	Request::byteUpload(char *buffer, int byteSize)
 
 bool Request::foundStringinVec(const std::string& target, const std::vector<std::string>& vec) const
 {
-	// std::vector<std::string>::const_iterator it;
-	// it = std::find(vec.begin(), vec.end(), target);
-	// if (it != vec.end())
-	// 	return (true);
-	// return (false);
 	for (std::vector<std::string>::const_iterator it = vec.begin(); it != vec.end(); it++)
 	{
 		if ((*it + ":" + std::to_string(this->_port)) == target)

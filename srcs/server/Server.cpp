@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsebasti <jsebasti@student.42.fr>          +#+  +:+       +#+        */
+/*   By: romainjobert <romainjobert@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/28 13:53:36 by rjobert           #+#    #+#             */
-/*   Updated: 2024/05/31 12:39:34 by jsebasti         ###   ########.fr       */
+/*   Updated: 2024/06/04 18:31:01 by romainjober      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,7 +158,6 @@ int	Server::readClient(pollfd& pfd, Request& request)
 			return (0);
 		}
 		buffer[byteRead] = '\0';
-		//std::cout << BLUE << "bytes read : " << byteRead << RESET << std::endl;
 		if (request._readRequest(buffer, byteRead))
 		{
 			_start.erase(pfd.fd);
@@ -282,10 +281,9 @@ void	Server::processRequest(Request& request, int io_fd)
 		request.setBody(request.getrawBody());
 	const Location* matchLoc = findLocationForRequest(request.getPath());
 	if (matchLoc == NULL)
-		request.setLocation(_rootloc); // to replace with root location in config logic
+		request.setLocation(_rootloc);
 	else
 		request.setLocation(*matchLoc);
-	//std::cout << request.getLocation().getAllowedMethod()
 	if (matchLoc != NULL && !matchLoc->getAlias().empty())
 	{
 		request.setPath(matchLoc->getAlias());
