@@ -110,8 +110,8 @@ void	Request::executeCGI()
 	close(_cgi._fdout[1]);
 	close(_cgi._fdin[1]);
 	for (int i = 0; env[i]; i++)
-		delete env[i];
-	delete env;
+		delete[] env[i];
+	delete[] env;
 
 	if (pid > 0)
 	{
